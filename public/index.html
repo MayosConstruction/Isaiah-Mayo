@@ -1,0 +1,48 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#1f3a5f">
+  <title>Mayo Construction</title>
+  <link rel="stylesheet" href="/style.css">
+</head>
+<body>
+  <div id="login" class="login hidden">
+    <form id="login-form" class="card login-card">
+      <h1>Mayo Construction</h1>
+      <p class="muted">Hot Springs, Arkansas</p>
+      <label>Who are you?
+        <select name="username">
+          <option value="isaiah">Isaiah</option>
+          <option value="moss">Moss</option>
+        </select>
+      </label>
+      <label>Password <input type="password" name="password" required autocomplete="current-password"></label>
+      <p id="login-error" class="error"></p>
+      <button class="btn primary" type="submit">Log in</button>
+    </form>
+  </div>
+
+  <div id="app" class="hidden">
+    <header class="topbar no-print">
+      <div class="brand">Mayo Construction</div>
+      <nav id="nav">
+        <a href="#/">Home</a>
+        <a href="#/todos">To-Do</a>
+        <a href="#/schedule">Schedule</a>
+        <a href="#/customers">Customers</a>
+        <a href="#/estimates">Estimates</a>
+        <a href="#/money">Money</a>
+        <a href="#/contracts">Contracts</a>
+        <a href="#/settings">Settings</a>
+      </nav>
+    </header>
+    <main id="view"></main>
+  </div>
+
+  <dialog id="modal"><div id="modal-body"></div></dialog>
+  <div id="toast" class="toast hidden"></div>
+  <script src="/app.js"></script>
+</body>
+</html>

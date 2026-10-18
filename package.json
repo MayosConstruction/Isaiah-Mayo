@@ -1,0 +1,14 @@
+{
+  "name": "mayo-construction-crm",
+  "version": "1.0.0",
+  "description": "Simple CRM for Mayo Construction (Hot Springs, AR): to-dos, schedule, customers, estimates, money in/out, contracts.",
+  "private": true,
+  "main": "server.js",
+  "scripts": {
+    "start": "node --no-warnings server.js",
+    "test": "node --no-warnings test/smoke.js"
+  },
+  "engines": {
+    "node": ">=22.13"
+  }
+}

@@ -1,0 +1,58 @@
+CONSTRUCTION AGREEMENT
+
+This Agreement is made on {{date}} between:
+
+CONTRACTOR: Mayo Construction (Isaiah Mayo and Moss Mayo), Hot Springs, Arkansas
+CUSTOMER (OWNER): {{customer_name}}
+Phone: {{customer_phone}}    Email: {{customer_email}}
+Project address: {{customer_address}}
+
+1. SCOPE OF WORK
+Contractor agrees to furnish labor and materials to complete the following work:
+{{job_title}}
+
+{{estimate_items}}
+
+2. CONTRACT PRICE
+Customer agrees to pay Contractor the total sum of {{estimate_total}} for the work described above.
+
+3. PAYMENT SCHEDULE
+Deposit due at signing: $____________
+Balance due upon completion: $____________
+Payments not received within 15 days of the due date may be subject to a late charge.
+
+4. START AND COMPLETION
+Work is expected to begin on or about ____________ and be substantially complete on or about ____________. Dates may change due to weather, material availability, change orders, or other conditions beyond Contractor's control.
+
+5. CHANGE ORDERS
+Any change to the scope of work, materials, or price must be agreed to in writing by both parties before the changed work is performed.
+
+6. MATERIALS AND CLEANUP
+All materials will be new and of standard quality unless stated otherwise. Contractor will keep the work area reasonably clean and remove construction debris at completion.
+
+7. HIDDEN CONDITIONS
+If Contractor discovers rot, water damage, code violations, or other conditions that could not reasonably be seen before work started, Contractor will notify Customer and any additional work will be handled as a change order.
+
+8. WARRANTY
+Contractor warrants its workmanship for a period of ____ year(s) from completion. Manufacturer warranties on materials pass through to Customer. This warranty does not cover damage from misuse, neglect, or normal wear.
+
+9. PERMITS AND INSURANCE
+Contractor will obtain required building permits unless stated otherwise and maintains general liability insurance.
+
+10. NOTICE TO OWNER
+[Insert the residential lien notice required by Arkansas law (Ark. Code Ann. § 18-44-115) here. Have an Arkansas attorney confirm the exact wording before using this agreement.]
+
+11. ENTIRE AGREEMENT
+This Agreement, together with any attached estimate and written change orders, is the entire agreement between the parties.
+
+
+CONTRACTOR: Mayo Construction
+
+Signature: ______________________________   Date: ____________
+           Isaiah Mayo / Moss Mayo
+
+
+CUSTOMER:
+
+Signature: ______________________________   Date: ____________
+           {{customer_name}}
