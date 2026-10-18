@@ -471,6 +471,25 @@ function importData(data) {
   return { ok: true, counts };
 }
 
+// Starter data (your existing jobs and customers) ships encrypted, because the
+// code repository is public. The code to unlock it was given to the owners.
+function unlockStarter(code) {
+  const file = path.join(__dirname, 'seed', 'workshop.enc.json');
+  if (!fs.existsSync(file)) return null;
+  // Accept the code typed any way: lowercase, with or without dashes/spaces.
+  const raw = String(code || '').toUpperCase().replace(/[^A-Z0-9]/g, '');
+  const normalized = raw.match(/.{1,4}/g)?.join('-') || '';
+  try {
+    const box = JSON.parse(fs.readFileSync(file, 'utf8'));
+    const key = crypto.scryptSync(normalized, Buffer.from(box.salt, 'base64'), 32);
+    const d = crypto.createDecipheriv('aes-256-gcm', key, Buffer.from(box.iv, 'base64'));
+    d.setAuthTag(Buffer.from(box.tag, 'base64'));
+    return JSON.parse(Buffer.concat([d.update(Buffer.from(box.data, 'base64')), d.final()]).toString('utf8'));
+  } catch {
+    return null;
+  }
+}
+
 // ---------------------------------------------------------------------------
 // Online signing
 // ---------------------------------------------------------------------------
@@ -787,6 +806,13 @@ async function handleApi(req, res, url) {
 
   if (parts[0] === 'job-money' && method === 'GET') {
     return send(res, 200, jobMoney());
+  }
+  if (parts[0] === 'load-starter' && method === 'POST') {
+    const ip = req.socket.remoteAddress;
+    if (tooManyFailures(ip)) throw httpError(429, 'Too many tries. Wait 15 minutes.');
+    const data = unlockStarter((await readBody(req)).code);
+    if (!data) { noteFailure(ip); throw httpError(400, "That code didn't work. Check it and try again."); }
+    return send(res, 200, importData(data));
   }
   if (parts[0] === 'import' && method === 'POST') {
     return send(res, 200, importData(await readBody(req)));

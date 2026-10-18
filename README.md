@@ -66,6 +66,9 @@ Tip: on your phone, open the site and choose **Add to Home Screen** so it works 
 
 ## Loading your existing jobs
 
+**Easiest way:** on the Home screen (or in Settings), type the code from your Claude chat into **Load your jobs**. Your Workshop notes ship inside the app *encrypted*, so nobody can read them from the public repository without that code.
+
+**Or:** 
 Go to **Settings → Import** and pick a `.json` file: either a backup made by this app, or a starter file. Importing only adds records. It never deletes anything. Importing the same file again won't double anything, and it fills in any missing phone numbers.
 
 Customer and job details are kept out of this repository on purpose, because the repository is public. Keep your starter or backup files somewhere private.

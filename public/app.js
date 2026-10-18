@@ -824,6 +824,30 @@ function shareSignLink(c, est, link, text, after) {
   });
 }
 
+// "Load my jobs" box: unlocks the starter data with the code the owners were given.
+function starterCard() {
+  return `<form class="card starter" id="starter">
+    <h3>Load your jobs</h3>
+    <p class="muted" style="margin:.2rem 0 .6rem">Type the code from your Claude chat to load your customers, jobs, money, and schedule from The Mayo's Workshop notes. You only do this once.</p>
+    <div class="row"><input name="code" placeholder="MAYO-XXXX-XXXX-XXXX-XXXX" autocapitalize="characters" autocomplete="off" required style="flex:1;min-width:200px;margin:0">
+    <button class="btn primary">Load</button></div>
+  </form>`;
+}
+function wireStarter(after) {
+  const f = $('#starter');
+  if (!f) return;
+  f.onsubmit = async (e) => {
+    e.preventDefault();
+    try {
+      const r = await api('POST', '/load-starter', { code: f.elements.code.value });
+      customersCache = null; jobsCache = null;
+      const added = Object.entries(r.counts).filter(([, n]) => n).map(([k, n]) => `${n} ${k}`).join(', ');
+      toast(added ? 'Loaded: ' + added : 'Already loaded');
+      after();
+    } catch (err) { alert(err.message); }
+  };
+}
+
 // ---------------------------------------------------------------------------
 // Pages
 // ---------------------------------------------------------------------------
@@ -870,6 +894,7 @@ async function pageHome() {
       </div>
       ${Object.keys(subsDue).length ? `<p class="muted" style="margin:.6rem 0 0">Subs due at finish: ${Object.entries(subsDue).map(([k, v]) => `${esc(personLabel(k))} ${money(v)}`).join(' · ')}</p>` : ''}
     </div>
+    ${!jobsCache.length ? starterCard() : ''}
     <div class="spread"><h3 style="margin:0">Current jobs</h3><a href="#/jobs">All jobs</a></div>
     <div class="grid" style="margin-bottom:1rem">${current.map((j) => jobCard(j, s.jobMoney)).join('') || '<p class="empty">No current jobs. <a href="#/jobs">Add one</a>.</p>'}</div>
     <div class="grid">
@@ -902,6 +927,7 @@ async function pageHome() {
         <p class="muted" style="margin-top:.5rem">${s.customerCount} customers on file</p>
       </div>
     </div>`;
+  wireStarter(pageHome);
   wireTodos($('#home-todos'), s.todos, pageHome);
   wireEvents($('#home-events'), s.events, pageHome);
   $('#q-todo').onclick = () => editTodo({}, pageHome);
@@ -1583,6 +1609,7 @@ async function pageSettings() {
       <p class="muted">Download everything (customers, money, estimates, etc.) as one file. Do this every so often and keep it somewhere safe. Uploaded files are in the server's <code>data/uploads</code> folder.</p>
       <a class="btn" href="/api/backup">Download backup</a>
     </div>
+    ${starterCard()}
     <form class="card" id="import">
       <h3>Import</h3>
       <p class="muted">Load a backup file or a starter file. This only adds records, it never deletes anything.</p>
@@ -1590,6 +1617,7 @@ async function pageSettings() {
       <button class="btn primary" style="margin-top:.6rem">Import</button>
     </form>`;
   showVersion($('#app-version'));
+  wireStarter(() => {});
   $('#import').onsubmit = async (e) => {
     e.preventDefault();
     const file = e.target.elements.file.files[0];
