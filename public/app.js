@@ -894,7 +894,7 @@ async function pageHome() {
       </div>
       ${Object.keys(subsDue).length ? `<p class="muted" style="margin:.6rem 0 0">Subs due at finish: ${Object.entries(subsDue).map(([k, v]) => `${esc(personLabel(k))} ${money(v)}`).join(' · ')}</p>` : ''}
     </div>
-    ${!jobsCache.length ? starterCard() : ''}
+    ${!s.starterLoaded ? starterCard() : ''}
     <div class="spread"><h3 style="margin:0">Current jobs</h3><a href="#/jobs">All jobs</a></div>
     <div class="grid" style="margin-bottom:1rem">${current.map((j) => jobCard(j, s.jobMoney)).join('') || '<p class="empty">No current jobs. <a href="#/jobs">Add one</a>.</p>'}</div>
     <div class="grid">
@@ -1724,6 +1724,10 @@ $('#login-form').addEventListener('submit', async (e) => {
 window.addEventListener('hashchange', route);
 
 showVersion($('#login-version'));
+// A plain link like /load/MAYO-XXXX-… works too (some phones drop the part after #).
+if (location.pathname.startsWith('/load/')) {
+  history.replaceState(null, '', '/#/load?code=' + encodeURIComponent(location.pathname.slice(6)));
+}
 (async function init() {
   try { const last = localStorage.getItem('mayo-user'); if (last) $('#login-form [name=username]').value = last; } catch {}
   try {

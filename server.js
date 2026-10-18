@@ -405,6 +405,7 @@ function summary() {
     events: db.prepare('SELECT * FROM events WHERE date >= ? AND date <= ? ORDER BY date, start_time IS NULL, start_time').all(t, weekAheadStr),
     openEstimates: db.prepare("SELECT * FROM estimates WHERE status IN ('Draft','Sent') ORDER BY id DESC").all(),
     customerCount: db.prepare('SELECT COUNT(*) AS n FROM customers').get().n,
+    starterLoaded: !!db.prepare("SELECT 1 FROM settings WHERE key = 'starter_loaded'").get(),
     jobs: db.prepare(`SELECT * FROM jobs WHERE status IN ('In Progress','Scheduled','Estimate Pending') ORDER BY ${JOB_ORDER}`).all(),
     jobMoney: jobMoney(),
   };
@@ -701,11 +702,13 @@ const MIME = {
 };
 
 function serveStatic(req, res, pathname) {
-  let rel = pathname === '/' ? '/index.html' : /^\/sign\/[a-f0-9]+$/.test(pathname) ? '/sign.html' : pathname;
+  let rel = pathname === '/' || /^\/load\/[\w-]+$/.test(pathname) ? '/index.html' : /^\/sign\/[a-f0-9]+$/.test(pathname) ? '/sign.html' : pathname;
   const file = path.resolve(PUBLIC_DIR, '.' + decodeURIComponent(rel));
   if (!file.startsWith(PUBLIC_DIR + path.sep)) return send(res, 404, 'Not found');
   fs.readFile(file, (err, data) => {
     if (err) return send(res, 404, 'Not found');
+    // Stamp the version on script/style links so phones never keep an old copy after an update.
+    if (file.endsWith('.html')) data = data.toString('utf8').replace(/(\/(?:app|sign)\.js|\/style\.css)"/g, `$1?v=${VERSION}"`);
     send(res, 200, data, { 'Content-Type': MIME[path.extname(file)] || 'application/octet-stream', 'Cache-Control': 'no-cache' });
   });
 }
@@ -812,7 +815,9 @@ async function handleApi(req, res, url) {
     if (tooManyFailures(ip)) throw httpError(429, 'Too many tries. Wait 15 minutes.');
     const data = unlockStarter((await readBody(req)).code);
     if (!data) { noteFailure(ip); throw httpError(400, "That code didn't work. Check it and try again."); }
-    return send(res, 200, importData(data));
+    const result = importData(data);
+    db.prepare("INSERT OR REPLACE INTO settings (key, value) VALUES ('starter_loaded', ?)").run(new Date().toISOString());
+    return send(res, 200, result);
   }
   if (parts[0] === 'import' && method === 'POST') {
     return send(res, 200, importData(await readBody(req)));
