@@ -1656,6 +1656,17 @@ async function route() {
   });
   window.scrollTo(0, 0);
   try {
+    if (section === 'load') {
+      // One-tap link: #/load?code=MAYO-… loads the starter data, then goes home.
+      try {
+        const r = await api('POST', '/load-starter', { code: query.get('code') });
+        customersCache = null; jobsCache = null;
+        const added = Object.entries(r.counts).filter(([, n]) => n).map(([k, n]) => `${n} ${k}`).join(', ');
+        toast(added ? 'Loaded: ' + added : 'Already loaded');
+      } catch (err) { alert(err.message); }
+      history.replaceState(null, '', '#/');
+      return route();
+    }
     if (!section) await pageHome();
     else if (section === 'jobs' && parts[1]) await pageJob(parts[1]);
     else if (section === 'jobs') await pageJobs();
