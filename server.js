@@ -241,6 +241,14 @@ for (const t of db.prepare("SELECT id, body FROM templates WHERE body LIKE '%[PA
     .replace('including the Right to Cancel and the Notice to Owner, and agree', 'including the Right to Cancel, and agree');
   db.prepare('UPDATE templates SET body = ? WHERE id = ?').run(body, t.id);
 }
+// Signature lines are drawn by the app (boxes on print, real signatures online), not underlines.
+for (const t of db.prepare("SELECT id, body FROM templates WHERE body LIKE '%Signature: ______________________________%'").all()) {
+  const body = t.body
+    .replace(/\nSignature: _{30}   Date: _{12}\n/g, '\n')
+    .replace(/(By: \{\{contractor_signer\}\})   Signature: _{30}   Date: _{12}/g, '$1')
+    .replace(/\n{3,}/g, '\n\n');
+  db.prepare('UPDATE templates SET body = ? WHERE id = ?').run(body, t.id);
+}
 // The first version's one-page starter is replaced by the agreement above (only if nobody edited it).
 db.prepare("DELETE FROM templates WHERE name = 'Construction Agreement (starter)' AND body LIKE '%Payments not received within 15 days of the due date may be subject to a late charge.%'").run();
 
@@ -498,9 +506,14 @@ function unlockStarter(code) {
 //   TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN, TWILIO_FROM_NUMBER
 //   TEXT_FORWARD_TO (optional): a cell number that customer replies are forwarded to
 // ---------------------------------------------------------------------------
+//   TWILIO_MESSAGING_SERVICE_SID (optional): a Twilio Messaging Service with an RCS sender,
+//     so iPhones (iOS 18+) see "Mayo's Construction" with the logo; others get a normal text.
 function textingConfig() {
-  const { TWILIO_ACCOUNT_SID: sid, TWILIO_AUTH_TOKEN: token, TWILIO_FROM_NUMBER: from } = process.env;
-  return sid && token && from ? { sid, token, from: toE164(from) } : null;
+  const { TWILIO_ACCOUNT_SID: sid, TWILIO_AUTH_TOKEN: token, TWILIO_FROM_NUMBER: from, TWILIO_MESSAGING_SERVICE_SID: service } = process.env;
+  return sid && token && (from || service) ? { sid, token, from: toE164(from), service } : null;
+}
+function senderLabel(cfg) {
+  return cfg.service ? `${bizInfo().name}${cfg.from ? ' / ' + prettyPhone(cfg.from) : ''}` : prettyPhone(cfg.from);
 }
 function toE164(p) {
   const d = String(p || '').replace(/\D/g, '');
@@ -530,7 +543,7 @@ async function sendText(body, user) {
       Authorization: 'Basic ' + Buffer.from(`${cfg.sid}:${cfg.token}`).toString('base64'),
       'Content-Type': 'application/x-www-form-urlencoded',
     },
-    body: new URLSearchParams({ To: to, From: cfg.from, Body: text }),
+    body: new URLSearchParams(cfg.service ? { To: to, MessagingServiceSid: cfg.service, Body: text } : { To: to, From: cfg.from, Body: text }),
   });
   const out = await r.json().catch(() => ({}));
   if (!r.ok) throw httpError(502, 'Text not sent: ' + (out.message || `Twilio error ${r.status}`));
@@ -538,7 +551,7 @@ async function sendText(body, user) {
     job_id: body.job_id, customer_id: body.customer_id, kind: body.kind, channel: 'sms', body: text, sent_by: user.name,
   });
   db.prepare("UPDATE messages SET to_number = ? WHERE id = (SELECT MAX(id) FROM messages)").run(to);
-  return { ok: true, from: prettyPhone(cfg.from) };
+  return { ok: true, from: senderLabel(cfg) };
 }
 
 // Twilio calls this when a customer texts back. We log it on their job and
@@ -855,7 +868,7 @@ async function handleApi(req, res, url) {
   }
   if (parts[0] === 'settings') {
     const cfg = textingConfig();
-    const texting = { texting_enabled: !!cfg, texting_number: cfg ? prettyPhone(cfg.from) : '', texting_forward: !!process.env.TEXT_FORWARD_TO };
+    const texting = { texting_enabled: !!cfg, texting_number: cfg ? senderLabel(cfg) : '', texting_forward: !!process.env.TEXT_FORWARD_TO };
     if (method === 'GET') return send(res, 200, { ...getSettings(), ...texting });
     if (method === 'PUT') return send(res, 200, { ...saveSettings(await readBody(req)), ...texting });
   }

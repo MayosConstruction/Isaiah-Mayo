@@ -86,14 +86,10 @@ This Agreement, the estimate above, and any signed Change Orders are the entire 
 19. OWNER'S RIGHT TO CANCEL
 If you signed this Agreement at your home or anywhere other than Contractor's place of business, you may cancel it without any penalty or obligation within three (3) business days after signing — by midnight on {{cancel_by_date}}. To cancel, send a signed and dated written notice (a text or email is fine) to {{business_name}}, {{business_phone}}, {{business_email}}. If you cancel, any payment you made will be returned within 10 business days.
 
-
 By signing below, Owner confirms they have read this entire Agreement, including the Right to Cancel, and agree to its terms.
 
 OWNER: {{customer_name}}
 
-Signature: ______________________________   Date: ____________
-
-
 CONTRACTOR: {{business_name}}
 
-By: {{contractor_signer}}   Signature: ______________________________   Date: ____________
+By: {{contractor_signer}}

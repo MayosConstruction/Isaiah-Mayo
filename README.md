@@ -97,8 +97,9 @@ With these set on Render (**Environment** tab), texts send straight from the app
 | `TWILIO_AUTH_TOKEN` | From your Twilio console |
 | `TWILIO_FROM_NUMBER` | The number you bought in Twilio |
 | `TEXT_FORWARD_TO` | Optional: your cell, to get customer replies forwarded |
+| `TWILIO_MESSAGING_SERVICE_SID` | Optional: a Messaging Service with an approved **RCS sender**, so iPhones (iOS 18+) show **Mayo's Construction with your logo** and a verified check. Phones without RCS get a normal text from your number. |
 
-In Twilio, set the number's **"A message comes in"** webhook to `https://<your-app>.onrender.com/twilio/incoming` (HTTP POST). Then replies are saved on the job and forwarded to `TEXT_FORWARD_TO`. The first text to each customer automatically adds "Reply STOP to opt out." Without these settings, texting falls back to opening your phone's Messages app.
+In Twilio, set the number's **"A message comes in"** webhook to `https://<your-app>.onrender.com/twilio/incoming` (HTTP POST). Then replies are saved on the job and forwarded to `TEXT_FORWARD_TO`. The first text to each customer automatically adds "Reply STOP to opt out." The app never opens your phone's Messages app. Until texting is connected, you can copy a text or email it.
 
 ## How the money works
 
@@ -125,6 +126,10 @@ The app comes with two templates:
 
 Fill-in blanks you can use in any template:
 `{{customer_name}}` `{{customer_phone}}` `{{customer_email}}` `{{job_address}}` `{{date}}` `{{start_date}}` `{{finish_date}}` `{{estimate_number}}` `{{estimate_items}}` `{{estimate_notes}}` `{{estimate_total}}` `{{deposit_percent}}` `{{deposit_amount}}` `{{balance_amount}}` `{{business_name}}` `{{business_phone}}` `{{business_email}}` `{{license_number}}` `{{insurance}}` `{{warranty_years}}` `{{late_fee}}` `{{exclusions}}` `{{cancel_by_date}}` `{{contractor_signer}}` `{{original_price}}` `{{change_amount}}` `{{new_total}}` `{{days_added}}`
+
+## Fill-in-the-blank contracts
+
+When you create or send a contract, anything the app can't fill in from the customer, job, estimate, or Settings (like a missing email) shows as a **Fill in the blanks** box. Type the answer and it drops into the agreement. Anything left empty prints as N/A, after asking you first. A customer email or phone typed in is saved to their record. Printed contracts get signature boxes instead of underlines, and online signing adds the real signatures.
 
 ## Checking which version is running
 

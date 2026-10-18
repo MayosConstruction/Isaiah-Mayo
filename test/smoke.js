@@ -188,6 +188,13 @@ const { server } = require('../server');
   const twiml = await good.text();
   assert.ok(twiml.includes('<Message to="+15015550001">Reply from Jane Smith: See you then!</Message>'), twiml);
   assert.ok((await call('GET', `/messages?job_id=${job.id}`)).some((mm) => mm.channel === 'sms-in' && mm.body === 'See you then!'));
+  // With an RCS-enabled Messaging Service, texts go out under the business name
+  process.env.TWILIO_MESSAGING_SERVICE_SID = 'MG123';
+  const rcs = await call('POST', '/send-text', { to: '5015550100', body: 'Branded' });
+  assert.strictEqual(rcs.from, "Mayo's Construction / (501) 555-0000");
+  assert.strictEqual(sentToTwilio[2].body.get('MessagingServiceSid'), 'MG123');
+  assert.strictEqual(sentToTwilio[2].body.get('From'), null);
+  delete process.env.TWILIO_MESSAGING_SERVICE_SID;
   fakeTwilio.close();
 
   const backup = await call('GET', '/backup');

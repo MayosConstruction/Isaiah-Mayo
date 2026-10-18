@@ -125,6 +125,14 @@ main { max-width: 1000px; margin: 0 auto; padding: 1rem; }
 
 .msg-in { background: #eef6f0; }
 
+/* Contract blanks & signature boxes */
+mark.blank { background: #fff3c4; color: #7a5200; border-radius: 4px; padding: 0 .3rem; font-family: var(--display); font-weight: 700; }
+.blanks { border: 2px dashed #e0b84a; background: #fffbea; border-radius: 8px; padding: .7rem .8rem; margin: .4rem 0 .8rem; }
+.sig-grid { display: grid; grid-template-columns: 3fr 1fr; gap: 1rem 1rem; margin-top: 2rem; page-break-inside: avoid; }
+.sig-box { border: 1.5px solid var(--ink); border-radius: 6px; padding: .3rem .5rem; }
+.sig-space { height: 3rem; }
+.sig-label { font-size: .8rem; color: var(--muted); border-top: 1px solid var(--border); padding-top: .2rem; }
+
 /* Forms */
 label { display: block; font-size: .88rem; color: var(--muted); margin-bottom: .7rem; }
 input, select, textarea {

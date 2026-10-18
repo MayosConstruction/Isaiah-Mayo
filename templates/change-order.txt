@@ -24,7 +24,6 @@ Payment for this Change Order is due with the next scheduled payment (or at comp
 By signing, Owner authorizes Contractor to perform the change described above for the price shown.
 
 OWNER: {{customer_name}}
-Signature: ______________________________   Date: ____________
 
 CONTRACTOR: {{business_name}}
-By: {{contractor_signer}}   Signature: ______________________________   Date: ____________
+By: {{contractor_signer}}

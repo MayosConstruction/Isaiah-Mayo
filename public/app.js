@@ -676,7 +676,6 @@ function phoneDigits(p) {
   const d = String(p || '').replace(/\D/g, '');
   return d.length === 10 ? '+1' + d : d ? '+' + d : '';
 }
-function smsHref(phone, body) { return `sms:${phoneDigits(phone)}?&body=${encodeURIComponent(body)}`; }
 function mailHref(email, subject, body) { return `mailto:${encodeURIComponent(email || '')}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`; }
 function firstName(name) { return String(name || '').trim().split(/\s+/)[0] || 'there'; }
 function crewText(crew) {
@@ -729,10 +728,10 @@ async function textCustomer(ctx, after) {
       <div class="modal-actions">
         <button type="button" class="btn left" data-close>Cancel</button>
         ${c.email ? '<a class="btn" id="send-email" href="#">Email</a>' : ''}
-        <a class="btn primary" id="send-text" href="#">${SETTINGS.texting_enabled ? 'Send text' : 'Text from my phone'}</a>
+        ${SETTINGS.texting_enabled ? '<a class="btn primary" id="send-text" href="#">Send text</a>' : '<button type="button" class="btn" id="copy-text">Copy text</button>'}
       </div>
-      ${SETTINGS.texting_enabled ? `<p class="muted" style="font-size:.85rem;margin:.4rem 0 0">Sends from your business number ${esc(SETTINGS.texting_number)}.</p>`
-        : '<p class="muted" style="font-size:.85rem;margin:.4rem 0 0">Business texting isn\'t set up yet, so this opens your phone\'s Messages app. See Settings → Business texting.</p>'}
+      ${SETTINGS.texting_enabled ? `<p class="muted" style="font-size:.85rem;margin:.4rem 0 0">Sends as ${esc(SETTINGS.texting_number)}.</p>`
+        : '<p class="error" style="font-size:.85rem;margin:.4rem 0 0">Business texting isn\'t connected yet, so texts can\'t be sent from the app. See Settings → Business texting.</p>'}
     </form>`, {
     onReady: (body) => {
       const f = $('form', body);
@@ -770,12 +769,15 @@ async function textCustomer(ctx, after) {
           } catch (err) { alert(err.message); } finally { btn.style.pointerEvents = ''; }
           return;
         }
-        e.currentTarget.href = channel === 'text' ? smsHref(c.phone, text) : mailHref(c.email, "Mayo's Construction", text);
+        e.currentTarget.href = mailHref(c.email, "Mayo's Construction", text);
         logMessage({ job_id: job.id, customer_id: c.id, kind: f.kind.value, channel, body: text });
         remember();
         setTimeout(() => { $('#modal').close(); after && after(); }, 600);
       };
-      $('#send-text', body).addEventListener('click', send('text'));
+      if (SETTINGS.texting_enabled) $('#send-text', body).addEventListener('click', send('text'));
+      else $('#copy-text', body).addEventListener('click', async () => {
+        try { await navigator.clipboard.writeText(f.body.value); toast('Text copied'); } catch { prompt('Copy this text:', f.body.value); }
+      });
       if (c.email) $('#send-email', body).addEventListener('click', send('email'));
     },
   });
@@ -797,6 +799,7 @@ async function sendForSignature(est, after) {
   const total = estimateTotals(est).total;
   const isCO = est.kind === 'change_order';
   const defaultTpl = (templates.find((t) => (isCO ? /change order/i : /residential/i).test(t.name)) || templates[0] || {}).id;
+  const extra = {};
   if (!SETTINGS.license_number && !confirm('Your contractor license number is not filled in yet (Settings → Business info). Send anyway?')) return;
   openModal(`
     <form>
@@ -804,14 +807,30 @@ async function sendForSignature(est, after) {
       <p class="muted">They get a link, review the estimate and agreement on their phone, and sign with their finger. The signed copy saves to their customer file automatically.</p>
       <label>Agreement to include <select name="tpl"><option value="">Estimate only (no agreement)</option>
         ${templates.map((t) => `<option value="${t.id}" ${t.id === defaultTpl ? 'selected' : ''}>${esc(t.name)}</option>`).join('')}</select></label>
+      <div id="send-blanks"></div>
       <div class="modal-actions">
         <button type="button" class="btn" data-close>Cancel</button>
         <button type="submit" class="btn primary">Create link</button>
       </div>
     </form>`, {
+    onReady: (body) => {
+      const showBlanks = () => {
+        const tpl = templates.find((t) => t.id === Number($('[name=tpl]', body).value));
+        const box = $('#send-blanks', body);
+        box.innerHTML = tpl ? blankInputs(missingBlanks(tpl.body, c, est, job), extra) : '';
+        wireBlankInputs(box, extra, () => {});
+      };
+      $('[name=tpl]', body).addEventListener('change', showBlanks);
+      showBlanks();
+    },
     onSubmit: async (d) => {
       const tpl = templates.find((t) => t.id === Number(d.tpl));
-      const saved = await api('POST', `/estimates/${est.id}/send`, { contract_text: tpl ? fillTemplate(tpl.body, c, est, job) : '' });
+      if (tpl) {
+        const left = missingBlanks(tpl.body, c, est, job, extra);
+        if (left.length && !confirm(`Still empty: ${left.map((k) => BLANK_LABELS[k] || k).join(', ')}.\n\nSend with ${left.length === 1 ? 'it' : 'them'} as N/A?`)) throw new Error('Fill in the blanks, then tap Create link again.');
+        saveBlanksToCustomer(c, extra);
+      }
+      const saved = await api('POST', `/estimates/${est.id}/send`, { contract_text: tpl ? fillTemplate(tpl.body, c, est, job, extra) : '' });
       const link = `${location.origin}/sign/${saved.sign_token}`;
       const text = isCO
         ? `Hi ${firstName(c.name)}, this is ${me.name} with ${BIZ.name}. Here's change order ${est.number} for ${job?.address || 'your project'} (${total < 0 ? 'credit of ' : ''}${money(Math.abs(total))}). Please review and sign here: ${link}`
@@ -824,10 +843,10 @@ function shareSignLink(c, est, link, text, after) {
   openModal(`
     <div>
       <h2>Link ready</h2>
-      <p class="muted">${SETTINGS.texting_enabled ? `Texts go out from your business number ${esc(SETTINGS.texting_number)}.` : 'Send it from your phone:'}</p>
+      <p class="muted">${SETTINGS.texting_enabled ? `Texts go out as ${esc(SETTINGS.texting_number)}.` : 'Business texting isn\'t connected yet. You can email it or copy the link.'}</p>
       <textarea id="share-text" style="min-height:120px">${esc(text)}</textarea>
       <div class="row" style="margin-top:.6rem">
-        ${c.phone ? '<a class="btn primary" id="share-sms" href="#">Send by text</a>' : ''}
+        ${c.phone && SETTINGS.texting_enabled ? '<a class="btn primary" id="share-sms" href="#">Send by text</a>' : ''}
         ${c.email ? '<a class="btn" id="share-email" href="#">Send by email</a>' : ''}
         <button class="btn" id="share-copy" type="button">Copy link</button>
         <button class="btn" type="button" data-close>Done</button>
@@ -837,14 +856,10 @@ function shareSignLink(c, est, link, text, after) {
     onReady: (body) => {
       const txt = () => $('#share-text', body).value;
       const log = (channel) => logMessage({ job_id: est.job_id, customer_id: c.id, kind: 'Estimate to sign', channel, body: txt() });
-      if (c.phone) $('#share-sms', body).addEventListener('click', async (e) => {
-        if (SETTINGS.texting_enabled) {
-          e.preventDefault();
-          try { await sendBusinessText({ to: c.phone, body: txt(), job_id: est.job_id, customer_id: c.id, kind: 'Estimate to sign' }); $('#modal').close(); }
-          catch (err) { alert(err.message); }
-          return;
-        }
-        e.currentTarget.href = smsHref(c.phone, txt()); log('text');
+      if (c.phone && SETTINGS.texting_enabled) $('#share-sms', body).addEventListener('click', async (e) => {
+        e.preventDefault();
+        try { await sendBusinessText({ to: c.phone, body: txt(), job_id: est.job_id, customer_id: c.id, kind: 'Estimate to sign' }); $('#modal').close(); }
+        catch (err) { alert(err.message); }
       });
       if (c.email) $('#share-email', body).addEventListener('click', (e) => { e.currentTarget.href = mailHref(c.email, `Your estimate from Mayo's Construction (${est.number})`, txt()); log('email'); });
       $('#share-copy', body).addEventListener('click', async () => {
@@ -1099,7 +1114,7 @@ async function pageCustomer(id) {
     <p><a href="#/customers">‹ All customers</a></p>
     <div class="card">
       <div class="spread"><h2 style="margin:0">${esc(c.name)}</h2><button class="btn" id="edit">Edit</button></div>
-      ${c.phone ? `<div>📞 ${esc(c.phone)} &nbsp; <a href="tel:${esc(tel)}">Call</a> · <a href="sms:${esc(tel)}">Text</a></div>` : ''}
+      ${c.phone ? `<div>📞 ${esc(c.phone)} &nbsp; <a href="tel:${esc(tel)}">Call</a></div>` : ''}
       ${c.email ? `<div>✉️ <a href="mailto:${esc(c.email)}">${esc(c.email)}</a></div>` : ''}
       ${c.address ? `<div>📍 <a href="https://maps.google.com/?q=${encodeURIComponent(c.address)}" target="_blank" rel="noopener">${esc(c.address)}</a></div>` : ''}
       ${c.notes ? `<p class="muted" style="white-space:pre-wrap">${esc(c.notes)}</p>` : ''}
@@ -1319,7 +1334,7 @@ async function pageEstimatePrint(id) {
       ${est.notes ? `<p style="white-space:pre-wrap;margin-top:1.5rem">${esc(est.notes)}</p>` : ''}
       ${est.signed_at ? `<div style="margin-top:2rem"><img src="${esc(est.signature)}" alt="Signature" style="max-width:280px;border-bottom:1px solid var(--ink)"><br>
         Signed electronically by ${esc(est.signed_name)} on ${fmtLongDate(est.signed_at.slice(0, 10))}</div>`
-        : '<p style="margin-top:2.5rem">Accepted by: ______________________________ &nbsp; Date: ____________</p>'}
+        : signatureBoxes(c.name)}
     </div>`;
 }
 
@@ -1472,7 +1487,58 @@ async function pageTemplateEdit(id) {
   };
 }
 
-function fillTemplate(body, c, est, job) {
+// What each blank is called when it has to be typed in.
+const BLANK_LABELS = {
+  customer_name: "Customer's name", customer_address: "Customer's address", customer_phone: "Customer's phone", customer_email: "Customer's email",
+  job_title: 'Job', job_address: 'Project address', job_scope: 'Scope of work', job_price: 'Job price',
+  start_date: 'Start date', finish_date: 'Finish date', estimate_number: 'Agreement number', estimate_items: 'Scope of work',
+  estimate_total: 'Contract price', deposit_percent: 'Deposit %', deposit_amount: 'Deposit amount', balance_amount: 'Balance amount',
+  business_name: 'Business name', business_phone: 'Business phone', business_email: 'Business email', business_city: 'Business city',
+  license_number: 'Your contractor license #', insurance: 'Insurance carrier / policy #', warranty_years: 'Warranty (years)', late_fee: 'Late fee',
+  exclusions: 'Not included', contractor_signer: 'Signed for Mayo\'s by', original_price: 'Price before change', change_amount: 'Change amount',
+  new_total: 'New price', days_added: 'Days added',
+};
+const DATE_BLANKS = ['start_date', 'finish_date'];
+const LONG_BLANKS = ['job_scope', 'estimate_items', 'exclusions'];
+// Blanks that can simply be left out when empty.
+const OPTIONAL_BLANKS = ['estimate_notes'];
+
+// Placeholders in a template that nothing in the app can fill in.
+function missingBlanks(body, c, est, job, extra = {}) {
+  const values = { ...templateValues(c, est, job), ...extra };
+  const keys = [...String(body || '').matchAll(/\{\{\s*(\w+)\s*\}\}/g)].map((m) => m[1]);
+  return [...new Set(keys)].filter((k) => !values[k] && !OPTIONAL_BLANKS.includes(k));
+}
+// The "Fill in the blanks" boxes shown before sending or printing.
+function blankInputs(keys, extra) {
+  if (!keys.length) return '';
+  return `<div class="blanks"><h3 style="margin:0 0 .3rem">Fill in the blanks</h3>
+    <p class="muted" style="font-size:.85rem;margin:0 0 .5rem">These aren't saved anywhere in the app yet. Type them in, or leave one empty and it will say N/A.</p>
+    <div class="form-grid">${keys.map((k) => LONG_BLANKS.includes(k)
+      ? `<label style="grid-column:1/-1">${esc(BLANK_LABELS[k] || k)} <textarea data-blank="${k}">${esc(extra['_raw_' + k] || '')}</textarea></label>`
+      : `<label>${esc(BLANK_LABELS[k] || k)} <input data-blank="${k}" type="${DATE_BLANKS.includes(k) ? 'date' : 'text'}" value="${esc(extra['_raw_' + k] || '')}"></label>`).join('')}</div></div>`;
+}
+function wireBlankInputs(root, extra, onChange) {
+  $$('[data-blank]', root).forEach((el) => el.addEventListener('input', () => {
+    const k = el.dataset.blank;
+    extra['_raw_' + k] = el.value;
+    extra[k] = DATE_BLANKS.includes(k) && el.value ? fmtLongDate(el.value) : el.value.trim();
+    onChange();
+  }));
+}
+
+function fillTemplate(body, c, est, job, extra = {}, { highlight = false } = {}) {
+  const values = { ...templateValues(c, est, job) };
+  for (const [k, v] of Object.entries(extra)) if (v && !k.startsWith('_raw_')) values[k] = v;
+  const out = body.replace(/\{\{\s*(\w+)\s*\}\}/g, (m, k) => (values[k] ? values[k]
+    : OPTIONAL_BLANKS.includes(k) ? '' : highlight ? `\u0001${k}\u0002` : 'N/A'))
+    .replace(/\n{3,}/g, '\n\n');
+  if (!highlight) return out;
+  // On screen, empty blanks show as highlighted labels instead of lines.
+  return esc(out).replace(/\u0001(\w+)\u0002/g, (m, k) => `<mark class="blank">${esc(BLANK_LABELS[k] || k)}</mark>`);
+}
+
+function templateValues(c, est, job) {
   const t = est ? estimateTotals(est) : null;
   const scope = job ? checklist(job.scope).map((i) => `  • ${i.text}`).join('\n') : '';
   const values = {
@@ -1510,9 +1576,25 @@ function fillTemplate(body, c, est, job) {
     values.change_amount = (t.total < 0 ? '−' : '+') + money(Math.abs(t.total));
     values.new_total = money(before + t.total);
   }
-  // Blanks left empty become a line to fill in by hand, except notes, which just disappear.
-  return body.replace(/\{\{\s*(\w+)\s*\}\}/g, (m, k) => (values[k] ? values[k] : k === 'estimate_notes' ? '' : '____________________'))
-    .replace(/\n{3,}/g, '\n\n');
+  return values;
+}
+
+// Signature boxes for printed contracts and estimates (no underlines).
+function signatureBoxes(ownerName) {
+  return `<div class="sig-grid">
+    <div class="sig-box"><div class="sig-space"></div><div class="sig-label">Owner signature${ownerName ? ' · ' + esc(ownerName) : ''}</div></div>
+    <div class="sig-box small"><div class="sig-space"></div><div class="sig-label">Date</div></div>
+    <div class="sig-box"><div class="sig-space"></div><div class="sig-label">${esc(BIZ.name)} · ${esc(me ? me.name + ' Mayo' : '')}</div></div>
+    <div class="sig-box small"><div class="sig-space"></div><div class="sig-label">Date</div></div>
+  </div>`;
+}
+// If the customer's email/phone was typed into a blank, keep it on their record.
+function saveBlanksToCustomer(c, extra) {
+  if (!c) return;
+  const upd = {};
+  if (!c.email && extra.customer_email) upd.email = extra.customer_email;
+  if (!c.phone && extra.customer_phone) upd.phone = extra.customer_phone;
+  if (Object.keys(upd).length) api('PUT', `/customers/${c.id}`, upd).then(() => customers(true)).catch(() => {});
 }
 
 async function pageContractNew(query) {
@@ -1539,7 +1621,8 @@ async function pageContractNew(query) {
           <label>Job (fills in address, dates & scope) <select id="c-job"></select></label>
           <label>Estimate (fills in price & work) <select id="c-est"></select></label>
         </div>
-        <p class="muted" style="font-size:.88rem">Tip: you can edit the text below before printing. Blank lines (____) are for filling in by hand.</p>
+        <div id="blanks"></div>
+        <p class="muted" style="font-size:.88rem">You can also edit the wording right in the agreement below before printing.</p>
         <div class="row">
           <button class="btn primary" id="print">Print / Save as PDF</button>
           <button class="btn" id="save">Save copy to customer's file</button>
@@ -1552,6 +1635,7 @@ async function pageContractNew(query) {
         ${letterhead()}
       </div>
       <div class="contract-text" id="text" contenteditable="true" spellcheck="true"></div>
+      <div id="sigs"></div>
     </div>`;
 
   const estSelect = $('#c-est');
@@ -1566,12 +1650,35 @@ async function pageContractNew(query) {
     if (state.job && !mine.some((j) => j.id === state.job)) state.job = null;
     $('#c-job').innerHTML = jobOptions(state.job, mine);
   };
+  const extra = {};
+  const current = () => ({
+    tpl: templates.find((t) => t.id === state.template),
+    c: customersCache.find((x) => x.id === state.customer),
+    est: estimates.find((e) => e.id === state.estimate),
+    job: jobsCache.find((j) => j.id === state.job),
+  });
+  const renderText = () => {
+    const { tpl, c, est, job } = current();
+    if (!tpl) { $('#text').textContent = 'No template yet — create one on the Contracts page.'; return; }
+    $('#text').innerHTML = fillTemplate(tpl.body, c, est, job, extra, { highlight: true });
+    $('#sigs').innerHTML = signatureBoxes(c?.name);
+  };
   const render = () => {
-    const tpl = templates.find((t) => t.id === state.template);
-    const c = customersCache.find((x) => x.id === state.customer);
-    const est = estimates.find((e) => e.id === state.estimate);
-    const job = jobsCache.find((j) => j.id === state.job);
-    $('#text').textContent = tpl ? fillTemplate(tpl.body, c, est, job) : 'No template yet — create one on the Contracts page.';
+    const { tpl, c, est, job } = current();
+    const keys = tpl ? missingBlanks(tpl.body, c, est, job) : [];
+    $('#blanks').innerHTML = blankInputs(keys, extra);
+    wireBlankInputs($('#blanks'), extra, renderText);
+    renderText();
+  };
+  // Before printing or saving, any blank still empty becomes N/A (after asking).
+  const finalize = () => {
+    const { tpl, c, est, job } = current();
+    if (!tpl) return false;
+    const left = missingBlanks(tpl.body, c, est, job, extra);
+    if (left.length && !confirm(`Still empty: ${left.map((k) => BLANK_LABELS[k] || k).join(', ')}.\n\nLeave ${left.length === 1 ? 'it' : 'them'} as N/A?`)) return false;
+    $('#text').textContent = fillTemplate(tpl.body, c, est, job, extra);
+    saveBlanksToCustomer(c, extra);
+    return true;
   };
   renderJobOptions();
   renderEstOptions();
@@ -1580,7 +1687,7 @@ async function pageContractNew(query) {
   $('#c-cust').onchange = (e) => { state.customer = Number(e.target.value) || null; renderJobOptions(); renderEstOptions(); render(); };
   $('#c-job').onchange = (e) => { state.job = Number(e.target.value) || null; render(); };
   estSelect.onchange = (e) => { state.estimate = Number(e.target.value) || null; render(); };
-  $('#print').onclick = () => window.print();
+  $('#print').onclick = () => { if (finalize()) window.print(); };
   $('#upload').onclick = () => {
     const c = customersCache.find((x) => x.id === state.customer);
     uploadDocument({ customer_id: state.customer, name: c ? `${c.name} - signed contract` : '' }, () => {});
@@ -1588,6 +1695,7 @@ async function pageContractNew(query) {
   $('#save').onclick = async () => {
     const c = customersCache.find((x) => x.id === state.customer);
     if (!c) return alert('Pick a customer first.');
+    if (!finalize()) return;
     const html = `<!doctype html><meta charset="utf-8"><title>Contract</title>
       <body style="font-family:Georgia,serif;max-width:760px;margin:2rem auto;padding:0 1rem;line-height:1.55">
       <div style="display:flex;gap:12px;align-items:center;border-bottom:4px solid #a42f28;padding-bottom:8px;font-family:Arial,sans-serif">
@@ -1634,7 +1742,7 @@ async function pageSettings() {
       ${SETTINGS.texting_enabled
         ? `<p class="green" style="margin:0">✓ On. Texts go out from <strong>${esc(SETTINGS.texting_number)}</strong>.</p>
            <p class="muted" style="margin:.4rem 0 0">${SETTINGS.texting_forward ? 'Customer replies are forwarded to your phone and saved on the job.' : 'Customer replies are saved on the job. Add TEXT_FORWARD_TO on Render to also get them on your phone.'}</p>`
-        : `<p class="muted" style="margin:0">Off. Texts open your phone's Messages app for now. To send from a Mayo's Construction number instead, set up a Twilio number and add it on Render (TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN, TWILIO_FROM_NUMBER).</p>`}
+        : `<p class="muted" style="margin:0">Not connected yet. Once your Twilio account is set up and added on Render, texts send from the app as Mayo's Construction (with your logo on iPhones through RCS) and never open your phone's Messages app.</p>`}
     </div>
     <form class="card" id="pw">
       <h3>Change your password</h3>
