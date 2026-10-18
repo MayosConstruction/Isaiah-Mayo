@@ -685,6 +685,12 @@ function crewText(crew) {
   return c.replace(' & ', ' and ');
 }
 function crewIsPlural(crew) { return / & | and /.test(crew || 'Moss & Isaiah'); }
+// With business texting set up, texts go out from the company number through the app.
+async function sendBusinessText(m) {
+  const r = await api('POST', '/send-text', m);
+  toast(`Text sent from ${r.from}`);
+  return r;
+}
 function logMessage(m) {
   // keepalive lets this finish even while the phone switches to Messages.
   fetch('/api/messages', {
@@ -723,8 +729,10 @@ async function textCustomer(ctx, after) {
       <div class="modal-actions">
         <button type="button" class="btn left" data-close>Cancel</button>
         ${c.email ? '<a class="btn" id="send-email" href="#">Email</a>' : ''}
-        <a class="btn primary" id="send-text" href="#">Send text</a>
+        <a class="btn primary" id="send-text" href="#">${SETTINGS.texting_enabled ? 'Send text' : 'Text from my phone'}</a>
       </div>
+      ${SETTINGS.texting_enabled ? `<p class="muted" style="font-size:.85rem;margin:.4rem 0 0">Sends from your business number ${esc(SETTINGS.texting_number)}.</p>`
+        : '<p class="muted" style="font-size:.85rem;margin:.4rem 0 0">Business texting isn\'t set up yet, so this opens your phone\'s Messages app. See Settings → Business texting.</p>'}
     </form>`, {
     onReady: (body) => {
       const f = $('form', body);
@@ -742,15 +750,29 @@ async function textCustomer(ctx, after) {
       f.body.addEventListener('input', () => (edited = true));
       ['kind', 'crew', 'date', 'time'].forEach((n) => f[n].addEventListener('change', () => { if (n === 'kind') edited = false; fill(); }));
       fill();
-      const send = (channel) => (e) => {
-        const text = f.body.value.trim();
-        if (!text) { e.preventDefault(); return; }
-        e.currentTarget.href = channel === 'text' ? smsHref(c.phone, text) : mailHref(c.email, "Mayo's Construction", text);
-        logMessage({ job_id: job.id, customer_id: c.id, kind: f.kind.value, channel, body: text });
+      const remember = () => {
         // Remember who's coming / arrival time on the job for next time.
         if (job.id && (f.crew.value !== job.crew || f.time.value !== job.arrival_time)) {
           api('PUT', `/jobs/${job.id}`, { crew: f.crew.value, arrival_time: f.time.value }).catch(() => {});
         }
+      };
+      const send = (channel) => async (e) => {
+        const text = f.body.value.trim();
+        if (!text) { e.preventDefault(); return; }
+        if (channel === 'text' && SETTINGS.texting_enabled) {
+          e.preventDefault();
+          const btn = e.currentTarget;
+          btn.style.pointerEvents = 'none';
+          try {
+            await sendBusinessText({ to: c.phone, body: text, job_id: job.id, customer_id: c.id, kind: f.kind.value });
+            remember();
+            $('#modal').close(); after && after();
+          } catch (err) { alert(err.message); } finally { btn.style.pointerEvents = ''; }
+          return;
+        }
+        e.currentTarget.href = channel === 'text' ? smsHref(c.phone, text) : mailHref(c.email, "Mayo's Construction", text);
+        logMessage({ job_id: job.id, customer_id: c.id, kind: f.kind.value, channel, body: text });
+        remember();
         setTimeout(() => { $('#modal').close(); after && after(); }, 600);
       };
       $('#send-text', body).addEventListener('click', send('text'));
@@ -760,7 +782,8 @@ async function textCustomer(ctx, after) {
 }
 
 function messageRow(m) {
-  return `<li><div class="grow"><div class="sub">${esc(m.kind || 'Message')} · ${m.channel === 'email' ? '✉️' : '💬'} ${esc(m.sent_by || '')} · ${esc((m.created_at || '').slice(5, 16).replace('T', ' '))}</div>
+  const icon = { email: '✉️', sms: '📲 business text', 'sms-in': '↩️ reply from' }[m.channel] || '💬';
+  return `<li class="${m.channel === 'sms-in' ? 'msg-in' : ''}"><div class="grow"><div class="sub">${esc(m.kind || 'Message')} · ${icon} ${esc(m.sent_by || '')} · ${esc((m.created_at || '').slice(5, 16).replace('T', ' '))}</div>
     <div style="white-space:pre-wrap">${esc(m.body)}</div></div></li>`;
 }
 
@@ -801,7 +824,7 @@ function shareSignLink(c, est, link, text, after) {
   openModal(`
     <div>
       <h2>Link ready</h2>
-      <p class="muted">Send it from your phone:</p>
+      <p class="muted">${SETTINGS.texting_enabled ? `Texts go out from your business number ${esc(SETTINGS.texting_number)}.` : 'Send it from your phone:'}</p>
       <textarea id="share-text" style="min-height:120px">${esc(text)}</textarea>
       <div class="row" style="margin-top:.6rem">
         ${c.phone ? '<a class="btn primary" id="share-sms" href="#">Send by text</a>' : ''}
@@ -814,7 +837,15 @@ function shareSignLink(c, est, link, text, after) {
     onReady: (body) => {
       const txt = () => $('#share-text', body).value;
       const log = (channel) => logMessage({ job_id: est.job_id, customer_id: c.id, kind: 'Estimate to sign', channel, body: txt() });
-      if (c.phone) $('#share-sms', body).addEventListener('click', (e) => { e.currentTarget.href = smsHref(c.phone, txt()); log('text'); });
+      if (c.phone) $('#share-sms', body).addEventListener('click', async (e) => {
+        if (SETTINGS.texting_enabled) {
+          e.preventDefault();
+          try { await sendBusinessText({ to: c.phone, body: txt(), job_id: est.job_id, customer_id: c.id, kind: 'Estimate to sign' }); $('#modal').close(); }
+          catch (err) { alert(err.message); }
+          return;
+        }
+        e.currentTarget.href = smsHref(c.phone, txt()); log('text');
+      });
       if (c.email) $('#share-email', body).addEventListener('click', (e) => { e.currentTarget.href = mailHref(c.email, `Your estimate from Mayo's Construction (${est.number})`, txt()); log('email'); });
       $('#share-copy', body).addEventListener('click', async () => {
         try { await navigator.clipboard.writeText(link); toast('Link copied'); } catch { prompt('Copy this link:', link); }
@@ -1598,6 +1629,13 @@ async function pageSettings() {
       <label>"Not included" list (goes in every agreement) <textarea name="exclusions" style="min-height:150px">${esc(SETTINGS.exclusions)}</textarea></label>
       <button class="btn primary">Save business info</button>
     </form>
+    <div class="card">
+      <h3>Business texting</h3>
+      ${SETTINGS.texting_enabled
+        ? `<p class="green" style="margin:0">✓ On. Texts go out from <strong>${esc(SETTINGS.texting_number)}</strong>.</p>
+           <p class="muted" style="margin:.4rem 0 0">${SETTINGS.texting_forward ? 'Customer replies are forwarded to your phone and saved on the job.' : 'Customer replies are saved on the job. Add TEXT_FORWARD_TO on Render to also get them on your phone.'}</p>`
+        : `<p class="muted" style="margin:0">Off. Texts open your phone's Messages app for now. To send from a Mayo's Construction number instead, set up a Twilio number and add it on Render (TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN, TWILIO_FROM_NUMBER).</p>`}
+    </div>
     <form class="card" id="pw">
       <h3>Change your password</h3>
       <label>Current password <input type="password" name="current" required autocomplete="current-password"></label>

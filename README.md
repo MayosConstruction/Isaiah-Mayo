@@ -87,6 +87,19 @@ The link works only for that one estimate and can be signed once.
 
 On a job tap **💬 Text customer** (also on customer pages and appointments). Pick a message, such as *schedule reminder*, *on our way*, *running late*, *who's coming*, *job update*, or *job finished*. Then pick **who's coming** (Moss, Isaiah, both, or a sub) and the arrival time. The text is written for you, and you can edit it before sending. It sends from **your own phone number** through Messages, so replies come straight to you. Every text is logged on the job under *Texts & updates sent*.
 
+## Business texting (from a Mayo's Construction number)
+
+With these set on Render (**Environment** tab), texts send straight from the app using your business number, and your phone's Messages app never opens:
+
+| Variable | What it is |
+|---|---|
+| `TWILIO_ACCOUNT_SID` | From your Twilio console (starts with `AC`) |
+| `TWILIO_AUTH_TOKEN` | From your Twilio console |
+| `TWILIO_FROM_NUMBER` | The number you bought in Twilio |
+| `TEXT_FORWARD_TO` | Optional: your cell, to get customer replies forwarded |
+
+In Twilio, set the number's **"A message comes in"** webhook to `https://<your-app>.onrender.com/twilio/incoming` (HTTP POST). Then replies are saved on the job and forwarded to `TEXT_FORWARD_TO`. The first text to each customer automatically adds "Reply STOP to opt out." Without these settings, texting falls back to opening your phone's Messages app.
+
 ## How the money works
 
 - **Moss and Isaiah are 50/50 partners.** Money you pay yourselves from a job is **Partner pay**. It isn't a cost, it's your split.

@@ -142,6 +142,7 @@ addColumn('transactions', 'status', "TEXT DEFAULT 'paid'"); // 'paid' or 'owed' 
 addColumn('todos', 'job_id', 'INTEGER REFERENCES jobs(id) ON DELETE SET NULL');
 addColumn('estimates', 'job_id', 'INTEGER REFERENCES jobs(id) ON DELETE SET NULL');
 addColumn('events', 'job_id', 'INTEGER REFERENCES jobs(id) ON DELETE SET NULL');
+addColumn('messages', 'to_number', 'TEXT');
 addColumn('jobs', 'crew', "TEXT DEFAULT 'Moss & Isaiah'"); // who's coming
 addColumn('jobs', 'arrival_time', 'TEXT');
 // Online signing: the customer opens /sign/<token>, reviews, and signs.
@@ -492,6 +493,82 @@ function unlockStarter(code) {
 }
 
 // ---------------------------------------------------------------------------
+// Business texting through Twilio. Texts come from the company's own number
+// instead of opening someone's personal Messages app. Set these on Render:
+//   TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN, TWILIO_FROM_NUMBER
+//   TEXT_FORWARD_TO (optional): a cell number that customer replies are forwarded to
+// ---------------------------------------------------------------------------
+function textingConfig() {
+  const { TWILIO_ACCOUNT_SID: sid, TWILIO_AUTH_TOKEN: token, TWILIO_FROM_NUMBER: from } = process.env;
+  return sid && token && from ? { sid, token, from: toE164(from) } : null;
+}
+function toE164(p) {
+  const d = String(p || '').replace(/\D/g, '');
+  if (d.length === 10) return '+1' + d;
+  if (d.length === 11 && d.startsWith('1')) return '+' + d;
+  return d ? '+' + d : '';
+}
+function prettyPhone(p) {
+  const d = toE164(p).replace(/^\+1/, '');
+  return d.length === 10 ? `(${d.slice(0, 3)}) ${d.slice(3, 6)}-${d.slice(6)}` : p;
+}
+
+async function sendText(body, user) {
+  const cfg = textingConfig();
+  if (!cfg) throw httpError(400, 'Business texting is not set up yet (see Settings).');
+  const to = toE164(body.to);
+  let text = String(body.body || '').trim();
+  if (to.length < 11) throw httpError(400, 'That phone number does not look right.');
+  if (!text) throw httpError(400, 'The message is empty.');
+  // The first business text to a number tells them how to opt out (required by carriers).
+  const texted = db.prepare("SELECT 1 FROM messages WHERE channel = 'sms' AND to_number = ?").get(to);
+  if (!texted) text += '\nReply STOP to opt out.';
+  const base = process.env.TWILIO_API_BASE || 'https://api.twilio.com';
+  const r = await fetch(`${base}/2010-04-01/Accounts/${cfg.sid}/Messages.json`, {
+    method: 'POST',
+    headers: {
+      Authorization: 'Basic ' + Buffer.from(`${cfg.sid}:${cfg.token}`).toString('base64'),
+      'Content-Type': 'application/x-www-form-urlencoded',
+    },
+    body: new URLSearchParams({ To: to, From: cfg.from, Body: text }),
+  });
+  const out = await r.json().catch(() => ({}));
+  if (!r.ok) throw httpError(502, 'Text not sent: ' + (out.message || `Twilio error ${r.status}`));
+  insertResource('messages', {
+    job_id: body.job_id, customer_id: body.customer_id, kind: body.kind, channel: 'sms', body: text, sent_by: user.name,
+  });
+  db.prepare("UPDATE messages SET to_number = ? WHERE id = (SELECT MAX(id) FROM messages)").run(to);
+  return { ok: true, from: prettyPhone(cfg.from) };
+}
+
+// Twilio calls this when a customer texts back. We log it on their job and
+// forward it to TEXT_FORWARD_TO so the reply lands on a real phone.
+function twilioSignatureOk(req, params) {
+  const cfg = textingConfig();
+  if (!cfg) return false;
+  const proto = String(req.headers['x-forwarded-proto'] || 'http').split(',')[0];
+  const url = `${proto}://${req.headers.host}${req.url}`;
+  const data = url + Object.keys(params).sort().map((k) => k + params[k]).join('');
+  const expected = crypto.createHmac('sha1', cfg.token).update(data).digest('base64');
+  const got = String(req.headers['x-twilio-signature'] || '');
+  return got.length === expected.length && crypto.timingSafeEqual(Buffer.from(got), Buffer.from(expected));
+}
+async function handleIncomingText(req, res) {
+  const chunks = [];
+  for await (const c of req) { chunks.push(c); if (chunks.length > 100) break; }
+  const params = Object.fromEntries(new URLSearchParams(Buffer.concat(chunks).toString('utf8')));
+  if (!twilioSignatureOk(req, params)) return send(res, 403, 'Forbidden');
+  const from = toE164(params.From);
+  const digits = from.replace(/^\+1/, '');
+  const c = db.prepare("SELECT id, name FROM customers WHERE replace(replace(replace(replace(replace(phone,'-',''),' ',''),'(',''),')',''),'.','') LIKE ?").get('%' + digits);
+  const job = c && db.prepare(`SELECT id FROM jobs WHERE customer_id = ? ORDER BY ${JOB_ORDER} LIMIT 1`).get(c.id);
+  insertResource('messages', { job_id: job?.id, customer_id: c?.id, kind: 'Reply', channel: 'sms-in', body: String(params.Body || ''), sent_by: c?.name || prettyPhone(from) });
+  const fwd = toE164(process.env.TEXT_FORWARD_TO);
+  const reply = fwd ? `<Message to="${escHtml(fwd)}">Reply from ${escHtml(c?.name || prettyPhone(from))}: ${escHtml(params.Body || '')}</Message>` : '';
+  send(res, 200, `<?xml version="1.0" encoding="UTF-8"?><Response>${reply}</Response>`, { 'Content-Type': 'text/xml' });
+}
+
+// ---------------------------------------------------------------------------
 // Online signing
 // ---------------------------------------------------------------------------
 function bizInfo() {
@@ -773,9 +850,14 @@ async function handleApi(req, res, url) {
 
   const user = currentUser(req);
   if (!user) throw httpError(401, 'Please log in');
+  if (parts[0] === 'send-text' && method === 'POST') {
+    return send(res, 200, await sendText(await readBody(req), user));
+  }
   if (parts[0] === 'settings') {
-    if (method === 'GET') return send(res, 200, getSettings());
-    if (method === 'PUT') return send(res, 200, saveSettings(await readBody(req)));
+    const cfg = textingConfig();
+    const texting = { texting_enabled: !!cfg, texting_number: cfg ? prettyPhone(cfg.from) : '', texting_forward: !!process.env.TEXT_FORWARD_TO };
+    if (method === 'GET') return send(res, 200, { ...getSettings(), ...texting });
+    if (method === 'PUT') return send(res, 200, { ...saveSettings(await readBody(req)), ...texting });
   }
 
   if (parts[0] === 'logout' && method === 'POST') {
@@ -887,7 +969,9 @@ async function handleApi(req, res, url) {
 const server = http.createServer(async (req, res) => {
   const url = new URL(req.url, 'http://localhost');
   try {
-    if (url.pathname.startsWith('/api/')) {
+    if (url.pathname === '/twilio/incoming' && req.method === 'POST') {
+      await handleIncomingText(req, res);
+    } else if (url.pathname.startsWith('/api/')) {
       // Basic CSRF guard: state-changing API calls must come from our own page.
       if (req.method !== 'GET' && req.headers['x-requested-with'] !== 'mayo-crm') throw httpError(403, 'Forbidden');
       await handleApi(req, res, url);

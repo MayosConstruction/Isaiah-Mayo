@@ -153,6 +153,43 @@ const { server } = require('../server');
   assert.strictEqual(jobAfter.finish_date, '2026-11-05');
   assert.ok((await call('GET', '/todos')).some((t) => t.title.includes('approved change order CO-1001')));
 
+  // Business texting through Twilio (a fake Twilio stands in here)
+  assert.strictEqual((await call('GET', '/settings')).texting_enabled, false);
+  await call('POST', '/send-text', { to: '501-555-0100', body: 'Hi' }, 400);
+  const http = require('node:http');
+  const sentToTwilio = [];
+  const fakeTwilio = http.createServer((req, res) => {
+    let b = '';
+    req.on('data', (d) => (b += d));
+    req.on('end', () => { sentToTwilio.push({ url: req.url, auth: req.headers.authorization, body: new URLSearchParams(b) }); res.end('{"sid":"SM1"}'); });
+  });
+  await new Promise((r) => fakeTwilio.listen(0, r));
+  Object.assign(process.env, {
+    TWILIO_ACCOUNT_SID: 'AC123', TWILIO_AUTH_TOKEN: 'secret', TWILIO_FROM_NUMBER: '501-555-0000',
+    TWILIO_API_BASE: `http://localhost:${fakeTwilio.address().port}`, TEXT_FORWARD_TO: '501-555-0001',
+  });
+  assert.strictEqual((await call('GET', '/settings')).texting_number, '(501) 555-0000');
+  const sentOk = await call('POST', '/send-text', { to: '(501) 555-0100', body: 'On our way', job_id: job.id, customer_id: c.id, kind: 'On our way' });
+  assert.strictEqual(sentOk.from, '(501) 555-0000');
+  assert.strictEqual(sentToTwilio[0].url, '/2010-04-01/Accounts/AC123/Messages.json');
+  assert.strictEqual(sentToTwilio[0].body.get('To'), '+15015550100');
+  assert.strictEqual(sentToTwilio[0].body.get('From'), '+15015550000');
+  assert.ok(sentToTwilio[0].body.get('Body').includes('Reply STOP to opt out'), 'first text includes opt-out');
+  await call('POST', '/send-text', { to: '5015550100', body: 'Second' });
+  assert.strictEqual(sentToTwilio[1].body.get('Body'), 'Second', 'opt-out line only on the first text');
+  // Customer texts back: Twilio signs the request; unsigned requests are refused
+  const inUrl = `http://localhost:${server.address().port}/twilio/incoming`;
+  const params = { Body: 'See you then!', From: '+15015550100' };
+  const sig = require('node:crypto').createHmac('sha1', 'secret')
+    .update(inUrl + Object.keys(params).sort().map((k) => k + params[k]).join('')).digest('base64');
+  const bad = await fetch(inUrl, { method: 'POST', body: new URLSearchParams(params) });
+  assert.strictEqual(bad.status, 403);
+  const good = await fetch(inUrl, { method: 'POST', headers: { 'X-Twilio-Signature': sig }, body: new URLSearchParams(params) });
+  const twiml = await good.text();
+  assert.ok(twiml.includes('<Message to="+15015550001">Reply from Jane Smith: See you then!</Message>'), twiml);
+  assert.ok((await call('GET', `/messages?job_id=${job.id}`)).some((mm) => mm.channel === 'sms-in' && mm.body === 'See you then!'));
+  fakeTwilio.close();
+
   const backup = await call('GET', '/backup');
   assert.ok(backup.customers.length === 2 && backup.jobs.length === 2);
 
