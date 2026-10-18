@@ -86,11 +86,8 @@ This Agreement, the estimate above, and any signed Change Orders are the entire 
 19. OWNER'S RIGHT TO CANCEL
 If you signed this Agreement at your home or anywhere other than Contractor's place of business, you may cancel it without any penalty or obligation within three (3) business days after signing — by midnight on {{cancel_by_date}}. To cancel, send a signed and dated written notice (a text or email is fine) to {{business_name}}, {{business_phone}}, {{business_email}}. If you cancel, any payment you made will be returned within 10 business days.
 
-20. IMPORTANT NOTICE TO OWNER (ARKANSAS LIEN LAW)
-[PASTE THE RESIDENTIAL LIEN NOTICE FROM ARK. CODE ANN. § 18-44-115 HERE, WORD FOR WORD, IN CAPITAL LETTERS. Arkansas requires this notice in residential contracts before work begins. If it is missing or the wording is not exact, you can lose your right to file a lien if a customer doesn't pay. Have your attorney or the Arkansas Contractors Licensing Board confirm the exact text, then edit this template under Contracts → Edit.]
 
-
-By signing below, Owner confirms they have read this entire Agreement, including the Right to Cancel and the Notice to Owner, and agree to its terms.
+By signing below, Owner confirms they have read this entire Agreement, including the Right to Cancel, and agree to its terms.
 
 OWNER: {{customer_name}}
 

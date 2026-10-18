@@ -53,7 +53,7 @@ async function load() {
       <canvas id="pad" style="width:100%;height:170px;border:2px dashed var(--border);border-radius:8px;background:#fff;touch-action:none;margin:.3rem 0"></canvas>
       <button type="button" class="btn small" id="clear">Clear</button>
       <label class="row" style="margin-top:1rem;color:var(--text);flex-wrap:nowrap;align-items:flex-start"><input type="checkbox" name="agree" required>
-        <span>${d.kind === 'change_order' ? 'I approve this change order and agree' : 'I have read and agree to the estimate and agreement above, including the Right to Cancel and Notice to Owner, and I agree'} to sign electronically.</span></label>
+        <span>${d.kind === 'change_order' ? 'I approve this change order and agree' : 'I have read and agree to the estimate and agreement above, including the Right to Cancel, and I agree'} to sign electronically.</span></label>
       <p class="error" id="err"></p>
       <button class="btn primary" style="width:100%;font-size:1.25rem">Sign &amp; send</button>
     </form>`;

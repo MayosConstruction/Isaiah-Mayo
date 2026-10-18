@@ -233,6 +233,13 @@ for (const [name, file] of [['Residential Construction Agreement', 'residential-
     db.prepare('INSERT INTO templates (name, body) VALUES (?, ?)').run(name, fs.readFileSync(path.join(__dirname, 'templates', file), 'utf8'));
   }
 }
+// Remove the lien-notice placeholder section that an earlier version of the agreement had.
+for (const t of db.prepare("SELECT id, body FROM templates WHERE body LIKE '%[PASTE THE RESIDENTIAL LIEN NOTICE%'").all()) {
+  const body = t.body
+    .replace(/\n*20\. IMPORTANT NOTICE TO OWNER \(ARKANSAS LIEN LAW\)\n\[PASTE[\s\S]*?\]\n*/, '\n\n\n')
+    .replace('including the Right to Cancel and the Notice to Owner, and agree', 'including the Right to Cancel, and agree');
+  db.prepare('UPDATE templates SET body = ? WHERE id = ?').run(body, t.id);
+}
 // The first version's one-page starter is replaced by the agreement above (only if nobody edited it).
 db.prepare("DELETE FROM templates WHERE name = 'Construction Agreement (starter)' AND body LIKE '%Payments not received within 15 days of the due date may be subject to a late charge.%'").run();
 

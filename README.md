@@ -102,17 +102,17 @@ On a job tap **💬 Text customer** (also on customer pages and appointments). P
 
 The app comes with two templates:
 
-- **Residential Construction Agreement:** scope and exclusions, price with deposit and balance, late fees and the right to stop work, change orders, schedule and delays, hidden conditions (rot, termites, mold), permits, owner responsibilities, materials and allowances, cleanup, subcontractors, warranty limits, termination, disputes (Garland County), the **3-day right to cancel** for jobs sold at the customer's home, and a spot for the **Arkansas lien notice**.
+- **Residential Construction Agreement:** scope and exclusions, price with deposit and balance, late fees and the right to stop work, change orders, schedule and delays, hidden conditions (rot, termites, mold), permits, owner responsibilities, materials and allowances, cleanup, subcontractors, warranty limits, termination, disputes (Garland County), and the **3-day right to cancel** for jobs sold at the customer's home.
 - **Change Order:** what's changing, **your price for it** (or a credit), days added, and the price before and after. When the customer signs, the amount is added to the job total and the days are added to the finish date.
 
-**Before using them:** fill in **Settings → Business info** (license #, insurance, email, deposit %, warranty). Paste the exact lien notice wording from Ark. Code Ann. § 18-44-115 into Section 20 (Contracts → Edit). Then have an Arkansas attorney look the agreement over once. This is a strong starting point, **not legal advice**.
+**Before using them:** fill in **Settings → Business info** (license #, insurance, email, deposit %, warranty). Then have an Arkansas attorney look the agreement over once. This is a strong starting point, **not legal advice**.
 
 Fill-in blanks you can use in any template:
 `{{customer_name}}` `{{customer_phone}}` `{{customer_email}}` `{{job_address}}` `{{date}}` `{{start_date}}` `{{finish_date}}` `{{estimate_number}}` `{{estimate_items}}` `{{estimate_notes}}` `{{estimate_total}}` `{{deposit_percent}}` `{{deposit_amount}}` `{{balance_amount}}` `{{business_name}}` `{{business_phone}}` `{{business_email}}` `{{license_number}}` `{{insurance}}` `{{warranty_years}}` `{{late_fee}}` `{{exclusions}}` `{{cancel_by_date}}` `{{contractor_signer}}` `{{original_price}}` `{{change_amount}}` `{{new_total}}` `{{days_added}}`
 
 ## Checking which version is running
 
-The version number shows at the bottom of the login screen and at the top of **Settings**, for example `Version 1.5.0 · 34e8a6d`. If it doesn't match the latest, go to Render → your service → **Manual Deploy → Deploy latest commit**.
+The version number shows at the bottom of the login screen and at the top of **Settings**, for example `Version 1.5.1 · abc1234`. If it doesn't match the latest, go to Render → your service → **Manual Deploy → Deploy latest commit**.
 
 ## For developers
 
