@@ -103,6 +103,7 @@ function options(list, selected) {
 function openModal(html, { onSubmit, onDelete, onReady } = {}) {
   const dlg = $('#modal');
   const body = $('#modal-body');
+  if (dlg.open) dlg.close(); // opening one popup from another
   body.innerHTML = html;
   const form = $('form', body);
   if (form && onSubmit) {
@@ -192,6 +193,7 @@ async function editEvent(ev = {}, after) {
       <label>Customer (optional) <select name="customer_id">${customerOptions(ev.customer_id)}</select></label>
       <label>Location <input name="location" value="${esc(ev.location)}" placeholder="Address"></label>
       <label>Notes <textarea name="notes">${esc(ev.notes)}</textarea></label>
+      ${isEdit && ev.customer_id ? '<button type="button" class="btn" id="ev-text">💬 Text customer about this</button>' : ''}
       ${modalActions(isEdit)}
     </form>`, {
     onSubmit: async (d) => {
@@ -200,6 +202,11 @@ async function editEvent(ev = {}, after) {
     },
     onDelete: async () => { await api('DELETE', `/events/${ev.id}`); toast('Deleted'); after && after(); },
     onReady: (body) => {
+      const tb = $('#ev-text', body);
+      if (tb) tb.onclick = () => {
+        const crew = { Both: 'Moss & Isaiah', Moss: 'Moss', Isaiah: 'Isaiah' }[ev.assigned_to] || 'Moss & Isaiah';
+        setTimeout(() => textCustomer({ customer: customersCache.find((x) => x.id === ev.customer_id), event: ev, job: { crew, address: ev.location } }, after), 50);
+      };
       // Fill location from the customer's address if blank.
       $('[name=customer_id]', body).addEventListener('change', (e) => {
         const loc = $('[name=location]', body);
@@ -485,6 +492,8 @@ async function editJob(job = {}, after) {
         <label>Labor, us + subs ($) <input type="number" step="0.01" name="labor_cost" value="${esc(job.labor_cost || '')}" inputmode="decimal"></label>
         <label>Materials ($) <input type="number" step="0.01" name="materials_cost" value="${esc(job.materials_cost || '')}" inputmode="decimal"></label>
         <label>Materials status <select name="materials_status">${options(MATERIAL_STATUSES, job.materials_status || 'Not bought yet')}</select></label>
+        <label>Who's going <select name="crew">${options(CREW_CHOICES, job.crew || 'Moss & Isaiah')}</select></label>
+        <label>Usual arrival time <input type="time" name="arrival_time" value="${esc(job.arrival_time || '')}"></label>
       </div>
       <label>Materials needed (one per line) <textarea name="materials_text">${esc(mats.map((i) => i.text).join('\n'))}</textarea></label>
       <label>Scope of work (one per line) <textarea name="scope_text">${esc(scope.map((i) => i.text).join('\n'))}</textarea></label>
@@ -501,6 +510,7 @@ async function editJob(job = {}, after) {
       const payload = {
         address: d.address, customer_id: d.customer_id, status: d.status, start_date: d.start_date, finish_date: d.finish_date,
         price: d.price, labor_cost: d.labor_cost, materials_cost: d.materials_cost, materials_status: d.materials_status, notes: d.notes,
+        crew: d.crew, arrival_time: d.arrival_time,
         materials: linesToChecklist(d.materials_text, mats), scope: linesToChecklist(d.scope_text, scope),
       };
       const saved = isEdit ? await api('PUT', `/jobs/${job.id}`, payload) : await api('POST', '/jobs', payload);
@@ -550,9 +560,10 @@ function checklistHtml(items, field) {
 
 async function pageJob(id) {
   await customers();
-  const [job, jm, txs, todos, ests] = await Promise.all([
+  const [job, jm, txs, todos, ests, msgs] = await Promise.all([
     api('GET', `/jobs/${id}`), api('GET', '/job-money'),
     api('GET', `/transactions?job_id=${id}`), api('GET', `/todos?job_id=${id}`), api('GET', `/estimates?job_id=${id}`),
+    api('GET', `/messages?job_id=${id}`),
     jobs(),
   ]);
   const n = jobNumbers(job, jm);
@@ -572,7 +583,9 @@ async function pageJob(id) {
       </div>
       <div>${c ? `<a href="#/customers/${c.id}">${esc(c.name)}</a>${c.phone ? ` · <a href="tel:${esc(c.phone.replace(/[^\d+]/g, ''))}">${esc(c.phone)}</a>` : ''}` : '<span class="muted">No customer</span>'}</div>
       <div class="muted">Start: ${shortDate(job.start_date)} &nbsp; Finish: ${shortDate(job.finish_date)} &nbsp; · <a href="https://maps.google.com/?q=${encodeURIComponent(job.address)}" target="_blank" rel="noopener">Map</a></div>
+      <div class="muted">Who's going: <strong>${esc(job.crew || 'Moss & Isaiah')}</strong>${job.arrival_time ? ` · arriving around ${fmtTime(job.arrival_time)}` : ''}</div>
       <div class="row" style="margin-top:.75rem">
+        <button class="btn primary" id="text-cust">💬 Text customer</button>
         <button class="btn primary" id="add-in">+ Payment received</button>
         <button class="btn" id="add-out">+ Pay someone / expense</button>
         <button class="btn" id="add-todo">+ To-do</button>
@@ -608,10 +621,12 @@ async function pageJob(id) {
       <div class="card"><h3>Scope of work</h3><div id="scope">${checklistHtml(scope, 'scope')}</div></div>
       <div class="card"><h3>To-dos</h3><ul class="list" id="j-todos">${todos.map(todoRow).join('') || '<li class="empty">None.</li>'}</ul></div>
       ${ests.length ? `<div class="card"><h3>Estimates</h3><ul class="list">${ests.map((e) => `<li class="clickable" onclick="location.hash='#/estimates/${e.id}'">
-        <div class="grow"><div class="title">${esc(e.number)}</div></div><span class="pill ${e.status}">${e.status}</span><strong>${money(estimateTotals(e).total)}</strong></li>`).join('')}</ul></div>` : ''}
+        <div class="grow"><div class="title">${esc(e.number)}</div></div><span class="pill ${e.status}">${e.signed_at ? '✍️ Signed' : e.status}</span><strong>${money(estimateTotals(e).total)}</strong></li>`).join('')}</ul></div>` : ''}
       ${job.notes ? `<div class="card"><h3>Notes</h3><p style="white-space:pre-wrap;margin:0">${esc(job.notes)}</p></div>` : ''}
+      <div class="card"><h3>Texts & updates sent</h3><ul class="list">${msgs.map(messageRow).join('') || '<li class="empty">None yet. Use 💬 Text customer for reminders, arrival times, and updates.</li>'}</ul></div>
     </div>`;
   $('#edit').onclick = () => editJob(job, reload);
+  $('#text-cust').onclick = () => textCustomer({ customer: c, job, owes: n.owes }, reload);
   $('#status').onchange = async (e) => { await api('PUT', `/jobs/${id}`, { status: e.target.value }); await jobs(true); toast('Status updated'); reload(); };
   $('#mat-status').onchange = async (e) => {
     await api('PUT', `/jobs/${id}`, { materials_status: e.target.value });
@@ -639,6 +654,158 @@ async function pageJob(id) {
     lists[f.dataset.addItem].push({ text, done: false });
     saveList(f.dataset.addItem);
   }));
+}
+
+// ---------------------------------------------------------------------------
+// Texting & emailing customers (opens your phone's Messages / Mail app,
+// so texts come from your own number) and the message log.
+// ---------------------------------------------------------------------------
+const CREW_CHOICES = ['Moss & Isaiah', 'Moss', 'Isaiah', ...Object.keys(SUBS)];
+function phoneDigits(p) {
+  const d = String(p || '').replace(/\D/g, '');
+  return d.length === 10 ? '+1' + d : d ? '+' + d : '';
+}
+function smsHref(phone, body) { return `sms:${phoneDigits(phone)}?&body=${encodeURIComponent(body)}`; }
+function mailHref(email, subject, body) { return `mailto:${encodeURIComponent(email || '')}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`; }
+function firstName(name) { return String(name || '').trim().split(/\s+/)[0] || 'there'; }
+function crewText(crew) {
+  const c = crew || 'Moss & Isaiah';
+  if (SUBS[c]) return `${c}, our ${SUBS[c].toLowerCase()},`;
+  return c.replace(' & ', ' and ');
+}
+function crewIsPlural(crew) { return / & | and /.test(crew || 'Moss & Isaiah'); }
+function logMessage(m) {
+  // keepalive lets this finish even while the phone switches to Messages.
+  fetch('/api/messages', {
+    method: 'POST', keepalive: true,
+    headers: { 'Content-Type': 'application/json', 'X-Requested-With': 'mayo-crm' },
+    body: JSON.stringify({ ...m, sent_by: me && me.name }),
+  }).catch(() => {});
+}
+
+const MESSAGE_KINDS = {
+  'Schedule reminder': (v) => `Hi ${v.first}, this is ${v.me} with Mayo's Construction. Just a reminder that we're scheduled at ${v.address} on ${v.date}. ${v.crew} will be there around ${v.time}.`,
+  'On our way': (v) => `Hi ${v.first}, ${v.crew} ${v.plural ? 'are' : 'is'} on the way to ${v.address} and should be there around ${v.time}. – Mayo's Construction`,
+  'Running late': (v) => `Hi ${v.first}, sorry about this — ${v.crew} ${v.plural ? 'are' : 'is'} running a little behind. New arrival time is about ${v.time}. – Mayo's Construction`,
+  "Who's coming": (v) => `Hi ${v.first}, heads up: ${v.crew} will be at ${v.address} on ${v.date} around ${v.time}. – Mayo's Construction`,
+  'Job update': (v) => `Hi ${v.first}, quick update on ${v.address}: `,
+  'Job finished': (v) => `Hi ${v.first}, we've finished up at ${v.address}. Thank you for choosing Mayo's Construction!${v.owes > 0 ? ` The remaining balance is ${money(v.owes)}.` : ''}`,
+};
+
+// textCustomer({ customer, job, event, kind, owes }, after)
+async function textCustomer(ctx, after) {
+  const c = ctx.customer || {};
+  const job = ctx.job || {};
+  const ev = ctx.event || {};
+  const kinds = Object.keys(MESSAGE_KINDS);
+  openModal(`
+    <form>
+      <h2>Text ${esc(c.name || 'customer')}</h2>
+      ${!c.phone ? '<p class="error">No phone number on file. Add one on the customer page, or send by email.</p>' : ''}
+      <label>Message <select name="kind">${options(kinds, ctx.kind || 'Schedule reminder')}</select></label>
+      <div class="form-grid">
+        <label>Who's coming <select name="crew">${options(CREW_CHOICES.includes(job.crew) || !job.crew ? CREW_CHOICES : [job.crew, ...CREW_CHOICES], job.crew || 'Moss & Isaiah')}</select></label>
+        <label>Day <input type="date" name="date" value="${esc(ev.date || (job.start_date && job.start_date >= todayStr() ? job.start_date : todayStr()))}"></label>
+        <label>Arrival time <input type="time" name="time" value="${esc(ev.start_time || job.arrival_time || '08:00')}"></label>
+      </div>
+      <label>Text (you can edit it) <textarea name="body" style="min-height:130px"></textarea></label>
+      <div class="modal-actions">
+        <button type="button" class="btn left" data-close>Cancel</button>
+        ${c.email ? '<a class="btn" id="send-email" href="#">Email</a>' : ''}
+        <a class="btn primary" id="send-text" href="#">Send text</a>
+      </div>
+    </form>`, {
+    onReady: (body) => {
+      const f = $('form', body);
+      let edited = false;
+      const fill = () => {
+        if (edited) return;
+        const v = {
+          first: firstName(c.name), me: me.name, address: job.address || ev.location || c.address || 'your place',
+          date: fmtDate(f.date.value, { weekday: 'long', month: 'short', day: 'numeric' }),
+          time: fmtTime(f.time.value) || 'the usual time', crew: crewText(f.crew.value), plural: crewIsPlural(f.crew.value),
+          owes: ctx.owes || 0,
+        };
+        f.body.value = MESSAGE_KINDS[f.kind.value](v);
+      };
+      f.body.addEventListener('input', () => (edited = true));
+      ['kind', 'crew', 'date', 'time'].forEach((n) => f[n].addEventListener('change', () => { if (n === 'kind') edited = false; fill(); }));
+      fill();
+      const send = (channel) => (e) => {
+        const text = f.body.value.trim();
+        if (!text) { e.preventDefault(); return; }
+        e.currentTarget.href = channel === 'text' ? smsHref(c.phone, text) : mailHref(c.email, "Mayo's Construction", text);
+        logMessage({ job_id: job.id, customer_id: c.id, kind: f.kind.value, channel, body: text });
+        // Remember who's coming / arrival time on the job for next time.
+        if (job.id && (f.crew.value !== job.crew || f.time.value !== job.arrival_time)) {
+          api('PUT', `/jobs/${job.id}`, { crew: f.crew.value, arrival_time: f.time.value }).catch(() => {});
+        }
+        setTimeout(() => { $('#modal').close(); after && after(); }, 600);
+      };
+      $('#send-text', body).addEventListener('click', send('text'));
+      if (c.email) $('#send-email', body).addEventListener('click', send('email'));
+    },
+  });
+}
+
+function messageRow(m) {
+  return `<li><div class="grow"><div class="sub">${esc(m.kind || 'Message')} · ${m.channel === 'email' ? '✉️' : '💬'} ${esc(m.sent_by || '')} · ${esc((m.created_at || '').slice(5, 16).replace('T', ' '))}</div>
+    <div style="white-space:pre-wrap">${esc(m.body)}</div></div></li>`;
+}
+
+// Send an estimate (and contract) to the customer to sign on their phone.
+async function sendForSignature(est, after) {
+  await Promise.all([customers(), jobs()]);
+  const templates = await api('GET', '/templates');
+  const c = customersCache.find((x) => x.id === est.customer_id);
+  if (!c) return alert('Pick a customer for this estimate and save it first.');
+  const job = jobsCache.find((j) => j.id === est.job_id);
+  const total = estimateTotals(est).total;
+  openModal(`
+    <form>
+      <h2>Send to ${esc(c.name)} to sign</h2>
+      <p class="muted">They get a link, review the estimate and agreement on their phone, and sign with their finger. The signed copy saves to their customer file automatically.</p>
+      <label>Agreement to include <select name="tpl"><option value="">Estimate only (no agreement)</option>
+        ${templates.map((t, i) => `<option value="${t.id}" ${i === 0 ? 'selected' : ''}>${esc(t.name)}</option>`).join('')}</select></label>
+      <div class="modal-actions">
+        <button type="button" class="btn" data-close>Cancel</button>
+        <button type="submit" class="btn primary">Create link</button>
+      </div>
+    </form>`, {
+    onSubmit: async (d) => {
+      const tpl = templates.find((t) => t.id === Number(d.tpl));
+      const saved = await api('POST', `/estimates/${est.id}/send`, { contract_text: tpl ? fillTemplate(tpl.body, c, est, job) : '' });
+      const link = `${location.origin}/sign/${saved.sign_token}`;
+      const text = `Hi ${firstName(c.name)}, this is ${me.name} with Mayo's Construction. Here's your estimate for ${est.title || job?.address || 'your project'} (${money(total)}). You can review and sign it here: ${link}`;
+      setTimeout(() => shareSignLink(c, est, link, text, after), 50);
+    },
+  });
+}
+function shareSignLink(c, est, link, text, after) {
+  openModal(`
+    <div>
+      <h2>Link ready</h2>
+      <p class="muted">Send it from your phone:</p>
+      <textarea id="share-text" style="min-height:120px">${esc(text)}</textarea>
+      <div class="row" style="margin-top:.6rem">
+        ${c.phone ? '<a class="btn primary" id="share-sms" href="#">Send by text</a>' : ''}
+        ${c.email ? '<a class="btn" id="share-email" href="#">Send by email</a>' : ''}
+        <button class="btn" id="share-copy" type="button">Copy link</button>
+        <button class="btn" type="button" data-close>Done</button>
+      </div>
+      ${!c.phone && !c.email ? '<p class="error">No phone or email on file. Copy the link and send it however you like.</p>' : ''}
+    </div>`, {
+    onReady: (body) => {
+      const txt = () => $('#share-text', body).value;
+      const log = (channel) => logMessage({ job_id: est.job_id, customer_id: c.id, kind: 'Estimate to sign', channel, body: txt() });
+      if (c.phone) $('#share-sms', body).addEventListener('click', (e) => { e.currentTarget.href = smsHref(c.phone, txt()); log('text'); });
+      if (c.email) $('#share-email', body).addEventListener('click', (e) => { e.currentTarget.href = mailHref(c.email, `Your estimate from Mayo's Construction (${est.number})`, txt()); log('email'); });
+      $('#share-copy', body).addEventListener('click', async () => {
+        try { await navigator.clipboard.writeText(link); toast('Link copied'); } catch { prompt('Copy this link:', link); }
+      });
+      $('#modal').addEventListener('close', () => after && after(), { once: true });
+    },
+  });
 }
 
 // ---------------------------------------------------------------------------
@@ -705,7 +872,7 @@ async function pageHome() {
         ${pending.length && s.openEstimates.length ? '<hr style="border:none;border-top:1px solid var(--border)">' : ''}
         <ul class="list">${s.openEstimates.map((e) => `<li class="clickable" onclick="location.hash='#/estimates/${e.id}'">
           <div class="grow"><div class="title">${esc(e.number)} · ${esc(customerName(e.customer_id) || 'No customer')}</div><div class="sub">${esc(e.title || '')}</div></div>
-          <span class="pill ${e.status}">${e.status}</span><strong>${money(estimateTotals(e).total)}</strong></li>`).join('') || (pending.length ? '' : '<li class="empty">No open estimates.</li>')}</ul>
+          <span class="pill ${e.status}">${e.signed_at ? '✍️ Signed' : e.status}</span><strong>${money(estimateTotals(e).total)}</strong></li>`).join('') || (pending.length ? '' : '<li class="empty">No open estimates.</li>')}</ul>
       </div>
       <div class="card">
         <h3>This year so far</h3>
@@ -865,6 +1032,7 @@ async function pageCustomer(id) {
       ${c.notes ? `<p class="muted" style="white-space:pre-wrap">${esc(c.notes)}</p>` : ''}
       <div class="row" style="margin-top:.75rem">
         <button class="btn primary" id="add-job">+ Job</button>
+        <button class="btn" id="text-c">💬 Text</button>
         <a class="btn" href="#/estimates/new?customer=${id}">+ Estimate</a>
         <button class="btn" id="add-ev">+ Appointment</button>
         <button class="btn" id="add-todo">+ To-do</button>
@@ -882,13 +1050,14 @@ async function pageCustomer(id) {
     <div class="grid">
       <div class="card"><h3>Estimates</h3><ul class="list">${ests.map((e) => `<li class="clickable" onclick="location.hash='#/estimates/${e.id}'">
         <div class="grow"><div class="title">${esc(e.number)} ${esc(e.title || '')}</div><div class="sub">${fmtDate(e.date)}</div></div>
-        <span class="pill ${e.status}">${e.status}</span><strong>${money(estimateTotals(e).total)}</strong></li>`).join('') || '<li class="empty">None yet.</li>'}</ul></div>
+        <span class="pill ${e.status}">${e.signed_at ? '✍️ Signed' : e.status}</span><strong>${money(estimateTotals(e).total)}</strong></li>`).join('') || '<li class="empty">None yet.</li>'}</ul></div>
       <div class="card"><h3>Documents & contracts</h3><ul class="list" id="c-docs">${docs.map(docRow).join('') || '<li class="empty">None yet.</li>'}</ul></div>
       <div class="card"><h3>Appointments</h3><ul class="list" id="c-evs">${evs.map((e) => eventRow(e).replace('<div class="title">', `<div class="title">${fmtDate(e.date)} · `)).join('') || '<li class="empty">None.</li>'}</ul></div>
       <div class="card"><h3>To-dos</h3><ul class="list" id="c-todos">${todos.map(todoRow).join('') || '<li class="empty">None.</li>'}</ul></div>
       <div class="card"><h3>Money</h3><ul class="list" id="c-txs">${txs.map(txRow).join('') || '<li class="empty">None.</li>'}</ul></div>
     </div>`;
   $('#edit').onclick = () => editCustomer(c, reload);
+  $('#text-c').onclick = () => textCustomer({ customer: c, kind: 'Job update' }, reload);
   $('#add-job').onclick = () => editJob({ customer_id: c.id, address: c.address, status: 'Estimate Pending' }, (j) => (location.hash = `#/jobs/${j.id}`));
   $('#add-ev').onclick = () => editEvent({ customer_id: c.id, location: c.address }, reload);
   $('#add-todo').onclick = () => editTodo({ customer_id: c.id }, reload);
@@ -908,7 +1077,7 @@ async function pageEstimates() {
     <div class="card"><ul class="list">${list.map((e) => `<li class="clickable" onclick="location.hash='#/estimates/${e.id}'">
       <div class="grow"><div class="title">${esc(e.number)} · ${esc(customerName(e.customer_id) || 'No customer')}</div>
       <div class="sub">${esc(e.title || '')} · ${fmtDate(e.date)}</div></div>
-      <span class="pill ${e.status}">${e.status}</span><strong>${money(estimateTotals(e).total)}</strong></li>`).join('') || '<li class="empty">No estimates yet.</li>'}</ul></div>`;
+      <span class="pill ${e.status}">${e.signed_at ? '✍️ Signed' : e.status}</span><strong>${money(estimateTotals(e).total)}</strong></li>`).join('') || '<li class="empty">No estimates yet.</li>'}</ul></div>`;
 }
 
 async function pageEstimateEdit(id, query) {
@@ -927,7 +1096,10 @@ async function pageEstimateEdit(id, query) {
     <p><a href="#/estimates">‹ All estimates</a></p>
     <form class="card" id="est-form">
       <div class="spread"><h2 style="margin:0">${id === 'new' ? 'New estimate' : 'Estimate ' + esc(est.number)}</h2>
-        ${id !== 'new' ? `<div class="row"><a class="btn" href="#/estimates/${id}/print">Print / PDF</a><a class="btn" href="#/contracts/new?estimate=${id}">Make contract</a><button type="button" class="btn" id="pay">Record payment</button></div>` : ''}</div>
+        ${id !== 'new' ? `<div class="row">${est.signed_at ? '' : '<button type="button" class="btn primary" id="send-sign">✍️ Send to sign</button>'}<a class="btn" href="#/estimates/${id}/print">Print / PDF</a><a class="btn" href="#/contracts/new?estimate=${id}">Make contract</a><button type="button" class="btn" id="pay">Record payment</button></div>` : ''}</div>
+      ${est.signed_at ? `<div class="signed-banner">✓ Signed by <strong>${esc(est.signed_name)}</strong> on ${fmtLongDate(est.signed_at.slice(0, 10))}
+        ${est.signed_document_id ? ` · <a href="/api/documents/${est.signed_document_id}/file" target="_blank" rel="noopener">View signed copy</a>` : ''}</div>`
+        : est.sign_token ? `<div class="sent-banner">Sent to sign ${est.sent_at ? 'on ' + fmtLongDate(est.sent_at.slice(0, 10)) : ''}, not signed yet. <a href="#" id="resend">Send the link again</a></div>` : ''}
       <div class="form-grid">
         <label>Customer <select name="customer_id">${customerOptions(est.customer_id, '— Pick customer —')}</select></label>
         <label>Job title <input name="title" value="${esc(est.title)}" placeholder="e.g. 12x16 deck replacement"></label>
@@ -1007,6 +1179,15 @@ async function pageEstimateEdit(id, query) {
     } catch (err) { alert(err.message); }
   };
   if (id !== 'new') {
+    const sendBtn = $('#send-sign');
+    if (sendBtn) sendBtn.onclick = () => sendForSignature(est, () => pageEstimateEdit(id, query));
+    const resend = $('#resend');
+    if (resend) resend.onclick = (e) => {
+      e.preventDefault();
+      const c = customersCache.find((x) => x.id === est.customer_id) || {};
+      const link = `${location.origin}/sign/${est.sign_token}`;
+      shareSignLink(c, est, link, `Hi ${firstName(c.name)}, here's the link to review and sign your estimate from Mayo's Construction: ${link}`);
+    };
     $('#del').onclick = async () => {
       if (!confirm('Delete this estimate?')) return;
       await api('DELETE', `/estimates/${id}`);
@@ -1043,7 +1224,9 @@ async function pageEstimatePrint(id) {
         <tr><td><strong>Total</strong></td><td class="num"><strong>${money(t.total)}</strong></td></tr>
       </table>
       ${est.notes ? `<p style="white-space:pre-wrap;margin-top:1.5rem">${esc(est.notes)}</p>` : ''}
-      <p style="margin-top:2.5rem">Accepted by: ______________________________ &nbsp; Date: ____________</p>
+      ${est.signed_at ? `<div style="margin-top:2rem"><img src="${esc(est.signature)}" alt="Signature" style="max-width:280px;border-bottom:1px solid var(--ink)"><br>
+        Signed electronically by ${esc(est.signed_name)} on ${fmtLongDate(est.signed_at.slice(0, 10))}</div>`
+        : '<p style="margin-top:2.5rem">Accepted by: ______________________________ &nbsp; Date: ____________</p>'}
     </div>`;
 }
 
@@ -1327,7 +1510,8 @@ async function pageSettings() {
       const data = JSON.parse(await file.text());
       const r = await api('POST', '/import', data);
       customersCache = null; jobsCache = null;
-      toast('Imported: ' + Object.entries(r.counts).filter(([, n]) => n).map(([k, n]) => `${n} ${k}`).join(', '));
+      const added = Object.entries(r.counts).filter(([, n]) => n).map(([k, n]) => `${n} ${k}`).join(', ');
+      toast(added ? 'Imported: ' + added : 'Already up to date (missing phone numbers filled in)');
       e.target.reset();
     } catch (err) { alert(err.message.startsWith('Unexpected') ? 'That is not a valid backup file.' : err.message); }
   };

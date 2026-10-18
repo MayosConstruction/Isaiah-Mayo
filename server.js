@@ -107,6 +107,16 @@ CREATE TABLE IF NOT EXISTS templates (
   body TEXT NOT NULL,
   created_at TEXT DEFAULT (datetime('now'))
 );
+CREATE TABLE IF NOT EXISTS messages (
+  id INTEGER PRIMARY KEY,
+  job_id INTEGER REFERENCES jobs(id) ON DELETE CASCADE,
+  customer_id INTEGER REFERENCES customers(id) ON DELETE SET NULL,
+  kind TEXT,
+  channel TEXT,
+  body TEXT NOT NULL,
+  sent_by TEXT,
+  created_at TEXT DEFAULT (datetime('now'))
+);
 CREATE TABLE IF NOT EXISTS documents (
   id INTEGER PRIMARY KEY,
   name TEXT NOT NULL,
@@ -131,6 +141,11 @@ addColumn('transactions', 'status', "TEXT DEFAULT 'paid'"); // 'paid' or 'owed' 
 addColumn('todos', 'job_id', 'INTEGER REFERENCES jobs(id) ON DELETE SET NULL');
 addColumn('estimates', 'job_id', 'INTEGER REFERENCES jobs(id) ON DELETE SET NULL');
 addColumn('events', 'job_id', 'INTEGER REFERENCES jobs(id) ON DELETE SET NULL');
+addColumn('jobs', 'crew', "TEXT DEFAULT 'Moss & Isaiah'"); // who's coming
+addColumn('jobs', 'arrival_time', 'TEXT');
+// Online signing: the customer opens /sign/<token>, reviews, and signs.
+for (const [col, def] of [['sign_token', 'TEXT'], ['contract_text', 'TEXT'], ['sent_at', 'TEXT'], ['signed_at', 'TEXT'],
+  ['signed_name', 'TEXT'], ['signature', 'TEXT'], ['signed_ip', 'TEXT'], ['signed_document_id', 'INTEGER']]) addColumn('estimates', col, def);
 
 // Moss and Isaiah are 50/50 partners: what they take from a job is "Partner pay",
 // everyone else on labor is a "Subcontractor". Older wording is converted here.
@@ -186,7 +201,7 @@ const JOB_ORDER = `CASE status WHEN 'In Progress' THEN 0 WHEN 'Scheduled' THEN 1
   start_date IS NULL, start_date, id`;
 const RESOURCES = {
   jobs: {
-    cols: ['address', 'customer_id', 'status', 'start_date', 'finish_date', 'price', 'labor_cost', 'materials_cost', 'materials_status', 'materials', 'scope', 'notes'],
+    cols: ['address', 'customer_id', 'status', 'start_date', 'finish_date', 'price', 'labor_cost', 'materials_cost', 'materials_status', 'materials', 'scope', 'notes', 'crew', 'arrival_time'],
     required: ['address'], order: JOB_ORDER,
   },
   customers: { cols: ['name', 'phone', 'email', 'address', 'notes'], required: ['name'], order: 'name COLLATE NOCASE' },
@@ -195,6 +210,7 @@ const RESOURCES = {
   estimates: { cols: ['number', 'customer_id', 'job_id', 'title', 'date', 'status', 'items', 'tax_rate', 'notes'], required: [], order: 'id DESC' },
   transactions: { cols: ['type', 'date', 'amount', 'category', 'description', 'paid_by', 'paid_to', 'status', 'customer_id', 'job_id'], required: ['type', 'date', 'amount'], order: 'date DESC, id DESC' },
   templates: { cols: ['name', 'body'], required: ['name', 'body'], order: 'name COLLATE NOCASE' },
+  messages: { cols: ['job_id', 'customer_id', 'kind', 'channel', 'body', 'sent_by'], required: ['body'], order: 'id DESC' },
 };
 
 function cleanValue(col, v) {
@@ -349,6 +365,27 @@ function summary() {
 // already has data.
 // ---------------------------------------------------------------------------
 const IMPORT_ORDER = ['customers', 'jobs', 'todos', 'events', 'estimates', 'transactions', 'templates'];
+// Importing the same file twice shouldn't double anything. Matching records are
+// reused, and a customer that already exists gets any blank phone/email/address filled in.
+function findExisting(table, row) {
+  if (table === 'customers') {
+    const c = db.prepare('SELECT * FROM customers WHERE lower(trim(name)) = lower(trim(?))').get(String(row.name || ''));
+    if (c) {
+      for (const col of ['phone', 'email', 'address']) {
+        if (!c[col] && row[col]) db.prepare(`UPDATE customers SET ${col} = ? WHERE id = ?`).run(String(row[col]), c.id);
+      }
+    }
+    return c;
+  }
+  if (table === 'jobs') return db.prepare('SELECT id FROM jobs WHERE lower(trim(address)) = lower(trim(?))').get(String(row.address || ''));
+  if (table === 'todos') return db.prepare('SELECT id FROM todos WHERE title = ?').get(String(row.title || ''));
+  if (table === 'events') return db.prepare('SELECT id FROM events WHERE title = ? AND date = ?').get(String(row.title || ''), String(row.date || ''));
+  if (table === 'transactions') {
+    return db.prepare('SELECT id FROM transactions WHERE type = ? AND date = ? AND amount = ? AND job_id IS ?')
+      .get(String(row.type), String(row.date), Number(row.amount) || 0, row.job_id ?? null);
+  }
+  return null;
+}
 function importData(data) {
   if (!data || typeof data !== 'object') throw httpError(400, 'Not a valid import file');
   const idMap = { customers: {}, jobs: {} };
@@ -364,6 +401,11 @@ function importData(data) {
         if (copy.customer_id != null) copy.customer_id = idMap.customers[copy.customer_id] ?? null;
         if (copy.job_id != null) copy.job_id = idMap.jobs[copy.job_id] ?? null;
         if (table === 'estimates') delete copy.number; // get a fresh number
+        const existing = findExisting(table, copy);
+        if (existing) {
+          if (row.id != null && idMap[table]) idMap[table][row.id] = existing.id;
+          continue;
+        }
         const saved = insertResource(table, copy);
         if (row.id != null && idMap[table]) idMap[table][row.id] = saved.id;
         counts[table]++;
@@ -376,6 +418,95 @@ function importData(data) {
     throw err.status ? err : httpError(400, 'Import failed: ' + err.message);
   }
   return { ok: true, counts };
+}
+
+// ---------------------------------------------------------------------------
+// Online signing
+// ---------------------------------------------------------------------------
+const BIZ = { name: "Mayo's Construction", phone: '870-617-3507', city: 'Hot Springs, AR', lines: 'Construction · Remodeling · Roofing' };
+function escHtml(v) {
+  return String(v ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+}
+function fmtMoney(n) { return '$' + (Number(n) || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }); }
+function estimateMath(est) {
+  let items = [];
+  try { items = JSON.parse(est.items || '[]'); } catch {}
+  const subtotal = items.reduce((t, i) => t + (Number(i.qty) || 0) * (Number(i.price) || 0), 0);
+  const tax = subtotal * (Number(est.tax_rate) || 0) / 100;
+  return { items, subtotal, tax, total: subtotal + tax };
+}
+
+function startSigning(id, body) {
+  const est = db.prepare('SELECT * FROM estimates WHERE id = ?').get(id);
+  if (!est) throw httpError(404, 'Not found');
+  if (est.signed_at) throw httpError(400, 'This estimate is already signed');
+  const token = est.sign_token || crypto.randomBytes(24).toString('hex');
+  db.prepare("UPDATE estimates SET sign_token = ?, contract_text = ?, sent_at = datetime('now'), status = CASE WHEN status = 'Draft' THEN 'Sent' ELSE status END WHERE id = ?")
+    .run(token, body.contract_text ? String(body.contract_text) : null, id);
+  return db.prepare('SELECT * FROM estimates WHERE id = ?').get(id);
+}
+
+function publicEstimate(token) {
+  const est = token && db.prepare('SELECT * FROM estimates WHERE sign_token = ?').get(String(token));
+  if (!est) throw httpError(404, 'This link is not valid. Please contact Mayo\'s Construction at ' + BIZ.phone + '.');
+  const c = est.customer_id ? db.prepare('SELECT name, address, phone, email FROM customers WHERE id = ?').get(est.customer_id) : null;
+  return { est, c };
+}
+
+function signedHtml(est, c) {
+  const m = estimateMath(est);
+  return `<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Signed - ${escHtml(est.number)}</title></head>
+<body style="font-family:Arial,sans-serif;max-width:780px;margin:24px auto;padding:0 16px;color:#151515;line-height:1.5">
+<div style="display:flex;gap:12px;align-items:center;border-bottom:4px solid #a42f28;padding-bottom:8px">
+  <img src="/logo.png" alt="" width="70" height="70">
+  <div><div style="font-size:24px;font-weight:800;text-transform:uppercase">${BIZ.name}</div>
+  <div style="color:#6e665a;font-size:14px">${BIZ.lines} · ${BIZ.city} · ${BIZ.phone}</div></div></div>
+<h2 style="margin:18px 0 4px">Estimate ${escHtml(est.number)}${est.title ? ' — ' + escHtml(est.title) : ''}</h2>
+<p style="margin:0 0 12px">Prepared for: <strong>${escHtml(c?.name)}</strong>${c?.address ? ' · ' + escHtml(c.address) : ''}</p>
+<table style="width:100%;border-collapse:collapse;font-size:14px">
+<tr><th align="left">Description</th><th align="right">Qty</th><th align="right">Price</th><th align="right">Amount</th></tr>
+${m.items.map((i) => `<tr style="border-top:1px solid #ddd"><td>${escHtml(i.desc)}</td><td align="right">${escHtml(i.qty)}</td><td align="right">${fmtMoney(i.price)}</td><td align="right">${fmtMoney((Number(i.qty) || 0) * (Number(i.price) || 0))}</td></tr>`).join('')}
+${m.tax ? `<tr><td colspan="3" align="right">Tax</td><td align="right">${fmtMoney(m.tax)}</td></tr>` : ''}
+<tr style="border-top:2px solid #151515"><td colspan="3" align="right"><strong>Total</strong></td><td align="right"><strong>${fmtMoney(m.total)}</strong></td></tr>
+</table>
+${est.notes ? `<p style="white-space:pre-wrap">${escHtml(est.notes)}</p>` : ''}
+${est.contract_text ? `<div style="white-space:pre-wrap;font-family:Georgia,serif;font-size:15px;margin-top:20px;border-top:1px solid #ddd;padding-top:12px">${escHtml(est.contract_text)}</div>` : ''}
+<div style="margin-top:24px;border:2px solid #1e7a45;border-radius:8px;padding:12px">
+  <div><strong>Signed electronically by:</strong> ${escHtml(est.signed_name)}</div>
+  <img src="${escHtml(est.signature)}" alt="Signature" style="max-width:320px;height:auto;border-bottom:1px solid #151515;margin:8px 0">
+  <div style="font-size:13px;color:#6e665a">Signed ${escHtml(est.signed_at)} UTC · IP ${escHtml(est.signed_ip)} · The signer agreed to sign electronically.</div>
+</div></body></html>`;
+}
+
+function completeSigning(token, body, req) {
+  const { est, c } = publicEstimate(token);
+  if (est.signed_at) throw httpError(400, 'This has already been signed. Thank you!');
+  const name = String(body.name || '').trim();
+  const sig = String(body.signature || '');
+  if (!name) throw httpError(400, 'Please type your full name');
+  if (!body.agree) throw httpError(400, 'Please check the box to agree');
+  if (!/^data:image\/png;base64,[A-Za-z0-9+/=]+$/.test(sig) || sig.length > 600000) throw httpError(400, 'Please sign in the box');
+  const ip = String(req.headers['x-forwarded-for'] || req.socket.remoteAddress || '').split(',')[0].trim();
+  db.exec('BEGIN');
+  try {
+    db.prepare("UPDATE estimates SET signed_at = datetime('now'), signed_name = ?, signature = ?, signed_ip = ?, status = 'Accepted' WHERE id = ?")
+      .run(name, sig, ip, est.id);
+    const signed = db.prepare('SELECT * FROM estimates WHERE id = ?').get(est.id);
+    const filename = crypto.randomBytes(12).toString('hex') + '.html';
+    fs.writeFileSync(path.join(UPLOAD_DIR, filename), signedHtml(signed, c));
+    const doc = db.prepare('INSERT INTO documents (name, kind, customer_id, filename, mime, size, uploaded_by) VALUES (?,?,?,?,?,?,?)')
+      .run(`${c?.name || 'Customer'} - ${est.number} signed`, 'Signed contract', est.customer_id, filename, 'text/html', fs.statSync(path.join(UPLOAD_DIR, filename)).size, 'Signed online');
+    db.prepare('UPDATE estimates SET signed_document_id = ? WHERE id = ?').run(doc.lastInsertRowid, est.id);
+    // Shows up on both partners' to-do lists.
+    db.prepare('INSERT INTO todos (title, due_date, customer_id, job_id, assigned_to) VALUES (?,?,?,?,?)')
+      .run(`✍️ ${c?.name || 'Customer'} signed ${est.number}${est.title ? ' (' + est.title + ')' : ''}. Schedule it!`, today(), est.customer_id, est.job_id, 'Both');
+    db.exec('COMMIT');
+  } catch (err) {
+    db.exec('ROLLBACK');
+    throw err;
+  }
+  return { ok: true };
 }
 
 // ---------------------------------------------------------------------------
@@ -475,7 +606,7 @@ const MIME = {
 };
 
 function serveStatic(req, res, pathname) {
-  let rel = pathname === '/' ? '/index.html' : pathname;
+  let rel = pathname === '/' ? '/index.html' : /^\/sign\/[a-f0-9]+$/.test(pathname) ? '/sign.html' : pathname;
   const file = path.resolve(PUBLIC_DIR, '.' + decodeURIComponent(rel));
   if (!file.startsWith(PUBLIC_DIR + path.sep)) return send(res, 404, 'Not found');
   fs.readFile(file, (err, data) => {
@@ -516,6 +647,28 @@ async function handleApi(req, res, url) {
     return send(res, 200, { id: u.id, username: u.username, name: u.name }, { 'Set-Cookie': sessionCookie(token, SESSION_DAYS * 86400) });
   }
 
+  // ---- Customer signing (no login: the long random link is the key) ----
+  if (parts[0] === 'public' && parts[1] === 'sign' && parts[2]) {
+    const { est, c } = publicEstimate(parts[2]);
+    if (method === 'GET' && !parts[3]) {
+      const m = estimateMath(est);
+      return send(res, 200, {
+        business: BIZ, customer: c ? { name: c.name, address: c.address } : null,
+        number: est.number, title: est.title, date: est.date, notes: est.notes, contract_text: est.contract_text,
+        items: m.items, subtotal: m.subtotal, tax: m.tax, tax_rate: est.tax_rate, total: m.total,
+        signed: !!est.signed_at, signed_name: est.signed_name, signed_at: est.signed_at,
+      });
+    }
+    if (method === 'GET' && parts[3] === 'document' && est.signed_at) {
+      return send(res, 200, signedHtml(est, c), {
+        'Content-Type': 'text/html; charset=utf-8',
+        'Content-Security-Policy': "default-src 'none'; img-src 'self' data:; style-src 'unsafe-inline'",
+      });
+    }
+    if (method === 'POST' && !parts[3]) return send(res, 200, completeSigning(parts[2], await readBody(req), req));
+    throw httpError(404, 'Not found');
+  }
+
   const user = currentUser(req);
   if (!user) throw httpError(401, 'Please log in');
 
@@ -553,6 +706,10 @@ async function handleApi(req, res, url) {
   }
   if (parts[0] === 'import' && method === 'POST') {
     return send(res, 200, importData(await readBody(req)));
+  }
+
+  if (parts[0] === 'estimates' && parts[2] === 'send' && method === 'POST') {
+    return send(res, 200, startSigning(Number(parts[1]), await readBody(req)));
   }
 
   // ---- Documents ----

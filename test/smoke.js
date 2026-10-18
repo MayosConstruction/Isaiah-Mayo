@@ -96,6 +96,39 @@ const { server } = require('../server');
   const impTx = (await call('GET', `/transactions?job_id=${impJob.id}`))[0];
   assert.strictEqual(impTx.customer_id, impJob.customer_id, 'ids are remapped');
 
+  // Re-importing the same file adds nothing new, but fills in a missing phone number
+  const again = await call('POST', '/import', {
+    customers: [{ id: 50, name: 'imported person', phone: '501-555-0199' }],
+    jobs: [{ id: 9, address: '9 Import Rd', customer_id: 50 }],
+    transactions: [{ type: 'in', date: `${y}-${m}-09`, amount: 10, job_id: 9, customer_id: 50 }],
+  });
+  assert.deepStrictEqual([again.counts.customers, again.counts.jobs, again.counts.transactions], [0, 0, 0]);
+  assert.strictEqual((await call('GET', '/customers')).find((x) => x.name === 'Imported Person').phone, '501-555-0199');
+
+  // Send an estimate to sign, and sign it without logging in
+  const sent = await call('POST', `/estimates/${e1.id}/send`, { contract_text: 'Agreement for {{customer_name}}' });
+  assert.ok(/^[a-f0-9]{48}$/.test(sent.sign_token));
+  const pub = `/public/sign/${sent.sign_token}`;
+  const savedCookie = cookie;
+  cookie = '';
+  const view = await call('GET', pub);
+  assert.strictEqual(view.total, 1000);
+  assert.strictEqual(view.signed, false);
+  await call('GET', '/public/sign/deadbeef', undefined, 404);
+  await call('POST', pub, { name: 'Jane Smith', agree: true, signature: 'not-an-image' }, 400);
+  const png = 'data:image/png;base64,' + Buffer.from('fakepng').toString('base64');
+  await call('POST', pub, { name: 'Jane Smith', agree: true, signature: png });
+  await call('POST', pub, { name: 'Jane Smith', agree: true, signature: png }, 400); // only once
+  const signedDoc = await call('GET', pub + '/document');
+  assert.ok(signedDoc.includes('Signed electronically by:') && signedDoc.includes('Jane Smith'));
+  cookie = savedCookie;
+  const est = await call('GET', `/estimates/${e1.id}`);
+  assert.strictEqual(est.status, 'Accepted');
+  assert.ok(est.signed_document_id);
+  assert.ok((await call('GET', '/todos')).some((t) => t.title.includes('signed E-1001')));
+  await call('POST', '/messages', { job_id: job.id, customer_id: c.id, kind: 'On our way', channel: 'text', body: 'On the way' }, 201);
+  assert.strictEqual((await call('GET', `/messages?job_id=${job.id}`)).length, 1);
+
   const backup = await call('GET', '/backup');
   assert.ok(backup.customers.length === 2 && backup.jobs.length === 2);
 

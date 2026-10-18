@@ -66,9 +66,23 @@ Tip: on your phone, open the site and choose **Add to Home Screen** so it works 
 
 ## Loading your existing jobs
 
-Go to **Settings → Import** and pick a `.json` file: either a backup made by this app, or a starter file. Importing only adds records. It never deletes anything.
+Go to **Settings → Import** and pick a `.json` file: either a backup made by this app, or a starter file. Importing only adds records. It never deletes anything. Importing the same file again won't double anything, and it fills in any missing phone numbers.
 
 Customer and job details are kept out of this repository on purpose, because the repository is public. Keep your starter or backup files somewhere private.
+
+## Sending estimates to sign
+
+1. Build the estimate (from a job, use **Make estimate**, and the scope fills in).
+2. Tap **✍️ Send to sign** and pick the agreement to include.
+3. Tap **Send by text** or **Send by email**. Your phone's Messages or Mail app opens with the link ready to go.
+4. The customer opens the link, reviews everything, types their name, and signs with their finger.
+5. The signed copy (with signature, date, and time) saves to the customer's file, the estimate turns **Accepted**, and a "✍️ signed, schedule it" to-do appears for both of you.
+
+The link works only for that one estimate and can be signed once.
+
+## Texting customers
+
+On a job tap **💬 Text customer** (also on customer pages and appointments). Pick a message, such as *schedule reminder*, *on our way*, *running late*, *who's coming*, *job update*, or *job finished*. Then pick **who's coming** (Moss, Isaiah, both, or a sub) and the arrival time. The text is written for you, and you can edit it before sending. It sends from **your own phone number** through Messages, so replies come straight to you. Every text is logged on the job under *Texts & updates sent*.
 
 ## How the money works
 
