@@ -92,6 +92,26 @@ main { max-width: 1000px; margin: 0 auto; padding: 1rem; }
 .pill.Declined { background: #fdecea; color: var(--red); }
 .pill.overdue { background: #fdecea; color: var(--red); }
 
+/* Jobs */
+.job-card { cursor: pointer; margin-bottom: 0; border-left: 5px solid var(--brand); }
+.job-card:hover { background: #fff8ea; }
+.job-money { display: grid; grid-template-columns: repeat(3, 1fr); gap: .4rem; margin: .6rem 0 .2rem; }
+.job-money span { display: block; font-size: .75rem; color: var(--muted); text-transform: uppercase; letter-spacing: .5px; }
+.job-money strong { font-family: var(--display); font-size: 1.2rem; }
+.mini { margin: .4rem 0 0; padding-left: 1.1rem; font-size: .92rem; }
+.done-item { text-decoration: line-through; color: var(--muted); }
+.job-table tr.sep td { border-top: 1px solid var(--border); padding-top: .5rem; }
+.pill.job-InProgress { background: #fdecea; color: var(--brand); font-weight: 600; }
+.pill.job-Scheduled { background: #fff3e0; color: #8a5300; }
+.pill.job-EstimatePending { background: #efe5cf; }
+.pill.job-Done { background: #e3f5ea; color: var(--green); }
+.cal .day .ev.job { background: var(--ink); }
+.cal .day .ev.job.c1 { background: var(--brand); }
+.cal .day .ev.job.c2 { background: #2f6f4f; }
+.cal .day .ev.job.c3 { background: #8a5300; }
+.cal .day .ev.job.c4 { background: #3b4f8a; }
+.cal .ev .short { display: none; }
+
 /* Forms */
 label { display: block; font-size: .88rem; color: var(--muted); margin-bottom: .7rem; }
 input, select, textarea {
@@ -180,6 +200,8 @@ dialog::backdrop { background: rgba(15, 25, 40, .45); }
   main { padding: .7rem; }
   .paper { padding: 1rem; }
   .hide-sm { display: none; }
+  .cal .ev .full { display: none; }
+  .cal .ev .short { display: inline; }
   /* Stack estimate line items so qty/price fields are usable on a phone */
   .items-table thead { display: none; }
   .items-table tr { display: grid; grid-template-columns: 1fr 1fr auto auto; gap: .3rem; align-items: center; padding: .4rem 0; border-bottom: 1px solid var(--border); }

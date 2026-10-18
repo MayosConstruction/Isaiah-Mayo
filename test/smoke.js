@@ -69,8 +69,31 @@ const { server } = require('../server');
   await call('GET', '/me', undefined, 401);
   await call('POST', '/login', { username: 'isaiah', password: 'newpass123' });
 
+  // Jobs, owed payouts and import
+  const job = await call('POST', '/jobs', { address: '1 Test St', customer_id: c.id, price: 1000, labor_cost: 600, scope: [{ text: 'Do work', done: false }] }, 201);
+  await call('POST', '/transactions', { type: 'in', date: `${y}-${m}-07`, amount: 400, job_id: job.id }, 201);
+  await call('POST', '/transactions', { type: 'out', date: `${y}-${m}-07`, amount: 200, category: 'Labor / Sub', paid_to: 'Dad', job_id: job.id }, 201);
+  const owed = await call('POST', '/transactions', { type: 'out', date: `${y}-${m}-08`, amount: 300, category: 'Labor / Sub', paid_to: 'Dad', status: 'owed', job_id: job.id }, 201);
+  const jm = await call('GET', '/job-money');
+  assert.deepStrictEqual(jm[job.id], { collected: 400, labor_paid: 200, owed_out: 300, spent: 200 });
+  const s2 = await call('GET', '/summary');
+  assert.strictEqual(s2.month.out, 250.5 + 200, 'owed payouts are not money out yet');
+  assert.strictEqual(s2.owedOut[0].total, 300);
+  assert.strictEqual((await call('GET', '/transactions?status=owed')).length, 1);
+  await call('PUT', `/transactions/${owed.id}`, { status: 'paid' });
+  assert.strictEqual((await call('GET', '/summary')).month.out, 250.5 + 500);
+  const imp = await call('POST', '/import', {
+    customers: [{ id: 50, name: 'Imported Person' }],
+    jobs: [{ id: 9, address: '9 Import Rd', customer_id: 50, status: 'Estimate Pending' }],
+    transactions: [{ type: 'in', date: `${y}-${m}-09`, amount: 10, job_id: 9, customer_id: 50 }],
+  });
+  assert.deepStrictEqual([imp.counts.customers, imp.counts.jobs, imp.counts.transactions], [1, 1, 1]);
+  const impJob = (await call('GET', '/jobs')).find((j) => j.address === '9 Import Rd');
+  const impTx = (await call('GET', `/transactions?job_id=${impJob.id}`))[0];
+  assert.strictEqual(impTx.customer_id, impJob.customer_id, 'ids are remapped');
+
   const backup = await call('GET', '/backup');
-  assert.ok(backup.customers.length === 1);
+  assert.ok(backup.customers.length === 2 && backup.jobs.length === 2);
 
   console.log('All smoke tests passed');
   server.close();

@@ -5,7 +5,7 @@ This Agreement is made on {{date}} between:
 CONTRACTOR: Mayo's Construction (Moss Mayo and Isaiah Mayo), Hot Springs, Arkansas · 870-617-3507
 CUSTOMER (OWNER): {{customer_name}}
 Phone: {{customer_phone}}    Email: {{customer_email}}
-Project address: {{customer_address}}
+Project address: {{job_address}}
 
 1. SCOPE OF WORK
 Contractor agrees to furnish labor and materials to complete the following work:
@@ -22,7 +22,7 @@ Balance due upon completion: $____________
 Payments not received within 15 days of the due date may be subject to a late charge.
 
 4. START AND COMPLETION
-Work is expected to begin on or about ____________ and be substantially complete on or about ____________. Dates may change due to weather, material availability, change orders, or other conditions beyond Contractor's control.
+Work is expected to begin on or about {{start_date}} and be substantially complete on or about {{finish_date}}. Dates may change due to weather, material availability, change orders, or other conditions beyond Contractor's control.
 
 5. CHANGE ORDERS
 Any change to the scope of work, materials, or price must be agreed to in writing by both parties before the changed work is performed.

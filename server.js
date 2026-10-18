@@ -43,6 +43,21 @@ CREATE TABLE IF NOT EXISTS customers (
   phone TEXT, email TEXT, address TEXT, notes TEXT,
   created_at TEXT DEFAULT (datetime('now'))
 );
+CREATE TABLE IF NOT EXISTS jobs (
+  id INTEGER PRIMARY KEY,
+  address TEXT NOT NULL,
+  customer_id INTEGER REFERENCES customers(id) ON DELETE SET NULL,
+  status TEXT DEFAULT 'Scheduled',
+  start_date TEXT, finish_date TEXT,
+  price REAL DEFAULT 0,
+  labor_cost REAL DEFAULT 0,
+  materials_cost REAL DEFAULT 0,
+  materials_status TEXT DEFAULT 'Unspent',
+  materials TEXT DEFAULT '[]',
+  scope TEXT DEFAULT '[]',
+  notes TEXT,
+  created_at TEXT DEFAULT (datetime('now'))
+);
 CREATE TABLE IF NOT EXISTS todos (
   id INTEGER PRIMARY KEY,
   title TEXT NOT NULL,
@@ -105,6 +120,18 @@ CREATE TABLE IF NOT EXISTS documents (
 );
 `);
 
+// ---- Columns added after the first version (safe to run every start) ----
+function addColumn(table, col, def) {
+  const exists = db.prepare(`PRAGMA table_info(${table})`).all().some((c) => c.name === col);
+  if (!exists) db.exec(`ALTER TABLE ${table} ADD COLUMN ${col} ${def}`);
+}
+addColumn('transactions', 'job_id', 'INTEGER REFERENCES jobs(id) ON DELETE SET NULL');
+addColumn('transactions', 'paid_to', 'TEXT');
+addColumn('transactions', 'status', "TEXT DEFAULT 'paid'"); // 'paid' or 'owed' (owed = not counted as money out yet)
+addColumn('todos', 'job_id', 'INTEGER REFERENCES jobs(id) ON DELETE SET NULL');
+addColumn('estimates', 'job_id', 'INTEGER REFERENCES jobs(id) ON DELETE SET NULL');
+addColumn('events', 'job_id', 'INTEGER REFERENCES jobs(id) ON DELETE SET NULL');
+
 // ---- Password helpers ----
 function hashPassword(password, salt = crypto.randomBytes(16).toString('hex')) {
   const hash = crypto.scryptSync(String(password), salt, 64).toString('hex');
@@ -139,22 +166,28 @@ if (!db.prepare('SELECT 1 FROM templates LIMIT 1').get()) {
 // ---------------------------------------------------------------------------
 // Generic CRUD resources (column whitelist per table)
 // ---------------------------------------------------------------------------
+const JOB_ORDER = `CASE status WHEN 'In Progress' THEN 0 WHEN 'Scheduled' THEN 1 WHEN 'Estimate Pending' THEN 2 WHEN 'Done' THEN 3 ELSE 4 END,
+  start_date IS NULL, start_date, id`;
 const RESOURCES = {
+  jobs: {
+    cols: ['address', 'customer_id', 'status', 'start_date', 'finish_date', 'price', 'labor_cost', 'materials_cost', 'materials_status', 'materials', 'scope', 'notes'],
+    required: ['address'], order: JOB_ORDER,
+  },
   customers: { cols: ['name', 'phone', 'email', 'address', 'notes'], required: ['name'], order: 'name COLLATE NOCASE' },
-  todos: { cols: ['title', 'notes', 'due_date', 'assigned_to', 'customer_id', 'done'], required: ['title'], order: 'done, due_date IS NULL, due_date, id DESC' },
-  events: { cols: ['title', 'date', 'start_time', 'end_time', 'location', 'notes', 'assigned_to', 'customer_id'], required: ['title', 'date'], order: 'date, start_time IS NULL, start_time' },
-  estimates: { cols: ['number', 'customer_id', 'title', 'date', 'status', 'items', 'tax_rate', 'notes'], required: [], order: 'id DESC' },
-  transactions: { cols: ['type', 'date', 'amount', 'category', 'description', 'paid_by', 'customer_id'], required: ['type', 'date', 'amount'], order: 'date DESC, id DESC' },
+  todos: { cols: ['title', 'notes', 'due_date', 'assigned_to', 'customer_id', 'job_id', 'done'], required: ['title'], order: 'done, due_date IS NULL, due_date, id DESC' },
+  events: { cols: ['title', 'date', 'start_time', 'end_time', 'location', 'notes', 'assigned_to', 'customer_id', 'job_id'], required: ['title', 'date'], order: 'date, start_time IS NULL, start_time' },
+  estimates: { cols: ['number', 'customer_id', 'job_id', 'title', 'date', 'status', 'items', 'tax_rate', 'notes'], required: [], order: 'id DESC' },
+  transactions: { cols: ['type', 'date', 'amount', 'category', 'description', 'paid_by', 'paid_to', 'status', 'customer_id', 'job_id'], required: ['type', 'date', 'amount'], order: 'date DESC, id DESC' },
   templates: { cols: ['name', 'body'], required: ['name', 'body'], order: 'name COLLATE NOCASE' },
 };
 
 function cleanValue(col, v) {
   if (v === undefined) return undefined;
   if (v === '' || v === null) return null;
-  if (col === 'items') return typeof v === 'string' ? v : JSON.stringify(v);
+  if (col === 'items' || col === 'materials' || col === 'scope') return typeof v === 'string' ? v : JSON.stringify(v);
   if (col === 'done') return v ? 1 : 0;
-  if (col === 'amount' || col === 'tax_rate') return Number(v) || 0;
-  if (col === 'customer_id') return Number(v) || null;
+  if (['amount', 'tax_rate', 'price', 'labor_cost', 'materials_cost'].includes(col)) return Number(v) || 0;
+  if (col === 'customer_id' || col === 'job_id') return Number(v) || null;
   return String(v);
 }
 
@@ -173,6 +206,9 @@ function pickFields(resource, body, forInsert) {
   if (resource === 'transactions' && out.type !== undefined && !['in', 'out'].includes(out.type)) {
     throw httpError(400, 'type must be "in" or "out"');
   }
+  if (resource === 'transactions' && out.status !== undefined && out.status !== null && !['paid', 'owed'].includes(out.status)) {
+    throw httpError(400, 'status must be "paid" or "owed"');
+  }
   return out;
 }
 
@@ -180,11 +216,14 @@ function listResource(resource, query) {
   const def = RESOURCES[resource];
   const where = [];
   const params = [];
-  if (query.customer_id && def.cols.includes('customer_id')) {
-    where.push('customer_id = ?');
-    params.push(Number(query.customer_id));
+  for (const key of ['customer_id', 'job_id']) {
+    if (query[key] && def.cols.includes(key)) {
+      where.push(`${key} = ?`);
+      params.push(Number(query[key]));
+    }
   }
   if (resource === 'transactions') {
+    if (query.status === 'owed') where.push("status = 'owed'");
     if (query.from) { where.push('date >= ?'); params.push(query.from); }
     if (query.to) { where.push('date <= ?'); params.push(query.to); }
   }
@@ -239,9 +278,23 @@ function moneyBetween(from, to) {
     .prepare(`SELECT
       COALESCE(SUM(CASE WHEN type='in' THEN amount END), 0) AS money_in,
       COALESCE(SUM(CASE WHEN type='out' THEN amount END), 0) AS money_out
-      FROM transactions WHERE date >= ? AND date <= ?`)
+      FROM transactions WHERE date >= ? AND date <= ? AND COALESCE(status, 'paid') = 'paid'`)
     .get(from, to);
   return { in: r.money_in, out: r.money_out, net: r.money_in - r.money_out };
+}
+
+// Money collected and paid out per job (only real, paid transactions count as collected/paid).
+function jobMoney() {
+  const out = {};
+  for (const r of db.prepare(`SELECT job_id,
+      COALESCE(SUM(CASE WHEN type='in' AND COALESCE(status,'paid')='paid' THEN amount END), 0) AS collected,
+      COALESCE(SUM(CASE WHEN type='out' AND COALESCE(status,'paid')='paid' AND category='Labor / Sub' THEN amount END), 0) AS labor_paid,
+      COALESCE(SUM(CASE WHEN type='out' AND status='owed' THEN amount END), 0) AS owed_out,
+      COALESCE(SUM(CASE WHEN type='out' AND COALESCE(status,'paid')='paid' THEN amount END), 0) AS spent
+    FROM transactions WHERE job_id IS NOT NULL GROUP BY job_id`).all()) {
+    out[r.job_id] = { collected: r.collected, labor_paid: r.labor_paid, owed_out: r.owed_out, spent: r.spent };
+  }
+  return out;
 }
 
 function summary() {
@@ -258,7 +311,44 @@ function summary() {
     events: db.prepare('SELECT * FROM events WHERE date >= ? AND date <= ? ORDER BY date, start_time IS NULL, start_time').all(t, weekAheadStr),
     openEstimates: db.prepare("SELECT * FROM estimates WHERE status IN ('Draft','Sent') ORDER BY id DESC").all(),
     customerCount: db.prepare('SELECT COUNT(*) AS n FROM customers').get().n,
+    jobs: db.prepare(`SELECT * FROM jobs WHERE status IN ('In Progress','Scheduled','Estimate Pending') ORDER BY ${JOB_ORDER}`).all(),
+    jobMoney: jobMoney(),
+    owedOut: db.prepare("SELECT paid_to, SUM(amount) AS total FROM transactions WHERE status = 'owed' GROUP BY paid_to ORDER BY total DESC").all(),
   };
+}
+
+// ---------------------------------------------------------------------------
+// Import (a backup file, or a starter file). Adds records; never deletes.
+// Ids in the file are remapped so it can be loaded into a database that
+// already has data.
+// ---------------------------------------------------------------------------
+const IMPORT_ORDER = ['customers', 'jobs', 'todos', 'events', 'estimates', 'transactions', 'templates'];
+function importData(data) {
+  if (!data || typeof data !== 'object') throw httpError(400, 'Not a valid import file');
+  const idMap = { customers: {}, jobs: {} };
+  const counts = {};
+  db.exec('BEGIN');
+  try {
+    for (const table of IMPORT_ORDER) {
+      const rows = Array.isArray(data[table]) ? data[table] : [];
+      counts[table] = 0;
+      for (const row of rows) {
+        if (table === 'templates' && db.prepare('SELECT 1 FROM templates WHERE name = ?').get(row.name)) continue;
+        const copy = { ...row };
+        if (copy.customer_id != null) copy.customer_id = idMap.customers[copy.customer_id] ?? null;
+        if (copy.job_id != null) copy.job_id = idMap.jobs[copy.job_id] ?? null;
+        if (table === 'estimates') delete copy.number; // get a fresh number
+        const saved = insertResource(table, copy);
+        if (row.id != null && idMap[table]) idMap[table][row.id] = saved.id;
+        counts[table]++;
+      }
+    }
+    db.exec('COMMIT');
+  } catch (err) {
+    db.exec('ROLLBACK');
+    throw err.status ? err : httpError(400, 'Import failed: ' + err.message);
+  }
+  return { ok: true, counts };
 }
 
 // ---------------------------------------------------------------------------
@@ -429,6 +519,13 @@ async function handleApi(req, res, url) {
       'Content-Type': 'application/json',
       'Content-Disposition': `attachment; filename="mayo-crm-backup-${today()}.json"`,
     });
+  }
+
+  if (parts[0] === 'job-money' && method === 'GET') {
+    return send(res, 200, jobMoney());
+  }
+  if (parts[0] === 'import' && method === 'POST') {
+    return send(res, 200, importData(await readBody(req)));
   }
 
   // ---- Documents ----

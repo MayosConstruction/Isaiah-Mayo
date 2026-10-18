@@ -9,6 +9,7 @@ Works on your phone or a computer. There's nothing extra to install except Node.
 | Page | What it's for |
 |---|---|
 | **Home** | This month's money in/out, profit, each partner's 50% share, today's to-dos, next 7 days, open estimates |
+| **Jobs** | One card per job, laid out like *The Mayo's Workshop* notes: address, customer, start/finish, status (📝 Estimate Pending, 📆 Scheduled, 🔨 In Progress, ✅ Done). Each job tracks price, collected vs. still owed, the labor/sub budget with who's been **paid** and who's still **owed** (Dad, subs), materials budget (Unspent / Paid / Unpaid), and tick-off lists for **materials needed** and **scope of work** |
 | **To-Do** | Quick list. Assign to Isaiah, Moss, or both. Set due dates, tick them off |
 | **Schedule** | Appointments and job days. List of what's coming up, or a month calendar |
 | **Customers** | Name, phone, email, address, and notes. Each customer page shows their estimates, payments, appointments, to-dos, and contracts. Tap to call, text, or open in Maps |
@@ -53,6 +54,16 @@ Both of you need to reach the same server so you see the same data. Two easy opt
 
 Tip: on your phone, open the site and choose **Add to Home Screen** so it works like an app.
 
+## Loading your existing jobs
+
+Go to **Settings → Import** and pick a `.json` file: either a backup made by this app, or a starter file. Importing only adds records. It never deletes anything.
+
+Customer and job details are kept out of this repository on purpose, because the repository is public. Keep your starter or backup files somewhere private.
+
+## Owed vs. paid
+
+A payout marked **Owed (not paid yet)**, like "$3,000 owed to Dad upon completion", shows on the job and under **Money → Still owed to people**. It doesn't count as money out until you tap **Mark paid**.
+
 ## Backups
 
 - **Settings → Download backup** saves all records as one `.json` file.
@@ -63,7 +74,7 @@ Tip: on your phone, open the site and choose **Add to Home Screen** so it works 
 The starter **Construction Agreement** is a general starting point, **not legal advice**. Arkansas has specific rules for residential contractors, including the residential lien notice (Ark. Code Ann. § 18-44-115) and contractor licensing thresholds. The template has a marked spot for that notice. **Have an Arkansas attorney review your template** before you use it. You can edit templates anytime under Contracts → Edit.
 
 Fill-in blanks you can use in any template:
-`{{customer_name}}` `{{customer_address}}` `{{customer_phone}}` `{{customer_email}}` `{{date}}` `{{job_title}}` `{{estimate_number}}` `{{estimate_items}}` `{{estimate_total}}`
+`{{customer_name}}` `{{customer_address}}` `{{customer_phone}}` `{{customer_email}}` `{{date}}` `{{job_title}}` `{{job_address}}` `{{job_scope}}` `{{job_price}}` `{{start_date}}` `{{finish_date}}` `{{estimate_number}}` `{{estimate_items}}` `{{estimate_total}}`
 
 ## For developers
 

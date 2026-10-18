@@ -10,13 +10,14 @@ const view = $('#view');
 const PEOPLE = ['Both', 'Isaiah', 'Moss'];
 const ESTIMATE_STATUSES = ['Draft', 'Sent', 'Accepted', 'Declined'];
 const IN_CATEGORIES = ['Job payment', 'Deposit', 'Other income'];
-const OUT_CATEGORIES = ['Materials', 'Fuel', 'Tools & equipment', 'Subcontractor', 'Dump / disposal', 'Insurance', 'Vehicle', 'Permits', 'Office / phone', 'Other expense'];
+const OUT_CATEGORIES = ['Labor / Sub', 'Materials', 'Fuel', 'Tools & equipment', 'Subcontractor', 'Dump / disposal', 'Insurance', 'Vehicle', 'Permits', 'Office / phone', 'Other expense'];
 const DOC_KINDS = ['Signed contract', 'Unsigned contract', 'Change order', 'Receipt', 'Photo', 'Other'];
 const BIZ = { name: "Mayo's Construction", phone: '870-617-3507', city: 'Hot Springs, AR', lines: 'Construction · Remodeling · Roofing', owners: 'Moss Mayo & Isaiah Mayo' };
 const LETTERHEAD = `<div class="who"><img src="/logo.png" alt="">
   <div><div class="biz">${BIZ.name}</div><div class="muted">${BIZ.lines}<br>${BIZ.city} · ${BIZ.phone}<br>${BIZ.owners}</div></div></div>`;
 let me = null;
 let customersCache = null;
+let peopleSeen = ['Dad', 'Isaiah'];
 
 function esc(s) {
   return String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
@@ -145,7 +146,7 @@ function estimateTotals(est) {
 // Shared forms (used from several pages)
 // ---------------------------------------------------------------------------
 async function editTodo(todo = {}, after) {
-  await customers();
+  await Promise.all([customers(), jobs()]);
   const isEdit = !!todo.id;
   openModal(`
     <form>
@@ -155,7 +156,10 @@ async function editTodo(todo = {}, after) {
         <label>Due date <input type="date" name="due_date" value="${esc(todo.due_date)}"></label>
         <label>Who <select name="assigned_to">${options(PEOPLE, todo.assigned_to || 'Both')}</select></label>
       </div>
-      <label>Customer (optional) <select name="customer_id">${customerOptions(todo.customer_id)}</select></label>
+      <div class="form-grid">
+        <label>Job (optional) <select name="job_id">${jobOptions(todo.job_id)}</select></label>
+        <label>Customer (optional) <select name="customer_id">${customerOptions(todo.customer_id)}</select></label>
+      </div>
       <label>Notes <textarea name="notes">${esc(todo.notes)}</textarea></label>
       ${isEdit ? `<label class="row"><input type="checkbox" name="done" ${todo.done ? 'checked' : ''}> Done</label>` : ''}
       ${modalActions(isEdit)}
@@ -203,7 +207,7 @@ async function editEvent(ev = {}, after) {
 }
 
 async function editTransaction(tx = {}, after) {
-  await customers();
+  await Promise.all([customers(), jobs()]);
   const isEdit = !!tx.id;
   const type = tx.type || 'in';
   openModal(`
@@ -218,15 +222,24 @@ async function editTransaction(tx = {}, after) {
         <label>Amount ($) <input type="number" step="0.01" min="0" name="amount" required value="${esc(tx.amount)}" inputmode="decimal"></label>
         <label>Date <input type="date" name="date" required value="${esc(tx.date || todayStr())}"></label>
         <label>Category <input name="category" list="cat-list" value="${esc(tx.category)}"></label>
-        <label id="paid-by-label">Paid with <select name="paid_by">${options(['Business', 'Isaiah', 'Moss'], tx.paid_by || 'Business')}</select></label>
+        <label class="out-only">Paid to <input name="paid_to" list="people-list" value="${esc(tx.paid_to)}" placeholder="e.g. Dad, Chris, Lowe's"></label>
+        <label class="out-only">Paid yet? <select name="status">
+          <option value="paid" ${tx.status !== 'owed' ? 'selected' : ''}>Paid</option>
+          <option value="owed" ${tx.status === 'owed' ? 'selected' : ''}>Owed (not paid yet)</option></select></label>
+        <label class="out-only">Paid with <select name="paid_by">${options(['Business', 'Isaiah', 'Moss'], tx.paid_by || 'Business')}</select></label>
       </div>
       <datalist id="cat-list"></datalist>
-      <label>Customer / job (optional) <select name="customer_id">${customerOptions(tx.customer_id)}</select></label>
+      <datalist id="people-list">${peopleSeen.map((p) => `<option value="${esc(p)}">`).join('')}</datalist>
+      <div class="form-grid">
+        <label>Job (optional) <select name="job_id">${jobOptions(tx.job_id)}</select></label>
+        <label>Customer (optional) <select name="customer_id">${customerOptions(tx.customer_id)}</select></label>
+      </div>
       <label>Description <input name="description" value="${esc(tx.description)}" placeholder="e.g. Lumber from Lowe's, Smith deposit"></label>
       ${modalActions(isEdit)}
     </form>`, {
     onSubmit: async (d) => {
-      if (d.type === 'in') d.paid_by = null;
+      if (d.type === 'in') { d.paid_by = null; d.paid_to = null; d.status = 'paid'; }
+      if (d.paid_to && !peopleSeen.includes(d.paid_to)) peopleSeen.push(d.paid_to);
       if (isEdit) await api('PUT', `/transactions/${tx.id}`, d); else await api('POST', '/transactions', d);
       toast('Saved'); after && after();
     },
@@ -236,8 +249,12 @@ async function editTransaction(tx = {}, after) {
         $('[name=type]', body).value = t;
         $$('#type-tabs .btn', body).forEach((b) => b.classList.toggle('active', b.dataset.type === t));
         $('#cat-list', body).innerHTML = (t === 'in' ? IN_CATEGORIES : OUT_CATEGORIES).map((c) => `<option value="${esc(c)}">`).join('');
-        $('#paid-by-label', body).classList.toggle('hidden', t === 'in');
+        $$('.out-only', body).forEach((el) => el.classList.toggle('hidden', t === 'in'));
       };
+      $('[name=job_id]', body).addEventListener('change', (e) => {
+        const j = jobsCache.find((x) => x.id === Number(e.target.value));
+        if (j && j.customer_id) $('[name=customer_id]', body).value = j.customer_id;
+      });
       $$('#type-tabs .btn', body).forEach((b) => b.addEventListener('click', () => setType(b.dataset.type)));
       setType(type);
     },
@@ -340,7 +357,7 @@ function todoRow(t) {
       <div class="sub">
         ${t.due_date ? `<span class="pill ${overdue ? 'overdue' : ''}">${overdue ? 'Overdue · ' : ''}${relDay(t.due_date)}</span>` : ''}
         ${t.assigned_to && t.assigned_to !== 'Both' ? esc(t.assigned_to) : 'Both'}
-        ${t.customer_id ? ' · ' + esc(customerName(t.customer_id)) : ''}
+        ${t.job_id ? ' · ' + esc(jobAddress(t.job_id)) : t.customer_id ? ' · ' + esc(customerName(t.customer_id)) : ''}
       </div>
     </div>
   </li>`;
@@ -370,11 +387,242 @@ function wireEvents(root, list, after) {
 }
 
 // ---------------------------------------------------------------------------
+// Jobs (laid out like "The Mayo's Workshop" notes)
+// ---------------------------------------------------------------------------
+const JOB_STATUSES = ['Estimate Pending', 'Scheduled', 'In Progress', 'Done', 'Lost'];
+const JOB_ICON = { 'Estimate Pending': '📝', Scheduled: '📆', 'In Progress': '🔨', Done: '✅', Lost: '✖️' };
+const MATERIAL_STATUSES = ['Unspent', 'Paid', 'Unpaid'];
+let jobsCache = null;
+
+async function jobs(force) {
+  if (!jobsCache || force) jobsCache = await api('GET', '/jobs');
+  return jobsCache;
+}
+function jobAddress(id) {
+  const j = (jobsCache || []).find((x) => x.id === id);
+  return j ? j.address : '';
+}
+function jobOptions(selected, list = jobsCache || []) {
+  return '<option value="">— None —</option>' +
+    list.map((j) => `<option value="${j.id}" ${j.id === Number(selected) ? 'selected' : ''}>${esc(j.address)}${j.customer_id ? ' · ' + esc(customerName(j.customer_id)) : ''}</option>`).join('');
+}
+function checklist(json) {
+  try { return (typeof json === 'string' ? JSON.parse(json || '[]') : json || []).filter((i) => i && i.text); } catch { return []; }
+}
+// Turn "one item per line" text into a checklist, keeping ticks on lines that didn't change.
+function linesToChecklist(text, old) {
+  return String(text || '').split('\n').map((l) => l.replace(/^\s*[-•◦⁃✓*]\s*/, '').trim()).filter(Boolean)
+    .map((t) => ({ text: t, done: old.some((o) => o.text === t && o.done) }));
+}
+function shortDate(s) { return s ? fmtDate(s, { month: 'numeric', day: 'numeric', year: '2-digit' }) : '—'; }
+function jobNumbers(job, jm = {}) {
+  const m = jm[job.id] || { collected: 0, labor_paid: 0, owed_out: 0, spent: 0 };
+  return {
+    ...m,
+    owes: (job.price || 0) - m.collected,
+    laborLeft: (job.labor_cost || 0) - m.labor_paid - m.owed_out,
+    leftover: (job.price || 0) - (job.labor_cost || 0) - (job.materials_cost || 0),
+  };
+}
+function statusPill(status) {
+  return `<span class="pill job-${status.replace(/\s/g, '')}">${JOB_ICON[status] || ''} ${esc(status)}</span>`;
+}
+
+function jobCard(job, jm) {
+  const n = jobNumbers(job, jm);
+  const scope = checklist(job.scope);
+  return `<div class="card job-card clickable" onclick="location.hash='#/jobs/${job.id}'">
+    <div class="spread" style="margin-bottom:.3rem">
+      <h3 style="margin:0">${esc(job.address)}</h3>${statusPill(job.status)}
+    </div>
+    <div class="muted">${esc(customerName(job.customer_id) || 'No customer')}${job.start_date ? ` · ${shortDate(job.start_date)} – ${shortDate(job.finish_date)}` : ''}</div>
+    ${job.price ? `<div class="job-money">
+      <div><span>Price</span><strong>${money(job.price)}</strong></div>
+      <div><span>Collected</span><strong class="green">${money(n.collected)}</strong></div>
+      <div><span>They owe</span><strong class="${n.owes > 0 ? 'red' : ''}">${money(n.owes)}</strong></div>
+    </div>` : ''}
+    ${scope.length ? `<ul class="mini">${scope.slice(0, 3).map((i) => `<li class="${i.done ? 'done-item' : ''}">${esc(i.text)}</li>`).join('')}${scope.length > 3 ? `<li class="muted">+${scope.length - 3} more</li>` : ''}</ul>` : ''}
+  </div>`;
+}
+
+async function editJob(job = {}, after) {
+  await customers();
+  const isEdit = !!job.id;
+  const mats = checklist(job.materials);
+  const scope = checklist(job.scope);
+  openModal(`
+    <form>
+      <h2>${isEdit ? 'Edit job' : 'New job'}</h2>
+      <label>Job address <input name="address" required value="${esc(job.address)}" placeholder="e.g. 353 Paradise Point"></label>
+      <div class="form-grid">
+        <label>Customer <select name="customer_id">${customerOptions(job.customer_id)}<option value="new">+ New customer…</option></select></label>
+        <label>Status <select name="status">${options(JOB_STATUSES, job.status || 'Scheduled')}</select></label>
+      </div>
+      <label id="new-cust" class="hidden">New customer's name <input name="new_customer"></label>
+      <div class="form-grid">
+        <label>Start <input type="date" name="start_date" value="${esc(job.start_date)}"></label>
+        <label>Finish <input type="date" name="finish_date" value="${esc(job.finish_date)}"></label>
+        <label>Price ($) <input type="number" step="0.01" name="price" value="${esc(job.price || '')}" inputmode="decimal"></label>
+        <label>Labor / Sub ($) <input type="number" step="0.01" name="labor_cost" value="${esc(job.labor_cost || '')}" inputmode="decimal"></label>
+        <label>Materials ($) <input type="number" step="0.01" name="materials_cost" value="${esc(job.materials_cost || '')}" inputmode="decimal"></label>
+        <label>Materials status <select name="materials_status">${options(MATERIAL_STATUSES, job.materials_status || 'Unspent')}</select></label>
+      </div>
+      <label>Materials needed (one per line) <textarea name="materials_text">${esc(mats.map((i) => i.text).join('\n'))}</textarea></label>
+      <label>Scope of work (one per line) <textarea name="scope_text">${esc(scope.map((i) => i.text).join('\n'))}</textarea></label>
+      <label>Notes <textarea name="notes">${esc(job.notes)}</textarea></label>
+      ${modalActions(isEdit)}
+    </form>`, {
+    onSubmit: async (d) => {
+      if (d.customer_id === 'new') {
+        if (!d.new_customer.trim()) throw new Error("Type the new customer's name");
+        const c = await api('POST', '/customers', { name: d.new_customer.trim(), address: d.address });
+        await customers(true);
+        d.customer_id = c.id;
+      }
+      const payload = {
+        address: d.address, customer_id: d.customer_id, status: d.status, start_date: d.start_date, finish_date: d.finish_date,
+        price: d.price, labor_cost: d.labor_cost, materials_cost: d.materials_cost, materials_status: d.materials_status, notes: d.notes,
+        materials: linesToChecklist(d.materials_text, mats), scope: linesToChecklist(d.scope_text, scope),
+      };
+      const saved = isEdit ? await api('PUT', `/jobs/${job.id}`, payload) : await api('POST', '/jobs', payload);
+      await jobs(true);
+      toast('Job saved'); after && after(saved);
+    },
+    onDelete: async () => {
+      await api('DELETE', `/jobs/${job.id}`);
+      await jobs(true);
+      toast('Job deleted'); location.hash = '#/jobs';
+    },
+    onReady: (body) => {
+      $('[name=customer_id]', body).addEventListener('change', (e) => $('#new-cust', body).classList.toggle('hidden', e.target.value !== 'new'));
+    },
+  });
+}
+
+const jobsView = { tab: 'current' };
+async function pageJobs() {
+  await customers();
+  const [all, jm] = await Promise.all([jobs(true), api('GET', '/job-money')]);
+  const tabs = {
+    current: ['Current', (j) => j.status === 'In Progress' || j.status === 'Scheduled'],
+    estimates: ['Estimates out', (j) => j.status === 'Estimate Pending'],
+    done: ['Done', (j) => j.status === 'Done' || j.status === 'Lost'],
+    all: ['All', () => true],
+  };
+  const list = all.filter(tabs[jobsView.tab][1]);
+  view.innerHTML = `
+    <div class="spread"><div><p class="eyebrow">The Mayo's Workshop</p><h2 style="margin:0">Jobs</h2></div><button class="btn primary" id="add">+ New job</button></div>
+    <div class="tabs">${Object.entries(tabs).map(([k, [label, f]]) =>
+      `<button class="btn small ${jobsView.tab === k ? 'active' : ''}" data-tab="${k}">${label} (${all.filter(f).length})</button>`).join('')}</div>
+    <div class="grid">${list.map((j) => jobCard(j, jm)).join('') || '<p class="empty">No jobs here.</p>'}</div>`;
+  $('#add').onclick = () => editJob({ status: jobsView.tab === 'estimates' ? 'Estimate Pending' : 'Scheduled' }, (j) => (location.hash = `#/jobs/${j.id}`));
+  $$('[data-tab]').forEach((b) => (b.onclick = () => { jobsView.tab = b.dataset.tab; pageJobs(); }));
+}
+
+function checklistHtml(items, field) {
+  return `<ul class="list check-list">${items.map((i, idx) => `<li class="${i.done ? 'done' : ''}">
+      <input type="checkbox" data-check="${field}" data-idx="${idx}" ${i.done ? 'checked' : ''} aria-label="Done">
+      <div class="grow"><div class="title" style="font-weight:400">${esc(i.text)}</div></div>
+      <button class="btn small danger" data-rm-item="${field}" data-idx="${idx}" aria-label="Remove">✕</button></li>`).join('') || '<li class="empty">Nothing listed.</li>'}</ul>
+    <form class="row" data-add-item="${field}" style="margin-top:.5rem">
+      <input name="text" placeholder="Add item…" style="flex:1;margin:0;min-width:150px"><button class="btn small">Add</button>
+    </form>`;
+}
+
+async function pageJob(id) {
+  await customers();
+  const [job, jm, txs, todos, ests] = await Promise.all([
+    api('GET', `/jobs/${id}`), api('GET', '/job-money'),
+    api('GET', `/transactions?job_id=${id}`), api('GET', `/todos?job_id=${id}`), api('GET', `/estimates?job_id=${id}`),
+    jobs(),
+  ]);
+  const n = jobNumbers(job, jm);
+  const mats = checklist(job.materials);
+  const scope = checklist(job.scope);
+  const c = customersCache.find((x) => x.id === job.customer_id);
+  const reload = () => pageJob(id);
+  const ins = txs.filter((t) => t.type === 'in');
+  const outs = txs.filter((t) => t.type === 'out');
+  view.innerHTML = `
+    <p><a href="#/jobs">‹ All jobs</a></p>
+    <div class="card">
+      <div class="spread" style="margin-bottom:.3rem">
+        <h2 style="margin:0">${esc(job.address)}</h2>
+        <div class="row"><select id="status" style="width:auto;margin:0">${JOB_STATUSES.map((s) => `<option value="${s}" ${s === job.status ? 'selected' : ''}>${JOB_ICON[s]} ${s}</option>`).join('')}</select>
+        <button class="btn" id="edit">Edit</button></div>
+      </div>
+      <div>${c ? `<a href="#/customers/${c.id}">${esc(c.name)}</a>${c.phone ? ` · <a href="tel:${esc(c.phone.replace(/[^\d+]/g, ''))}">${esc(c.phone)}</a>` : ''}` : '<span class="muted">No customer</span>'}</div>
+      <div class="muted">Start: ${shortDate(job.start_date)} &nbsp; Finish: ${shortDate(job.finish_date)} &nbsp; · <a href="https://maps.google.com/?q=${encodeURIComponent(job.address)}" target="_blank" rel="noopener">Map</a></div>
+      <div class="row" style="margin-top:.75rem">
+        <button class="btn primary" id="add-in">+ Payment received</button>
+        <button class="btn" id="add-out">+ Payout / expense</button>
+        <button class="btn" id="add-todo">+ To-do</button>
+        <a class="btn" href="#/estimates/new?job=${id}">Make estimate</a>
+        <a class="btn" href="#/contracts/new?job=${id}">Make contract</a>
+      </div>
+    </div>
+    <div class="grid">
+      <div class="card">
+        <h3>Money</h3>
+        <table class="totals job-table">
+          <tr><td><strong>Price</strong></td><td class="num"><strong>${money(job.price)}</strong></td></tr>
+          <tr><td>Collected</td><td class="num green">${money(n.collected)}</td></tr>
+          <tr><td>Customer owes</td><td class="num ${n.owes > 0 ? 'red' : ''}">${money(n.owes)}</td></tr>
+          <tr class="sep"><td><strong>Labor / Sub</strong></td><td class="num"><strong>${money(job.labor_cost)}</strong></td></tr>
+          <tr><td>Paid out</td><td class="num">${money(n.labor_paid)}</td></tr>
+          <tr><td>Still owed out</td><td class="num ${n.owed_out > 0 ? 'red' : ''}">${money(n.owed_out)}</td></tr>
+          <tr><td>Labor not handed out yet</td><td class="num">${money(n.laborLeft)}</td></tr>
+          <tr class="sep"><td><strong>Materials</strong></td><td class="num"><strong>${money(job.materials_cost)}</strong></td></tr>
+          <tr><td>Status</td><td class="num"><select id="mat-status" style="width:auto;margin:0;padding:.2rem .4rem;display:inline-block">${options(MATERIAL_STATUSES, job.materials_status || 'Unspent')}</select></td></tr>
+          <tr class="sep"><td><strong>Left over</strong> <span class="muted">(price − labor − materials)</span></td><td class="num"><strong>${money(n.leftover)}</strong></td></tr>
+        </table>
+      </div>
+      <div class="card">
+        <h3>Paid out / owed</h3>
+        <ul class="list" id="outs">${outs.map(txRow).join('') || '<li class="empty">No payouts yet. Use "+ Payout / expense" for Dad, subs, or materials.</li>'}</ul>
+        <h3 style="margin-top:1rem">Payments from customer</h3>
+        <ul class="list" id="ins">${ins.map(txRow).join('') || '<li class="empty">Nothing collected yet.</li>'}</ul>
+      </div>
+      <div class="card"><h3>Materials needed</h3><div id="mats">${checklistHtml(mats, 'materials')}</div></div>
+      <div class="card"><h3>Scope of work</h3><div id="scope">${checklistHtml(scope, 'scope')}</div></div>
+      <div class="card"><h3>To-dos</h3><ul class="list" id="j-todos">${todos.map(todoRow).join('') || '<li class="empty">None.</li>'}</ul></div>
+      ${ests.length ? `<div class="card"><h3>Estimates</h3><ul class="list">${ests.map((e) => `<li class="clickable" onclick="location.hash='#/estimates/${e.id}'">
+        <div class="grow"><div class="title">${esc(e.number)}</div></div><span class="pill ${e.status}">${e.status}</span><strong>${money(estimateTotals(e).total)}</strong></li>`).join('')}</ul></div>` : ''}
+      ${job.notes ? `<div class="card"><h3>Notes</h3><p style="white-space:pre-wrap;margin:0">${esc(job.notes)}</p></div>` : ''}
+    </div>`;
+  $('#edit').onclick = () => editJob(job, reload);
+  $('#status').onchange = async (e) => { await api('PUT', `/jobs/${id}`, { status: e.target.value }); await jobs(true); toast('Status updated'); reload(); };
+  $('#mat-status').onchange = async (e) => { await api('PUT', `/jobs/${id}`, { materials_status: e.target.value }); toast('Saved'); };
+  $('#add-in').onclick = () => editTransaction({ type: 'in', job_id: job.id, customer_id: job.customer_id, category: 'Job payment' }, reload);
+  $('#add-out').onclick = () => editTransaction({ type: 'out', job_id: job.id, customer_id: job.customer_id, category: 'Labor / Sub' }, reload);
+  $('#add-todo').onclick = () => editTodo({ job_id: job.id, customer_id: job.customer_id }, reload);
+  wireTxs($('#outs'), outs, reload);
+  wireTxs($('#ins'), ins, reload);
+  wireTodos($('#j-todos'), todos, reload);
+
+  const lists = { materials: mats, scope };
+  const saveList = async (field) => { await api('PUT', `/jobs/${id}`, { [field]: lists[field] }); reload(); };
+  $$('[data-check]').forEach((cb) => (cb.onchange = () => { lists[cb.dataset.check][cb.dataset.idx].done = cb.checked; saveList(cb.dataset.check); }));
+  $$('[data-rm-item]').forEach((b) => (b.onclick = () => { lists[b.dataset.rmItem].splice(Number(b.dataset.idx), 1); saveList(b.dataset.rmItem); }));
+  $$('[data-add-item]').forEach((f) => (f.onsubmit = (e) => {
+    e.preventDefault();
+    const text = f.elements.text.value.trim();
+    if (!text) return;
+    lists[f.dataset.addItem].push({ text, done: false });
+    saveList(f.dataset.addItem);
+  }));
+}
+
+// ---------------------------------------------------------------------------
 // Pages
 // ---------------------------------------------------------------------------
 async function pageHome() {
-  await customers();
+  await Promise.all([customers(), jobs(true)]);
   const s = await api('GET', '/summary');
+  const current = s.jobs.filter((j) => j.status !== 'Estimate Pending');
+  const pending = s.jobs.filter((j) => j.status === 'Estimate Pending');
+  const custOwe = current.reduce((sum, j) => sum + Math.max(0, jobNumbers(j, s.jobMoney).owes), 0);
+  const weOwe = s.owedOut.reduce((sum, r) => sum + r.total, 0);
   const half = s.month.net / 2;
   const greet = new Date().getHours() < 12 ? 'Good morning' : new Date().getHours() < 17 ? 'Good afternoon' : 'Good evening';
   const byDay = {};
@@ -393,7 +641,12 @@ async function pageHome() {
       <div class="stat"><div class="label">Out this month</div><div class="value red">${money(s.month.out)}</div></div>
       <div class="stat"><div class="label">Profit this month</div><div class="value">${money(s.month.net)}</div></div>
       <div class="stat"><div class="label">Each partner (50%)</div><div class="value">${money(half)}</div></div>
+      <div class="stat"><div class="label">Customers still owe</div><div class="value">${money(custOwe)}</div></div>
+      <div class="stat"><div class="label">We still owe out</div><div class="value">${money(weOwe)}</div>
+        ${s.owedOut.length ? `<div class="muted" style="font-size:.85rem">${s.owedOut.map((r) => `${esc(r.paid_to || '?')} ${money(r.total)}`).join(' · ')}</div>` : ''}</div>
     </div>
+    <div class="spread"><h3 style="margin:0">Current jobs</h3><a href="#/jobs">All jobs</a></div>
+    <div class="grid" style="margin-bottom:1rem">${current.map((j) => jobCard(j, s.jobMoney)).join('') || '<p class="empty">No current jobs. <a href="#/jobs">Add one</a>.</p>'}</div>
     <div class="grid">
       <div class="card">
         <div class="spread"><h3>To-do ${s.overdue ? `<span class="pill overdue">${s.overdue} overdue</span>` : ''}</h3><a href="#/todos">All</a></div>
@@ -404,10 +657,13 @@ async function pageHome() {
         <div id="home-events">${Object.keys(byDay).map((d) => `<div class="day-head">${relDay(d)}</div><ul class="list">${byDay[d].map(eventRow).join('')}</ul>`).join('') || '<p class="empty">Nothing scheduled.</p>'}</div>
       </div>
       <div class="card">
-        <div class="spread"><h3>Open estimates</h3><a href="#/estimates">All</a></div>
+        <div class="spread"><h3>Estimates out / pending 📝</h3><a href="#/estimates">Estimates</a></div>
+        <ul class="list">${pending.map((j) => `<li class="clickable" onclick="location.hash='#/jobs/${j.id}'">
+          <div class="grow"><div class="title">${esc(j.address)}</div><div class="sub">${esc(customerName(j.customer_id))}</div></div><span class="muted">›</span></li>`).join('')}</ul>
+        ${pending.length && s.openEstimates.length ? '<hr style="border:none;border-top:1px solid var(--border)">' : ''}
         <ul class="list">${s.openEstimates.map((e) => `<li class="clickable" onclick="location.hash='#/estimates/${e.id}'">
           <div class="grow"><div class="title">${esc(e.number)} · ${esc(customerName(e.customer_id) || 'No customer')}</div><div class="sub">${esc(e.title || '')}</div></div>
-          <span class="pill ${e.status}">${e.status}</span><strong>${money(estimateTotals(e).total)}</strong></li>`).join('') || '<li class="empty">No open estimates.</li>'}</ul>
+          <span class="pill ${e.status}">${e.status}</span><strong>${money(estimateTotals(e).total)}</strong></li>`).join('') || (pending.length ? '' : '<li class="empty">No open estimates.</li>')}</ul>
       </div>
       <div class="card">
         <h3>This year so far</h3>
@@ -464,11 +720,17 @@ async function pageSchedule() {
   await customers();
   let events;
   let body;
+  const allJobs = (await jobs(true)).filter((j) => j.start_date && (j.status === 'Scheduled' || j.status === 'In Progress'));
+  const jobsOn = (ds) => allJobs.filter((j) => j.start_date <= ds && ds <= (j.finish_date || j.start_date));
   if (sched.mode === 'list') {
     events = await api('GET', `/events?from=${todayStr()}`);
     const byDay = {};
     events.forEach((e) => (byDay[e.date] = byDay[e.date] || []).push(e));
-    body = `<div class="card" id="ev-wrap">${Object.keys(byDay).map((d) => `<div class="day-head">${relDay(d)} <span class="muted" style="font-weight:400">${fmtLongDate(d)}</span></div><ul class="list">${byDay[d].map(eventRow).join('')}</ul>`).join('') || '<p class="empty">Nothing coming up. Add an appointment.</p>'}</div>`;
+    const upcoming = allJobs.filter((j) => (j.finish_date || j.start_date) >= todayStr());
+    body = `<div class="card"><h3>Jobs</h3><ul class="list">${upcoming.map((j) => `<li class="clickable" onclick="location.hash='#/jobs/${j.id}'">
+        <div class="grow"><div class="title">${JOB_ICON[j.status]} ${esc(j.address)}</div><div class="sub">${fmtDate(j.start_date)} – ${fmtDate(j.finish_date || j.start_date)} · ${esc(customerName(j.customer_id))}</div></div>
+        <span class="muted">›</span></li>`).join('') || '<li class="empty">No scheduled jobs.</li>'}</ul></div>
+      <div class="card" id="ev-wrap"><h3>Appointments</h3>${Object.keys(byDay).map((d) => `<div class="day-head">${relDay(d)} <span class="muted" style="font-weight:400">${fmtLongDate(d)}</span></div><ul class="list">${byDay[d].map(eventRow).join('')}</ul>`).join('') || '<p class="empty">Nothing coming up. Add an appointment.</p>'}</div>`;
   } else {
     const [y, m] = sched.month.split('-').map(Number);
     const first = new Date(y, m - 1, 1);
@@ -481,7 +743,7 @@ async function pageSchedule() {
       const ds = dateStr(d);
       const evs = events.filter((e) => e.date === ds);
       cells.push(`<div class="day ${d.getMonth() !== m - 1 ? 'other' : ''} ${ds === todayStr() ? 'today' : ''}" data-day="${ds}">
-        <div>${d.getDate()}</div>${evs.map((e) => `<div class="ev" data-event="${e.id}" title="${esc(fmtTime(e.start_time))}">${esc(e.title)}</div>`).join('')}</div>`);
+        <div>${d.getDate()}</div>${jobsOn(ds).map((j) => `<div class="ev job c${j.id % 5}" data-job="${j.id}" title="${esc(j.address)}"><span class="full">${esc(j.address)}</span><span class="short">${esc(j.address.split(' ')[0])}</span></div>`).join('')}${evs.map((e) => `<div class="ev" data-event="${e.id}" title="${esc(fmtTime(e.start_time))}">${esc(e.title)}</div>`).join('')}</div>`);
     }
     body = `<div class="card">
       <div class="spread">
@@ -509,6 +771,8 @@ async function pageSchedule() {
     $('#next').onclick = () => shift(1);
     $$('[data-day]').forEach((el) => el.addEventListener('click', (e) => {
       if (e.target.closest('[data-event]')) { e.stopPropagation(); return; }
+      const jobEl = e.target.closest('[data-job]');
+      if (jobEl) { location.hash = `#/jobs/${jobEl.dataset.job}`; return; }
       editEvent({ date: el.dataset.day }, pageSchedule);
     }));
     $$('.cal [data-event]').forEach((el) => el.addEventListener('click', (e) => e.stopPropagation(), true));
@@ -536,6 +800,8 @@ async function pageCustomers() {
 async function pageCustomer(id) {
   await customers();
   const c = await api('GET', `/customers/${id}`);
+  const [allJobs, jm] = await Promise.all([jobs(true), api('GET', '/job-money')]);
+  const custJobs = allJobs.filter((j) => j.customer_id === Number(id));
   const [ests, txs, docs, evs, todos] = await Promise.all([
     api('GET', `/estimates?customer_id=${id}`),
     api('GET', `/transactions?customer_id=${id}`),
@@ -556,7 +822,8 @@ async function pageCustomer(id) {
       ${c.address ? `<div>📍 <a href="https://maps.google.com/?q=${encodeURIComponent(c.address)}" target="_blank" rel="noopener">${esc(c.address)}</a></div>` : ''}
       ${c.notes ? `<p class="muted" style="white-space:pre-wrap">${esc(c.notes)}</p>` : ''}
       <div class="row" style="margin-top:.75rem">
-        <a class="btn primary" href="#/estimates/new?customer=${id}">+ Estimate</a>
+        <button class="btn primary" id="add-job">+ Job</button>
+        <a class="btn" href="#/estimates/new?customer=${id}">+ Estimate</a>
         <button class="btn" id="add-ev">+ Appointment</button>
         <button class="btn" id="add-todo">+ To-do</button>
         <button class="btn" id="add-pay">+ Payment / expense</button>
@@ -569,6 +836,7 @@ async function pageCustomer(id) {
       <div class="stat"><div class="label">Spent on their jobs</div><div class="value red">${money(spent)}</div></div>
       <div class="stat"><div class="label">Profit</div><div class="value">${money(paid - spent)}</div></div>
     </div>
+    ${custJobs.length ? `<div class="grid" style="margin-bottom:1rem">${custJobs.map((j) => jobCard(j, jm)).join('')}</div>` : ''}
     <div class="grid">
       <div class="card"><h3>Estimates</h3><ul class="list">${ests.map((e) => `<li class="clickable" onclick="location.hash='#/estimates/${e.id}'">
         <div class="grow"><div class="title">${esc(e.number)} ${esc(e.title || '')}</div><div class="sub">${fmtDate(e.date)}</div></div>
@@ -579,6 +847,7 @@ async function pageCustomer(id) {
       <div class="card"><h3>Money</h3><ul class="list" id="c-txs">${txs.map(txRow).join('') || '<li class="empty">None.</li>'}</ul></div>
     </div>`;
   $('#edit').onclick = () => editCustomer(c, reload);
+  $('#add-job').onclick = () => editJob({ customer_id: c.id, address: c.address, status: 'Estimate Pending' }, (j) => (location.hash = `#/jobs/${j.id}`));
   $('#add-ev').onclick = () => editEvent({ customer_id: c.id, location: c.address }, reload);
   $('#add-todo').onclick = () => editTodo({ customer_id: c.id }, reload);
   $('#add-pay').onclick = () => editTransaction({ customer_id: c.id }, reload);
@@ -602,8 +871,14 @@ async function pageEstimates() {
 
 async function pageEstimateEdit(id, query) {
   await customers();
+  await jobs();
+  const fromJob = id === 'new' && jobsCache.find((j) => j.id === Number(query.get('job')));
   const est = id === 'new'
-    ? { customer_id: Number(query.get('customer')) || null, date: todayStr(), status: 'Draft', items: [{ desc: '', qty: 1, price: '' }], tax_rate: 0 }
+    ? {
+      customer_id: fromJob ? fromJob.customer_id : Number(query.get('customer')) || null, job_id: fromJob ? fromJob.id : null,
+      title: fromJob ? fromJob.address : '', date: todayStr(), status: 'Draft', tax_rate: 0,
+      items: fromJob && checklist(fromJob.scope).length ? checklist(fromJob.scope).map((i) => ({ desc: i.text, qty: 1, price: '' })) : [{ desc: '', qty: 1, price: '' }],
+    }
     : await api('GET', `/estimates/${id}`);
   const items = typeof est.items === 'string' ? JSON.parse(est.items || '[]') : est.items;
   view.innerHTML = `
@@ -614,6 +889,7 @@ async function pageEstimateEdit(id, query) {
       <div class="form-grid">
         <label>Customer <select name="customer_id">${customerOptions(est.customer_id, '— Pick customer —')}</select></label>
         <label>Job title <input name="title" value="${esc(est.title)}" placeholder="e.g. 12x16 deck replacement"></label>
+        <label>Job (optional) <select name="job_id">${jobOptions(est.job_id)}</select></label>
         <label>Date <input type="date" name="date" value="${esc(est.date)}"></label>
         <label>Status <select name="status">${options(ESTIMATE_STATUSES, est.status)}</select></label>
       </div>
@@ -679,7 +955,7 @@ async function pageEstimateEdit(id, query) {
     const d = formData(e.target);
     delete d[''];
     const payload = {
-      customer_id: d.customer_id, title: d.title, date: d.date, status: d.status, tax_rate: d.tax_rate, notes: d.notes,
+      customer_id: d.customer_id, job_id: d.job_id, title: d.title, date: d.date, status: d.status, tax_rate: d.tax_rate, notes: d.notes,
       items: readItems().filter((i) => i.desc || Number(i.price)),
     };
     try {
@@ -694,7 +970,7 @@ async function pageEstimateEdit(id, query) {
       await api('DELETE', `/estimates/${id}`);
       location.hash = '#/estimates';
     };
-    $('#pay').onclick = () => editTransaction({ type: 'in', customer_id: est.customer_id, category: 'Job payment', description: `${est.number} ${est.title || ''}`.trim() }, () => {});
+    $('#pay').onclick = () => editTransaction({ type: 'in', customer_id: est.customer_id, job_id: est.job_id, category: 'Job payment', description: `${est.number} ${est.title || ''}`.trim() }, () => {});
   }
 }
 
@@ -730,16 +1006,24 @@ async function pageEstimatePrint(id) {
 }
 
 function txRow(t) {
+  const owed = t.status === 'owed';
+  const title = (t.paid_to ? (owed ? 'Owe ' : 'Paid ') + t.paid_to : t.description) || t.category || (t.type === 'in' ? 'Money in' : 'Money out');
   return `<li class="clickable" data-tx="${t.id}">
     <div class="grow">
-      <div class="title">${esc(t.description || t.category || (t.type === 'in' ? 'Money in' : 'Money out'))}</div>
-      <div class="sub">${fmtDate(t.date)}${t.category ? ' · ' + esc(t.category) : ''}${t.customer_id ? ' · ' + esc(customerName(t.customer_id)) : ''}${t.type === 'out' && t.paid_by && t.paid_by !== 'Business' ? ' · paid by ' + esc(t.paid_by) : ''}</div>
+      <div class="title">${esc(title)} ${owed ? '<span class="pill overdue">Owed</span>' : ''}</div>
+      <div class="sub">${owed ? 'due ' : ''}${fmtDate(t.date)}${t.paid_to && t.description ? ' · ' + esc(t.description) : ''}${t.category ? ' · ' + esc(t.category) : ''}${t.job_id ? ' · ' + esc(jobAddress(t.job_id)) : t.customer_id ? ' · ' + esc(customerName(t.customer_id)) : ''}${t.type === 'out' && t.paid_by && t.paid_by !== 'Business' ? ' · paid by ' + esc(t.paid_by) : ''}</div>
     </div>
-    <strong class="${t.type === 'in' ? 'green' : 'red'}">${t.type === 'in' ? '+' : '−'}${money(t.amount)}</strong>
+    ${owed ? `<button class="btn small" data-mark-paid="${t.id}">Mark paid</button>` : ''}
+    <strong class="${owed ? 'muted' : t.type === 'in' ? 'green' : 'red'}">${t.type === 'in' ? '+' : '−'}${money(t.amount)}</strong>
   </li>`;
 }
 function wireTxs(root, list, after) {
   $$('[data-tx]', root).forEach((el) => el.addEventListener('click', () => editTransaction(list.find((t) => t.id === Number(el.dataset.tx)), after)));
+  $$('[data-mark-paid]', root).forEach((b) => b.addEventListener('click', async (e) => {
+    e.stopPropagation();
+    await api('PUT', `/transactions/${b.dataset.markPaid}`, { status: 'paid', date: todayStr() });
+    toast('Marked paid'); after();
+  }));
 }
 
 const moneyView = { period: 'month', month: todayStr().slice(0, 7), year: todayStr().slice(0, 4) };
@@ -747,9 +1031,13 @@ async function pageMoney() {
   await customers();
   const from = moneyView.period === 'month' ? `${moneyView.month}-01` : `${moneyView.year}-01-01`;
   const to = moneyView.period === 'month' ? `${moneyView.month}-31` : `${moneyView.year}-12-31`;
-  const list = await api('GET', `/transactions?from=${from}&to=${to}`);
+  await jobs();
+  const [periodList, owedList] = await Promise.all([api('GET', `/transactions?from=${from}&to=${to}`), api('GET', '/transactions?status=owed')]);
+  const list = periodList.filter((t) => t.status !== 'owed');
   const mIn = list.filter((t) => t.type === 'in').reduce((s, t) => s + t.amount, 0);
   const mOut = list.filter((t) => t.type === 'out').reduce((s, t) => s + t.amount, 0);
+  const owedBy = {};
+  owedList.forEach((t) => (owedBy[t.paid_to || 'Someone'] = (owedBy[t.paid_to || 'Someone'] || 0) + t.amount));
   const net = mIn - mOut;
   // Out-of-pocket: expenses a partner paid personally (business owes them back).
   const owed = (who) => list.filter((t) => t.type === 'out' && t.paid_by === who).reduce((s, t) => s + t.amount, 0);
@@ -776,17 +1064,21 @@ async function pageMoney() {
     </div>
     ${owed('Isaiah') || owed('Moss') ? `<div class="card"><h3>Paid out of pocket</h3><p class="muted" style="margin:0">Business expenses a partner paid with their own money (the business owes them back):
       Isaiah ${money(owed('Isaiah'))} · Moss ${money(owed('Moss'))}</p></div>` : ''}
+    ${owedList.length ? `<div class="card"><h3>Still owed to people</h3>
+      <p class="muted" style="margin:0 0 .4rem">${Object.entries(owedBy).map(([k, v]) => `${esc(k)} <strong>${money(v)}</strong>`).join(' · ')}</p>
+      <ul class="list" id="owed-list">${owedList.map(txRow).join('')}</ul></div>` : ''}
     <div class="grid">
       <div class="card" style="grid-column: 1 / -1"><ul class="list" id="tx-list">${list.map(txRow).join('') || '<li class="empty">No entries for this period.</li>'}</ul></div>
       ${Object.keys(byCat).length ? `<div class="card"><h3>Where the money went</h3><table class="totals">${Object.entries(byCat).sort((a, b) => b[1] - a[1]).map(([k, v]) => `<tr><td>${esc(k)}</td><td class="num">${money(v)}</td></tr>`).join('')}</table></div>` : ''}
     </div>`;
   $('#add').onclick = () => editTransaction({}, pageMoney);
   wireTxs($('#tx-list'), list, pageMoney);
+  if (owedList.length) wireTxs($('#owed-list'), owedList, pageMoney);
   $$('[data-period]').forEach((b) => (b.onclick = () => { moneyView.period = b.dataset.period; pageMoney(); }));
   $('#pick').onchange = (e) => { if (!e.target.value) return; moneyView[moneyView.period] = e.target.value; pageMoney(); };
   $('#csv').onclick = () => {
-    const rows = [['Date', 'Type', 'Amount', 'Category', 'Description', 'Customer', 'Paid with']]
-      .concat(list.map((t) => [t.date, t.type === 'in' ? 'In' : 'Out', t.amount.toFixed(2), t.category || '', t.description || '', customerName(t.customer_id), t.paid_by || '']));
+    const rows = [['Date', 'Type', 'Amount', 'Category', 'Description', 'Paid to', 'Job', 'Customer', 'Paid with']]
+      .concat(list.map((t) => [t.date, t.type === 'in' ? 'In' : 'Out', t.amount.toFixed(2), t.category || '', t.description || '', t.paid_to || '', jobAddress(t.job_id), customerName(t.customer_id), t.paid_by || '']));
     const csv = rows.map((r) => r.map((v) => `"${String(v).replace(/"/g, '""')}"`).join(',')).join('\n');
     const a = document.createElement('a');
     a.href = URL.createObjectURL(new Blob([csv], { type: 'text/csv' }));
@@ -821,7 +1113,7 @@ async function pageContracts() {
   };
 }
 
-const PLACEHOLDERS = ['customer_name', 'customer_address', 'customer_phone', 'customer_email', 'date', 'job_title', 'estimate_number', 'estimate_items', 'estimate_total'];
+const PLACEHOLDERS = ['customer_name', 'customer_address', 'customer_phone', 'customer_email', 'date', 'job_title', 'job_address', 'job_scope', 'job_price', 'start_date', 'finish_date', 'estimate_number', 'estimate_items', 'estimate_total'];
 async function pageTemplateEdit(id) {
   const t = id === 'new' ? { name: '', body: '' } : await api('GET', `/templates/${id}`);
   view.innerHTML = `
@@ -851,28 +1143,38 @@ async function pageTemplateEdit(id) {
   };
 }
 
-function fillTemplate(body, c, est) {
+function fillTemplate(body, c, est, job) {
   const t = est ? estimateTotals(est) : null;
+  const scope = job ? checklist(job.scope).map((i) => `  • ${i.text}`).join('\n') : '';
   const values = {
-    customer_name: c?.name, customer_address: c?.address, customer_phone: c?.phone, customer_email: c?.email,
+    customer_name: c?.name, customer_address: c?.address || job?.address, customer_phone: c?.phone, customer_email: c?.email,
     date: fmtLongDate(todayStr()),
-    job_title: est?.title,
+    job_title: est?.title || job?.address,
+    job_address: job?.address || c?.address,
+    job_scope: scope,
+    job_price: job?.price ? money(job.price) : '',
+    start_date: job?.start_date ? fmtLongDate(job.start_date) : '',
+    finish_date: job?.finish_date ? fmtLongDate(job.finish_date) : '',
     estimate_number: est?.number,
+    // With no estimate picked, fall back to the job's scope and price.
     estimate_items: t ? t.items.map((i) => `  • ${i.desc} — ${i.qty} × ${money(i.price)} = ${money((Number(i.qty) || 0) * (Number(i.price) || 0))}`).join('\n') +
-      (t.tax ? `\n  Tax: ${money(t.tax)}` : '') : '',
-    estimate_total: t ? money(t.total) : '',
+      (t.tax ? `\n  Tax: ${money(t.tax)}` : '') : scope,
+    estimate_total: t ? money(t.total) : job?.price ? money(job.price) : '',
   };
   return body.replace(/\{\{\s*(\w+)\s*\}\}/g, (m, k) => (values[k] ? values[k] : '____________________'));
 }
 
 async function pageContractNew(query) {
   await customers();
-  const [templates, estimates] = await Promise.all([api('GET', '/templates'), api('GET', '/estimates')]);
+  const [templates, estimates] = await Promise.all([api('GET', '/templates'), api('GET', '/estimates'), jobs()]);
   const state = {
     template: Number(query.get('template')) || templates[0]?.id,
     estimate: Number(query.get('estimate')) || null,
     customer: Number(query.get('customer')) || null,
+    job: Number(query.get('job')) || null,
   };
+  if (state.estimate && !state.job) state.job = estimates.find((e) => e.id === state.estimate)?.job_id || null;
+  if (state.job && !state.customer) state.customer = jobsCache.find((j) => j.id === state.job)?.customer_id || null;
   if (state.estimate && !state.customer) state.customer = estimates.find((e) => e.id === state.estimate)?.customer_id || null;
 
   view.innerHTML = `
@@ -883,6 +1185,7 @@ async function pageContractNew(query) {
         <div class="form-grid">
           <label>Template <select id="c-tpl">${templates.map((t) => `<option value="${t.id}" ${t.id === state.template ? 'selected' : ''}>${esc(t.name)}</option>`).join('')}</select></label>
           <label>Customer <select id="c-cust">${customerOptions(state.customer, '— Pick customer —')}</select></label>
+          <label>Job (fills in address, dates & scope) <select id="c-job"></select></label>
           <label>Estimate (fills in price & work) <select id="c-est"></select></label>
         </div>
         <p class="muted" style="font-size:.88rem">Tip: you can edit the text below before printing. Blank lines (____) are for filling in by hand.</p>
@@ -907,16 +1210,24 @@ async function pageContractNew(query) {
     estSelect.innerHTML = '<option value="">— None —</option>' + mine.map((e) =>
       `<option value="${e.id}" ${e.id === state.estimate ? 'selected' : ''}>${esc(e.number)} ${esc(e.title || '')} (${money(estimateTotals(e).total)})</option>`).join('');
   };
+  const renderJobOptions = () => {
+    const mine = jobsCache.filter((j) => !state.customer || j.customer_id === state.customer);
+    if (state.job && !mine.some((j) => j.id === state.job)) state.job = null;
+    $('#c-job').innerHTML = jobOptions(state.job, mine);
+  };
   const render = () => {
     const tpl = templates.find((t) => t.id === state.template);
     const c = customersCache.find((x) => x.id === state.customer);
     const est = estimates.find((e) => e.id === state.estimate);
-    $('#text').textContent = tpl ? fillTemplate(tpl.body, c, est) : 'No template yet — create one on the Contracts page.';
+    const job = jobsCache.find((j) => j.id === state.job);
+    $('#text').textContent = tpl ? fillTemplate(tpl.body, c, est, job) : 'No template yet — create one on the Contracts page.';
   };
+  renderJobOptions();
   renderEstOptions();
   render();
   $('#c-tpl').onchange = (e) => { state.template = Number(e.target.value); render(); };
-  $('#c-cust').onchange = (e) => { state.customer = Number(e.target.value) || null; renderEstOptions(); render(); };
+  $('#c-cust').onchange = (e) => { state.customer = Number(e.target.value) || null; renderJobOptions(); renderEstOptions(); render(); };
+  $('#c-job').onchange = (e) => { state.job = Number(e.target.value) || null; render(); };
   estSelect.onchange = (e) => { state.estimate = Number(e.target.value) || null; render(); };
   $('#print').onclick = () => window.print();
   $('#upload').onclick = () => {
@@ -959,7 +1270,24 @@ async function pageSettings() {
       <h3>Backup</h3>
       <p class="muted">Download everything (customers, money, estimates, etc.) as one file. Do this every so often and keep it somewhere safe. Uploaded files are in the server's <code>data/uploads</code> folder.</p>
       <a class="btn" href="/api/backup">Download backup</a>
-    </div>`;
+    </div>
+    <form class="card" id="import">
+      <h3>Import</h3>
+      <p class="muted">Load a backup file or a starter file. This only adds records, it never deletes anything.</p>
+      <input type="file" name="file" accept=".json,application/json" required>
+      <button class="btn primary" style="margin-top:.6rem">Import</button>
+    </form>`;
+  $('#import').onsubmit = async (e) => {
+    e.preventDefault();
+    const file = e.target.elements.file.files[0];
+    try {
+      const data = JSON.parse(await file.text());
+      const r = await api('POST', '/import', data);
+      customersCache = null; jobsCache = null;
+      toast('Imported: ' + Object.entries(r.counts).filter(([, n]) => n).map(([k, n]) => `${n} ${k}`).join(', '));
+      e.target.reset();
+    } catch (err) { alert(err.message.startsWith('Unexpected') ? 'That is not a valid backup file.' : err.message); }
+  };
   $('#logout').onclick = async () => { await api('POST', '/logout'); showLogin(); };
   $('#pw').onsubmit = async (e) => {
     e.preventDefault();
@@ -983,6 +1311,8 @@ async function route() {
   window.scrollTo(0, 0);
   try {
     if (!section) await pageHome();
+    else if (section === 'jobs' && parts[1]) await pageJob(parts[1]);
+    else if (section === 'jobs') await pageJobs();
     else if (section === 'todos') await pageTodos();
     else if (section === 'schedule') await pageSchedule();
     else if (section === 'customers' && parts[1]) await pageCustomer(parts[1]);
@@ -1004,6 +1334,7 @@ async function route() {
 function showLogin() {
   me = null;
   customersCache = null;
+  jobsCache = null;
   $('#app').classList.add('hidden');
   $('#login').classList.remove('hidden');
 }
