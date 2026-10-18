@@ -1,6 +1,6 @@
-# Mayo Construction CRM
+# Mayo's Construction CRM
 
-A simple business app for **Mayo Construction** (Hot Springs, AR), built for two partners, Isaiah Mayo and Moss Mayo (50/50).
+A simple business app for **Mayo's Construction** (Hot Springs, AR · 870-617-3507), built for two partners, Isaiah Mayo and Moss Mayo (50/50).
 
 Works on your phone or a computer. There's nothing extra to install except Node.js.
 

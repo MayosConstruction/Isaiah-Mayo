@@ -1,4 +1,4 @@
-// Mayo Construction CRM — a small, zero-dependency server.
+// Mayo's Construction CRM — a small, zero-dependency server.
 // Uses Node's built-in SQLite (node:sqlite) so there is nothing to install.
 'use strict';
 
@@ -509,7 +509,7 @@ const server = http.createServer(async (req, res) => {
 setInterval(() => db.prepare('DELETE FROM sessions WHERE expires_at < ?').run(Date.now()), 864e5).unref();
 
 if (require.main === module) {
-  server.listen(PORT, () => console.log(`Mayo Construction CRM running at http://localhost:${PORT}`));
+  server.listen(PORT, () => console.log(`Mayo's Construction CRM running at http://localhost:${PORT}`));
 }
 
 module.exports = { server, db };

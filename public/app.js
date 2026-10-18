@@ -1,4 +1,4 @@
-// Mayo Construction CRM — front end (plain JavaScript, no build step).
+// Mayo's Construction CRM — front end (plain JavaScript, no build step).
 'use strict';
 
 // ---------------------------------------------------------------------------
@@ -12,6 +12,9 @@ const ESTIMATE_STATUSES = ['Draft', 'Sent', 'Accepted', 'Declined'];
 const IN_CATEGORIES = ['Job payment', 'Deposit', 'Other income'];
 const OUT_CATEGORIES = ['Materials', 'Fuel', 'Tools & equipment', 'Subcontractor', 'Dump / disposal', 'Insurance', 'Vehicle', 'Permits', 'Office / phone', 'Other expense'];
 const DOC_KINDS = ['Signed contract', 'Unsigned contract', 'Change order', 'Receipt', 'Photo', 'Other'];
+const BIZ = { name: "Mayo's Construction", phone: '870-617-3507', city: 'Hot Springs, AR', lines: 'Construction · Remodeling · Roofing', owners: 'Moss Mayo & Isaiah Mayo' };
+const LETTERHEAD = `<div class="who"><img src="/logo.png" alt="">
+  <div><div class="biz">${BIZ.name}</div><div class="muted">${BIZ.lines}<br>${BIZ.city} · ${BIZ.phone}<br>${BIZ.owners}</div></div></div>`;
 let me = null;
 let customersCache = null;
 
@@ -378,7 +381,7 @@ async function pageHome() {
   s.events.forEach((e) => (byDay[e.date] = byDay[e.date] || []).push(e));
   view.innerHTML = `
     <div class="spread">
-      <h2>${greet}, ${esc(me.name)}</h2>
+      <div><p class="eyebrow">Call the Mayos</p><h2 style="margin:0">${greet}, ${esc(me.name)}</h2></div>
       <div class="row">
         <button class="btn" id="q-todo">+ To-do</button>
         <button class="btn" id="q-event">+ Appointment</button>
@@ -707,8 +710,8 @@ async function pageEstimatePrint(id) {
     </div>
     <div class="paper">
       <div class="letterhead">
-        <div><div class="biz">Mayo Construction</div><div class="muted">Hot Springs, Arkansas<br>Isaiah Mayo &amp; Moss Mayo</div></div>
-        <div style="text-align:right"><div style="font-size:1.3rem;font-weight:700">ESTIMATE</div><div>${esc(est.number)}</div><div>${fmtLongDate(est.date)}</div></div>
+        ${LETTERHEAD}
+        <div style="text-align:right"><div class="doc-title">ESTIMATE</div><div>${esc(est.number)}</div><div>${fmtLongDate(est.date)}</div></div>
       </div>
       <p><strong>Prepared for:</strong><br>${esc(c.name || '')}${c.address ? '<br>' + esc(c.address) : ''}${c.phone ? '<br>' + esc(c.phone) : ''}${c.email ? '<br>' + esc(c.email) : ''}</p>
       ${est.title ? `<h3>${esc(est.title)}</h3>` : ''}
@@ -892,7 +895,7 @@ async function pageContractNew(query) {
     </div>
     <div class="paper">
       <div class="letterhead">
-        <div><div class="biz">Mayo Construction</div><div class="muted">Hot Springs, Arkansas</div></div>
+        ${LETTERHEAD}
       </div>
       <div class="contract-text" id="text" contenteditable="true" spellcheck="true"></div>
     </div>`;
@@ -925,7 +928,10 @@ async function pageContractNew(query) {
     if (!c) return alert('Pick a customer first.');
     const html = `<!doctype html><meta charset="utf-8"><title>Contract</title>
       <body style="font-family:Georgia,serif;max-width:760px;margin:2rem auto;padding:0 1rem;line-height:1.55">
-      <h2 style="color:#1f3a5f;border-bottom:3px solid #e07a1f;padding-bottom:.4rem">Mayo Construction</h2>
+      <div style="display:flex;gap:12px;align-items:center;border-bottom:4px solid #a42f28;padding-bottom:8px;font-family:Arial,sans-serif">
+        <img src="/logo.png" alt="" width="70" height="70">
+        <div><div style="font-size:24px;font-weight:800;text-transform:uppercase">${BIZ.name}</div>
+        <div style="color:#6e665a;font-size:14px">${BIZ.lines} · ${BIZ.city} · ${BIZ.phone}</div></div></div>
       <div style="white-space:pre-wrap">${esc($('#text').innerText)}</div></body>`;
     const data = btoa(unescape(encodeURIComponent(html)));
     await api('POST', '/documents', {

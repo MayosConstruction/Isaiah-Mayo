@@ -2,7 +2,7 @@ CONSTRUCTION AGREEMENT
 
 This Agreement is made on {{date}} between:
 
-CONTRACTOR: Mayo Construction (Isaiah Mayo and Moss Mayo), Hot Springs, Arkansas
+CONTRACTOR: Mayo's Construction (Moss Mayo and Isaiah Mayo), Hot Springs, Arkansas · 870-617-3507
 CUSTOMER (OWNER): {{customer_name}}
 Phone: {{customer_phone}}    Email: {{customer_email}}
 Project address: {{customer_address}}
@@ -46,7 +46,7 @@ Contractor will obtain required building permits unless stated otherwise and mai
 This Agreement, together with any attached estimate and written change orders, is the entire agreement between the parties.
 
 
-CONTRACTOR: Mayo Construction
+CONTRACTOR: Mayo's Construction
 
 Signature: ______________________________   Date: ____________
            Isaiah Mayo / Moss Mayo
