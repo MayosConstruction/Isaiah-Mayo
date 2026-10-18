@@ -13,7 +13,7 @@ function money(n) { return '$' + (Number(n) || 0).toLocaleString('en-US', { mini
 function header(b) {
   return `<div class="paper" style="margin-top:1rem">
     <div class="letterhead"><div class="who"><img src="/logo.png" alt="">
-      <div><div class="biz">${esc(b.name)}</div><div class="muted">${esc(b.lines)}<br>${esc(b.city)} · <a href="tel:${esc(b.phone.replace(/\D/g, ''))}">${esc(b.phone)}</a></div></div></div></div>`;
+      <div><div class="biz">${esc(b.name)}</div><div class="muted">${esc(b.lines)}<br>${esc(b.city)} · <a href="tel:${esc(b.phone.replace(/\D/g, ''))}">${esc(b.phone)}</a>${b.license ? '<br>AR License #' + esc(b.license) : ''}</div></div></div></div>`;
 }
 
 function thanks(d) {
@@ -31,7 +31,7 @@ async function load() {
   if (d.signed) return thanks(d);
 
   view.innerHTML = header(d.business) + `
-      <p class="eyebrow">Please review and sign</p>
+      <p class="eyebrow">${d.kind === 'change_order' ? 'Change order: please review and approve' : 'Please review and sign'}</p>
       <h2>${esc(d.title || 'Estimate')} <span class="muted" style="font-size:1rem">${esc(d.number)}</span></h2>
       ${d.customer ? `<p>Prepared for <strong>${esc(d.customer.name)}</strong>${d.customer.address ? '<br>' + esc(d.customer.address) : ''}</p>` : ''}
       <table>
@@ -40,7 +40,8 @@ async function load() {
       </table>
       <table class="totals" style="max-width:280px;margin:1rem 0 0 auto">
         ${d.tax ? `<tr><td>Subtotal</td><td class="num">${money(d.subtotal)}</td></tr><tr><td>Tax</td><td class="num">${money(d.tax)}</td></tr>` : ''}
-        <tr><td><strong>Total</strong></td><td class="num"><strong>${money(d.total)}</strong></td></tr>
+        <tr><td><strong>${d.kind === 'change_order' ? 'This change' : 'Total'}</strong></td><td class="num"><strong>${money(d.total)}</strong></td></tr>
+        ${d.kind === 'change_order' && d.days_added ? `<tr><td>Days added</td><td class="num">${esc(d.days_added)}</td></tr>` : ''}
       </table>
       ${d.notes ? `<p style="white-space:pre-wrap">${esc(d.notes)}</p>` : ''}
       ${d.contract_text ? `<h3 style="margin-top:1.5rem">Agreement</h3><div class="contract-text" style="max-height:55vh;overflow:auto;border:1px solid var(--border);border-radius:6px;padding:.8rem">${esc(d.contract_text)}</div>` : ''}
@@ -52,7 +53,7 @@ async function load() {
       <canvas id="pad" style="width:100%;height:170px;border:2px dashed var(--border);border-radius:8px;background:#fff;touch-action:none;margin:.3rem 0"></canvas>
       <button type="button" class="btn small" id="clear">Clear</button>
       <label class="row" style="margin-top:1rem;color:var(--text);flex-wrap:nowrap;align-items:flex-start"><input type="checkbox" name="agree" required>
-        <span>I agree to the estimate and agreement above and to sign electronically.</span></label>
+        <span>${d.kind === 'change_order' ? 'I approve this change order and agree' : 'I have read and agree to the estimate and agreement above, including the Right to Cancel and Notice to Owner, and I agree'} to sign electronically.</span></label>
       <p class="error" id="err"></p>
       <button class="btn primary" style="width:100%;font-size:1.25rem">Sign &amp; send</button>
     </form>`;

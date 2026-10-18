@@ -129,6 +129,30 @@ const { server } = require('../server');
   await call('POST', '/messages', { job_id: job.id, customer_id: c.id, kind: 'On our way', channel: 'text', body: 'On the way' }, 201);
   assert.strictEqual((await call('GET', `/messages?job_id=${job.id}`)).length, 1);
 
+  // Business settings
+  assert.strictEqual((await call('GET', '/settings')).deposit_percent, '50');
+  const st = await call('PUT', '/settings', { license_number: '0123456', bogus: 'x' });
+  assert.strictEqual(st.license_number, '0123456');
+  assert.strictEqual(st.bogus, undefined);
+  assert.ok((await call('GET', '/version')).version);
+  const tplNames = (await call('GET', '/templates')).map((t) => t.name);
+  assert.ok(tplNames.includes('Residential Construction Agreement') && tplNames.includes('Change Order'));
+
+  // Change order: priced by hand; once signed, its amount is added to the job and days to the finish date
+  await call('PUT', `/jobs/${job.id}`, { finish_date: '2026-11-03' });
+  const co = await call('POST', '/estimates', { kind: 'change_order', job_id: job.id, customer_id: c.id, items: [{ desc: 'Extra outlet', qty: 2, price: 125 }], days_added: 2 }, 201);
+  assert.strictEqual(co.number, 'CO-1001');
+  const coSent = await call('POST', `/estimates/${co.id}/send`, { contract_text: 'CO' });
+  const keep = cookie;
+  cookie = '';
+  assert.strictEqual((await call('GET', `/public/sign/${coSent.sign_token}`)).kind, 'change_order');
+  await call('POST', `/public/sign/${coSent.sign_token}`, { name: 'Jane Smith', agree: true, signature: png });
+  cookie = keep;
+  const jobAfter = await call('GET', `/jobs/${job.id}`);
+  assert.strictEqual(jobAfter.price, 1250);
+  assert.strictEqual(jobAfter.finish_date, '2026-11-05');
+  assert.ok((await call('GET', '/todos')).some((t) => t.title.includes('approved change order CO-1001')));
+
   const backup = await call('GET', '/backup');
   assert.ok(backup.customers.length === 2 && backup.jobs.length === 2);
 

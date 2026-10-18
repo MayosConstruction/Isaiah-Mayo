@@ -12,9 +12,19 @@ const ESTIMATE_STATUSES = ['Draft', 'Sent', 'Accepted', 'Declined'];
 const IN_CATEGORIES = ['Job payment', 'Deposit', 'Other income'];
 const OUT_CATEGORIES = ['Subcontractor', 'Partner pay', 'Materials', 'Fuel', 'Tools & equipment', 'Dump / disposal', 'Insurance', 'Vehicle', 'Permits', 'Office / phone', 'Other expense'];
 const DOC_KINDS = ['Signed contract', 'Unsigned contract', 'Change order', 'Receipt', 'Photo', 'Other'];
-const BIZ = { name: "Mayo's Construction", phone: '870-617-3507', city: 'Hot Springs, AR', lines: 'Construction · Remodeling · Roofing', owners: 'Moss Mayo & Isaiah Mayo' };
-const LETTERHEAD = `<div class="who"><img src="/logo.png" alt="">
-  <div><div class="biz">${BIZ.name}</div><div class="muted">${BIZ.lines}<br>${BIZ.city} · ${BIZ.phone}<br>${BIZ.owners}</div></div></div>`;
+// Business info comes from Settings → Business info (loaded at login).
+let SETTINGS = {};
+const BIZ = {
+  get name() { return SETTINGS.business_name || "Mayo's Construction"; },
+  get phone() { return SETTINGS.business_phone || ''; },
+  get city() { return SETTINGS.business_city || 'Hot Springs, AR'; },
+  get lines() { return SETTINGS.business_lines || ''; },
+  owners: 'Moss Mayo & Isaiah Mayo',
+};
+function letterhead() {
+  return `<div class="who"><img src="/logo.png" alt="">
+  <div><div class="biz">${esc(BIZ.name)}</div><div class="muted">${esc(BIZ.lines)}<br>${esc(BIZ.city)} · ${esc(BIZ.phone)}<br>${BIZ.owners}${SETTINGS.license_number ? ' · AR License #' + esc(SETTINGS.license_number) : ''}</div></div></div>`;
+}
 let me = null;
 let customersCache = null;
 // Moss and Isaiah are 50/50 partners. Regular subcontractors:
@@ -590,6 +600,7 @@ async function pageJob(id) {
         <button class="btn" id="add-out">+ Pay someone / expense</button>
         <button class="btn" id="add-todo">+ To-do</button>
         <a class="btn" href="#/estimates/new?job=${id}">Make estimate</a>
+        <a class="btn" href="#/estimates/new?job=${id}&kind=co">+ Change order</a>
         <a class="btn" href="#/contracts/new?job=${id}">Make contract</a>
       </div>
     </div>
@@ -620,8 +631,8 @@ async function pageJob(id) {
       <div class="card"><h3>Materials needed</h3><div id="mats">${checklistHtml(mats, 'materials')}</div></div>
       <div class="card"><h3>Scope of work</h3><div id="scope">${checklistHtml(scope, 'scope')}</div></div>
       <div class="card"><h3>To-dos</h3><ul class="list" id="j-todos">${todos.map(todoRow).join('') || '<li class="empty">None.</li>'}</ul></div>
-      ${ests.length ? `<div class="card"><h3>Estimates</h3><ul class="list">${ests.map((e) => `<li class="clickable" onclick="location.hash='#/estimates/${e.id}'">
-        <div class="grow"><div class="title">${esc(e.number)}</div></div><span class="pill ${e.status}">${e.signed_at ? '✍️ Signed' : e.status}</span><strong>${money(estimateTotals(e).total)}</strong></li>`).join('')}</ul></div>` : ''}
+      ${ests.length ? `<div class="card"><h3>Estimates & change orders</h3><ul class="list">${ests.map((e) => `<li class="clickable" onclick="location.hash='#/estimates/${e.id}'">
+        <div class="grow"><div class="title">${esc(e.number)} ${e.kind === 'change_order' ? '· Change order' : ''}</div><div class="sub">${esc(e.title || '')}</div></div>${e.kind === 'change_order' ? '<span class="pill">CO</span>' : ''}<span class="pill ${e.status}">${e.signed_at ? '✍️ Signed' : e.status}</span><strong>${money(estimateTotals(e).total)}</strong></li>`).join('')}</ul></div>` : ''}
       ${job.notes ? `<div class="card"><h3>Notes</h3><p style="white-space:pre-wrap;margin:0">${esc(job.notes)}</p></div>` : ''}
       <div class="card"><h3>Texts & updates sent</h3><ul class="list">${msgs.map(messageRow).join('') || '<li class="empty">None yet. Use 💬 Text customer for reminders, arrival times, and updates.</li>'}</ul></div>
     </div>`;
@@ -761,12 +772,15 @@ async function sendForSignature(est, after) {
   if (!c) return alert('Pick a customer for this estimate and save it first.');
   const job = jobsCache.find((j) => j.id === est.job_id);
   const total = estimateTotals(est).total;
+  const isCO = est.kind === 'change_order';
+  const defaultTpl = (templates.find((t) => (isCO ? /change order/i : /residential/i).test(t.name)) || templates[0] || {}).id;
+  if (!SETTINGS.license_number && !confirm('Your contractor license number is not filled in yet (Settings → Business info). Send anyway?')) return;
   openModal(`
     <form>
       <h2>Send to ${esc(c.name)} to sign</h2>
       <p class="muted">They get a link, review the estimate and agreement on their phone, and sign with their finger. The signed copy saves to their customer file automatically.</p>
       <label>Agreement to include <select name="tpl"><option value="">Estimate only (no agreement)</option>
-        ${templates.map((t, i) => `<option value="${t.id}" ${i === 0 ? 'selected' : ''}>${esc(t.name)}</option>`).join('')}</select></label>
+        ${templates.map((t) => `<option value="${t.id}" ${t.id === defaultTpl ? 'selected' : ''}>${esc(t.name)}</option>`).join('')}</select></label>
       <div class="modal-actions">
         <button type="button" class="btn" data-close>Cancel</button>
         <button type="submit" class="btn primary">Create link</button>
@@ -776,7 +790,9 @@ async function sendForSignature(est, after) {
       const tpl = templates.find((t) => t.id === Number(d.tpl));
       const saved = await api('POST', `/estimates/${est.id}/send`, { contract_text: tpl ? fillTemplate(tpl.body, c, est, job) : '' });
       const link = `${location.origin}/sign/${saved.sign_token}`;
-      const text = `Hi ${firstName(c.name)}, this is ${me.name} with Mayo's Construction. Here's your estimate for ${est.title || job?.address || 'your project'} (${money(total)}). You can review and sign it here: ${link}`;
+      const text = isCO
+        ? `Hi ${firstName(c.name)}, this is ${me.name} with ${BIZ.name}. Here's change order ${est.number} for ${job?.address || 'your project'} (${total < 0 ? 'credit of ' : ''}${money(Math.abs(total))}). Please review and sign here: ${link}`
+        : `Hi ${firstName(c.name)}, this is ${me.name} with ${BIZ.name}. Here's your estimate for ${est.title || job?.address || 'your project'} (${money(total)}). You can review and sign it here: ${link}`;
       setTimeout(() => shareSignLink(c, est, link, text, after), 50);
     },
   });
@@ -872,7 +888,7 @@ async function pageHome() {
         ${pending.length && s.openEstimates.length ? '<hr style="border:none;border-top:1px solid var(--border)">' : ''}
         <ul class="list">${s.openEstimates.map((e) => `<li class="clickable" onclick="location.hash='#/estimates/${e.id}'">
           <div class="grow"><div class="title">${esc(e.number)} · ${esc(customerName(e.customer_id) || 'No customer')}</div><div class="sub">${esc(e.title || '')}</div></div>
-          <span class="pill ${e.status}">${e.signed_at ? '✍️ Signed' : e.status}</span><strong>${money(estimateTotals(e).total)}</strong></li>`).join('') || (pending.length ? '' : '<li class="empty">No open estimates.</li>')}</ul>
+          ${e.kind === 'change_order' ? '<span class="pill">CO</span>' : ''}<span class="pill ${e.status}">${e.signed_at ? '✍️ Signed' : e.status}</span><strong>${money(estimateTotals(e).total)}</strong></li>`).join('') || (pending.length ? '' : '<li class="empty">No open estimates.</li>')}</ul>
       </div>
       <div class="card">
         <h3>This year so far</h3>
@@ -1050,7 +1066,7 @@ async function pageCustomer(id) {
     <div class="grid">
       <div class="card"><h3>Estimates</h3><ul class="list">${ests.map((e) => `<li class="clickable" onclick="location.hash='#/estimates/${e.id}'">
         <div class="grow"><div class="title">${esc(e.number)} ${esc(e.title || '')}</div><div class="sub">${fmtDate(e.date)}</div></div>
-        <span class="pill ${e.status}">${e.signed_at ? '✍️ Signed' : e.status}</span><strong>${money(estimateTotals(e).total)}</strong></li>`).join('') || '<li class="empty">None yet.</li>'}</ul></div>
+        ${e.kind === 'change_order' ? '<span class="pill">CO</span>' : ''}<span class="pill ${e.status}">${e.signed_at ? '✍️ Signed' : e.status}</span><strong>${money(estimateTotals(e).total)}</strong></li>`).join('') || '<li class="empty">None yet.</li>'}</ul></div>
       <div class="card"><h3>Documents & contracts</h3><ul class="list" id="c-docs">${docs.map(docRow).join('') || '<li class="empty">None yet.</li>'}</ul></div>
       <div class="card"><h3>Appointments</h3><ul class="list" id="c-evs">${evs.map((e) => eventRow(e).replace('<div class="title">', `<div class="title">${fmtDate(e.date)} · `)).join('') || '<li class="empty">None.</li>'}</ul></div>
       <div class="card"><h3>To-dos</h3><ul class="list" id="c-todos">${todos.map(todoRow).join('') || '<li class="empty">None.</li>'}</ul></div>
@@ -1077,25 +1093,31 @@ async function pageEstimates() {
     <div class="card"><ul class="list">${list.map((e) => `<li class="clickable" onclick="location.hash='#/estimates/${e.id}'">
       <div class="grow"><div class="title">${esc(e.number)} · ${esc(customerName(e.customer_id) || 'No customer')}</div>
       <div class="sub">${esc(e.title || '')} · ${fmtDate(e.date)}</div></div>
-      <span class="pill ${e.status}">${e.signed_at ? '✍️ Signed' : e.status}</span><strong>${money(estimateTotals(e).total)}</strong></li>`).join('') || '<li class="empty">No estimates yet.</li>'}</ul></div>`;
+      ${e.kind === 'change_order' ? '<span class="pill">CO</span>' : ''}<span class="pill ${e.status}">${e.signed_at ? '✍️ Signed' : e.status}</span><strong>${money(estimateTotals(e).total)}</strong></li>`).join('') || '<li class="empty">No estimates yet.</li>'}</ul></div>`;
 }
 
 async function pageEstimateEdit(id, query) {
   await customers();
   await jobs();
   const fromJob = id === 'new' && jobsCache.find((j) => j.id === Number(query.get('job')));
+  if (id === 'new' && query.get('kind') === 'co' && !fromJob) return alert('Open the job first, then tap "+ Change order".');
+  const newCO = id === 'new' && query.get('kind') === 'co';
   const est = id === 'new'
     ? {
+      kind: newCO ? 'change_order' : 'estimate',
       customer_id: fromJob ? fromJob.customer_id : Number(query.get('customer')) || null, job_id: fromJob ? fromJob.id : null,
-      title: fromJob ? fromJob.address : '', date: todayStr(), status: 'Draft', tax_rate: 0,
-      items: fromJob && checklist(fromJob.scope).length ? checklist(fromJob.scope).map((i) => ({ desc: i.text, qty: 1, price: '' })) : [{ desc: '', qty: 1, price: '' }],
+      title: fromJob ? (newCO ? `Change order — ${fromJob.address}` : fromJob.address) : '', date: todayStr(), status: 'Draft', tax_rate: 0,
+      deposit_percent: newCO ? 0 : Number(SETTINGS.deposit_percent || 50), days_added: 0,
+      items: !newCO && fromJob && checklist(fromJob.scope).length ? checklist(fromJob.scope).map((i) => ({ desc: i.text, qty: 1, price: '' })) : [{ desc: '', qty: 1, price: '' }],
     }
     : await api('GET', `/estimates/${id}`);
+  const isCO = est.kind === 'change_order';
+  const coJob = isCO && jobsCache.find((j) => j.id === est.job_id);
   const items = typeof est.items === 'string' ? JSON.parse(est.items || '[]') : est.items;
   view.innerHTML = `
     <p><a href="#/estimates">‹ All estimates</a></p>
     <form class="card" id="est-form">
-      <div class="spread"><h2 style="margin:0">${id === 'new' ? 'New estimate' : 'Estimate ' + esc(est.number)}</h2>
+      <div class="spread"><h2 style="margin:0">${id === 'new' ? (isCO ? 'New change order' : 'New estimate') : (isCO ? 'Change order ' : 'Estimate ') + esc(est.number)}</h2>
         ${id !== 'new' ? `<div class="row">${est.signed_at ? '' : '<button type="button" class="btn primary" id="send-sign">✍️ Send to sign</button>'}<a class="btn" href="#/estimates/${id}/print">Print / PDF</a><a class="btn" href="#/contracts/new?estimate=${id}">Make contract</a><button type="button" class="btn" id="pay">Record payment</button></div>` : ''}</div>
       ${est.signed_at ? `<div class="signed-banner">✓ Signed by <strong>${esc(est.signed_name)}</strong> on ${fmtLongDate(est.signed_at.slice(0, 10))}
         ${est.signed_document_id ? ` · <a href="/api/documents/${est.signed_document_id}/file" target="_blank" rel="noopener">View signed copy</a>` : ''}</div>`
@@ -1115,19 +1137,24 @@ async function pageEstimateEdit(id, query) {
       </table>
       </div>
       <button type="button" class="btn small" id="add-item" style="margin:.5rem 0 1rem">+ Add line</button>
+      ${isCO ? '<p class="muted" style="font-size:.88rem">Price each change yourself. Use a negative price for work removed (a credit).</p>' : ''}
       <div class="form-grid">
         <label>Tax rate % (leave 0 if none) <input type="number" step="0.01" name="tax_rate" value="${esc(est.tax_rate)}"></label>
-        <div></div>
+        ${isCO
+          ? `<label>Days added to the schedule <input type="number" step="1" min="0" name="days_added" value="${esc(est.days_added || 0)}"></label>`
+          : `<label>Deposit due at signing % <input type="number" step="1" min="0" max="100" name="deposit_percent" value="${esc(est.deposit_percent ?? SETTINGS.deposit_percent ?? 50)}"></label>`}
       </div>
       <table class="totals" style="max-width:320px;margin-left:auto">
         <tr><td>Subtotal</td><td class="num" id="t-sub"></td></tr>
         <tr><td>Tax</td><td class="num" id="t-tax"></td></tr>
-        <tr><td><strong>Total</strong></td><td class="num"><strong id="t-total"></strong></td></tr>
+        <tr><td><strong>${isCO ? 'This change order' : 'Total'}</strong></td><td class="num"><strong id="t-total"></strong></td></tr>
+        ${isCO ? `<tr><td>Job price before</td><td class="num">${money(coJob ? coJob.price : 0)}</td></tr><tr><td><strong>New job price</strong></td><td class="num"><strong id="t-new"></strong></td></tr>`
+          : '<tr><td>Deposit at signing</td><td class="num" id="t-dep"></td></tr><tr><td>Balance at completion</td><td class="num" id="t-bal"></td></tr>'}
       </table>
-      <label>Notes / terms (shows on the estimate) <textarea name="notes" placeholder="e.g. Estimate good for 30 days. 50% deposit to schedule.">${esc(est.notes)}</textarea></label>
+      <label>${isCO ? 'Reason / details (shows on the change order)' : 'Notes / terms (shows on the estimate)'} <textarea name="notes" placeholder="e.g. Estimate good for 30 days. 50% deposit to schedule.">${esc(est.notes)}</textarea></label>
       <div class="modal-actions">
         ${id !== 'new' ? '<button type="button" class="btn danger left" id="del">Delete</button>' : ''}
-        <button type="submit" class="btn primary">Save estimate</button>
+        <button type="submit" class="btn primary">Save ${isCO ? 'change order' : 'estimate'}</button>
       </div>
     </form>`;
 
@@ -1149,7 +1176,15 @@ async function pageEstimateEdit(id, query) {
     $('#t-sub').textContent = money(t.subtotal);
     $('#t-tax').textContent = money(t.tax);
     $('#t-total').textContent = money(t.total);
+    if (isCO) $('#t-new').textContent = money((coJob ? coJob.price : 0) + (est.signed_at ? 0 : t.total));
+    else {
+      const dep = Math.round(t.total * (Number($('[name=deposit_percent]').value) || 0)) / 100;
+      $('#t-dep').textContent = money(dep);
+      $('#t-bal').textContent = money(t.total - dep);
+    }
   };
+  const depInput = $('[name=deposit_percent]');
+  if (depInput) depInput.oninput = () => recalc();
   const wireRow = (tr) => {
     $$('input', tr).forEach((i) => (i.oninput = recalc));
     $('[data-rm]', tr).onclick = () => { tr.remove(); recalc(); };
@@ -1169,12 +1204,13 @@ async function pageEstimateEdit(id, query) {
     const d = formData(e.target);
     delete d[''];
     const payload = {
+      kind: est.kind || 'estimate', deposit_percent: d.deposit_percent, days_added: d.days_added,
       customer_id: d.customer_id, job_id: d.job_id, title: d.title, date: d.date, status: d.status, tax_rate: d.tax_rate, notes: d.notes,
       items: readItems().filter((i) => i.desc || Number(i.price)),
     };
     try {
       const saved = id === 'new' ? await api('POST', '/estimates', payload) : await api('PUT', `/estimates/${id}`, payload);
-      toast('Estimate saved');
+      toast(isCO ? 'Change order saved' : 'Estimate saved');
       if (id === 'new') location.hash = `#/estimates/${saved.id}`; else pageEstimateEdit(id, query);
     } catch (err) { alert(err.message); }
   };
@@ -1209,7 +1245,7 @@ async function pageEstimatePrint(id) {
     </div>
     <div class="paper">
       <div class="letterhead">
-        ${LETTERHEAD}
+        ${letterhead()}
         <div style="text-align:right"><div class="doc-title">ESTIMATE</div><div>${esc(est.number)}</div><div>${fmtLongDate(est.date)}</div></div>
       </div>
       <p><strong>Prepared for:</strong><br>${esc(c.name || '')}${c.address ? '<br>' + esc(c.address) : ''}${c.phone ? '<br>' + esc(c.phone) : ''}${c.email ? '<br>' + esc(c.email) : ''}</p>
@@ -1339,7 +1375,17 @@ async function pageContracts() {
   };
 }
 
-const PLACEHOLDERS = ['customer_name', 'customer_address', 'customer_phone', 'customer_email', 'date', 'job_title', 'job_address', 'job_scope', 'job_price', 'start_date', 'finish_date', 'estimate_number', 'estimate_items', 'estimate_total'];
+const PLACEHOLDERS = ['customer_name', 'customer_address', 'customer_phone', 'customer_email', 'date', 'job_title', 'job_address', 'job_scope', 'job_price',
+  'start_date', 'finish_date', 'estimate_number', 'estimate_items', 'estimate_notes', 'estimate_total', 'deposit_percent', 'deposit_amount', 'balance_amount',
+  'business_name', 'business_phone', 'business_email', 'business_city', 'license_number', 'insurance', 'warranty_years', 'late_fee', 'exclusions',
+  'cancel_by_date', 'contractor_signer', 'original_price', 'change_amount', 'new_total', 'days_added'];
+// Three business days to cancel (Sundays don't count).
+function cancelByDate() {
+  const d = new Date();
+  let n = 0;
+  while (n < 3) { d.setDate(d.getDate() + 1); if (d.getDay() !== 0) n++; }
+  return fmtDate(dateStr(d), { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' });
+}
 async function pageTemplateEdit(id) {
   const t = id === 'new' ? { name: '', body: '' } : await api('GET', `/templates/${id}`);
   view.innerHTML = `
@@ -1386,15 +1432,37 @@ function fillTemplate(body, c, est, job) {
     estimate_items: t ? t.items.map((i) => `  • ${i.desc} — ${i.qty} × ${money(i.price)} = ${money((Number(i.qty) || 0) * (Number(i.price) || 0))}`).join('\n') +
       (t.tax ? `\n  Tax: ${money(t.tax)}` : '') : scope,
     estimate_total: t ? money(t.total) : job?.price ? money(job.price) : '',
+    estimate_notes: est?.notes || '',
+    business_name: BIZ.name, business_phone: BIZ.phone, business_email: SETTINGS.business_email, business_city: BIZ.city,
+    license_number: SETTINGS.license_number, insurance: SETTINGS.insurance, warranty_years: SETTINGS.warranty_years,
+    late_fee: SETTINGS.late_fee, exclusions: SETTINGS.exclusions,
+    cancel_by_date: cancelByDate(),
+    contractor_signer: me ? `${me.name} Mayo` : '',
+    days_added: est ? String(est.days_added || 0) : '',
   };
-  return body.replace(/\{\{\s*(\w+)\s*\}\}/g, (m, k) => (values[k] ? values[k] : '____________________'));
+  const total = t ? t.total : job?.price || 0;
+  const pct = est && est.deposit_percent != null && est.deposit_percent !== '' ? Number(est.deposit_percent) : Number(SETTINGS.deposit_percent || 0);
+  if (total) {
+    values.deposit_percent = String(pct);
+    values.deposit_amount = money(Math.round(total * pct) / 100);
+    values.balance_amount = money(total - Math.round(total * pct) / 100);
+  }
+  if (est && est.kind === 'change_order' && t) {
+    const before = job?.price || 0;
+    values.original_price = money(before);
+    values.change_amount = (t.total < 0 ? '−' : '+') + money(Math.abs(t.total));
+    values.new_total = money(before + t.total);
+  }
+  // Blanks left empty become a line to fill in by hand, except notes, which just disappear.
+  return body.replace(/\{\{\s*(\w+)\s*\}\}/g, (m, k) => (values[k] ? values[k] : k === 'estimate_notes' ? '' : '____________________'))
+    .replace(/\n{3,}/g, '\n\n');
 }
 
 async function pageContractNew(query) {
   await customers();
   const [templates, estimates] = await Promise.all([api('GET', '/templates'), api('GET', '/estimates'), jobs()]);
   const state = {
-    template: Number(query.get('template')) || templates[0]?.id,
+    template: Number(query.get('template')) || (templates.find((t) => /residential/i.test(t.name)) || templates[0])?.id,
     estimate: Number(query.get('estimate')) || null,
     customer: Number(query.get('customer')) || null,
     job: Number(query.get('job')) || null,
@@ -1424,7 +1492,7 @@ async function pageContractNew(query) {
     </div>
     <div class="paper">
       <div class="letterhead">
-        ${LETTERHEAD}
+        ${letterhead()}
       </div>
       <div class="contract-text" id="text" contenteditable="true" spellcheck="true"></div>
     </div>`;
@@ -1481,11 +1549,29 @@ async function pageContractNew(query) {
 
 async function pageSettings() {
   view.innerHTML = `
-    <h2>Settings</h2>
+    <div class="spread"><h2 style="margin:0">Settings</h2><span class="muted" id="app-version"></span></div>
     <div class="card">
       <h3>Logged in as ${esc(me.name)}</h3>
       <button class="btn" id="logout">Log out</button>
     </div>
+    <form class="card" id="biz">
+      <h3>Business info</h3>
+      <p class="muted" style="font-size:.88rem">Used on estimates, contracts, and change orders.</p>
+      <div class="form-grid">
+        <label>Business name <input name="business_name" value="${esc(SETTINGS.business_name)}"></label>
+        <label>Arkansas contractor license # <input name="license_number" value="${esc(SETTINGS.license_number)}" placeholder="Shows on every contract"></label>
+        <label>Phone <input name="business_phone" value="${esc(SETTINGS.business_phone)}"></label>
+        <label>Email <input type="email" name="business_email" value="${esc(SETTINGS.business_email)}"></label>
+        <label>City <input name="business_city" value="${esc(SETTINGS.business_city)}"></label>
+        <label>Services line <input name="business_lines" value="${esc(SETTINGS.business_lines)}"></label>
+        <label>Insurance (carrier / policy #) <input name="insurance" value="${esc(SETTINGS.insurance)}"></label>
+        <label>Default deposit % <input type="number" min="0" max="100" name="deposit_percent" value="${esc(SETTINGS.deposit_percent)}"></label>
+        <label>Workmanship warranty (years) <input type="number" min="0" name="warranty_years" value="${esc(SETTINGS.warranty_years)}"></label>
+        <label>Late fee <input name="late_fee" value="${esc(SETTINGS.late_fee)}"></label>
+      </div>
+      <label>"Not included" list (goes in every agreement) <textarea name="exclusions" style="min-height:150px">${esc(SETTINGS.exclusions)}</textarea></label>
+      <button class="btn primary">Save business info</button>
+    </form>
     <form class="card" id="pw">
       <h3>Change your password</h3>
       <label>Current password <input type="password" name="current" required autocomplete="current-password"></label>
@@ -1503,6 +1589,7 @@ async function pageSettings() {
       <input type="file" name="file" accept=".json,application/json" required>
       <button class="btn primary" style="margin-top:.6rem">Import</button>
     </form>`;
+  showVersion($('#app-version'));
   $('#import').onsubmit = async (e) => {
     e.preventDefault();
     const file = e.target.elements.file.files[0];
@@ -1516,6 +1603,10 @@ async function pageSettings() {
     } catch (err) { alert(err.message.startsWith('Unexpected') ? 'That is not a valid backup file.' : err.message); }
   };
   $('#logout').onclick = async () => { await api('POST', '/logout'); showLogin(); };
+  $('#biz').onsubmit = async (e) => {
+    e.preventDefault();
+    try { SETTINGS = await api('PUT', '/settings', formData(e.target)); toast('Business info saved'); } catch (err) { alert(err.message); }
+  };
   $('#pw').onsubmit = async (e) => {
     e.preventDefault();
     try { await api('POST', '/password', formData(e.target)); e.target.reset(); toast('Password changed'); } catch (err) { alert(err.message); }
@@ -1565,10 +1656,17 @@ function showLogin() {
   $('#app').classList.add('hidden');
   $('#login').classList.remove('hidden');
 }
-function showApp() {
+async function showApp() {
   $('#login').classList.add('hidden');
   $('#app').classList.remove('hidden');
+  try { SETTINGS = await api('GET', '/settings'); } catch {}
   route();
+}
+async function showVersion(el) {
+  try {
+    const v = await (await fetch('/api/version')).json();
+    el.textContent = `Version ${v.version}${v.commit ? ' · ' + v.commit : ''}`;
+  } catch {}
 }
 
 $('#login-form').addEventListener('submit', async (e) => {
@@ -1586,6 +1684,7 @@ $('#login-form').addEventListener('submit', async (e) => {
 
 window.addEventListener('hashchange', route);
 
+showVersion($('#login-version'));
 (async function init() {
   try { const last = localStorage.getItem('mayo-user'); if (last) $('#login-form [name=username]').value = last; } catch {}
   try {

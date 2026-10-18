@@ -1,0 +1,102 @@
+RESIDENTIAL CONSTRUCTION AGREEMENT
+Agreement No. {{estimate_number}}          Date: {{date}}
+
+1. THE PARTIES
+Contractor: {{business_name}} (Moss Mayo and Isaiah Mayo), {{business_city}}
+Phone: {{business_phone}}          Email: {{business_email}}
+Arkansas Contractor License No.: {{license_number}}
+
+Owner: {{customer_name}}
+Phone: {{customer_phone}}          Email: {{customer_email}}
+Project address: {{job_address}}
+
+2. SCOPE OF WORK
+Contractor will furnish the labor, equipment, and materials needed to complete the following work (the "Work"):
+
+{{estimate_items}}
+
+{{estimate_notes}}
+
+Only the work listed above is included. Anything not listed is extra and will be handled by a written Change Order (Section 6).
+
+3. NOT INCLUDED
+Unless it is listed in Section 2, the price does NOT include:
+{{exclusions}}
+
+4. CONTRACT PRICE AND PAYMENT SCHEDULE
+Contract price: {{estimate_total}}
+
+  • Deposit due at signing ({{deposit_percent}}%): {{deposit_amount}}
+    The deposit reserves your place on our schedule and is used to order materials. Work is not scheduled and materials are not ordered until the deposit is received.
+  • Balance due the day the Work is substantially complete: {{balance_amount}}
+
+On jobs lasting more than two weeks, Contractor may bill every two weeks for work completed (progress payments). Payment for signed Change Orders is due with the next payment. Returned checks are subject to a $35 fee.
+
+5. LATE PAYMENT
+Any amount not paid within 10 days of its due date accrues a late charge of {{late_fee}} (or the highest rate allowed by law, if lower). If any payment is more than 10 days late, Contractor may stop work until it is paid, and the schedule will be extended. Owner agrees to pay reasonable costs of collecting unpaid amounts, including attorney's fees and court costs.
+
+6. CHANGE ORDERS
+Any change to the Work — added work, removed work, different materials, or work required by an inspector or by hidden conditions — must be agreed to in a written Change Order stating the change, the price, and any added time. Change Orders may be signed on paper or electronically (including by a link sent by text or email). Contractor does not have to perform changed work until the Change Order is signed. Requests made to Contractor's workers or subcontractors on the job site are not Change Orders.
+
+7. SCHEDULE AND DELAYS
+Estimated start: {{start_date}}          Estimated completion: {{finish_date}}
+
+These dates are good-faith estimates, not guarantees. The schedule will be extended, without penalty to Contractor, for delays caused by weather, material shortages or backorders, permits and inspections, Change Orders, hidden conditions, the Owner (including access, selections, decisions, or late payment), utility companies, illness or injury, or anything else beyond Contractor's reasonable control.
+
+8. HIDDEN CONDITIONS
+The price is based on what could be seen when we looked at the job. If Contractor uncovers conditions that could not reasonably be seen beforehand — including rot, termite or water damage, mold, asbestos, lead paint, structural problems, code violations from earlier work, buried debris, or rock — Contractor will stop work in that area and tell Owner. Repairing those conditions is extra and will be handled by Change Order. Contractor does not test for or remove asbestos, lead paint, or mold.
+
+9. PERMITS, INSPECTIONS, AND CODES
+Contractor will get the building permits required for the Work unless Section 3 says otherwise. Work will meet the building codes that apply when the permit is issued. Work an inspector requires that is beyond the Scope of Work is extra and will be handled by Change Order.
+
+10. OWNER'S RESPONSIBILITIES
+Owner will:
+  a) give Contractor access to the work area Monday–Saturday, 7:00 am to 7:00 pm;
+  b) provide electricity and water at no charge;
+  c) move or protect furniture, valuables, vehicles, plants, and fragile items near the work area;
+  d) keep children and pets away from the work area;
+  e) point out property lines, septic systems, sprinkler lines, invisible fences, and private underground lines (Contractor is not responsible for damage to private lines that were not marked);
+  f) get any HOA or neighborhood approval needed; and
+  g) make selections (colors, fixtures, finishes) promptly so the job is not delayed.
+
+11. MATERIALS, SELECTIONS, AND ALLOWANCES
+Materials will be new and standard grade unless stated otherwise. Natural materials like wood and stone vary in color and grain; that is not a defect. If a specified item is unavailable, Contractor may substitute an item of equal or better quality after telling Owner. If an allowance is listed, Owner pays the actual cost over the allowance and is credited any amount under it. Special-order items cannot be returned once ordered, and Owner pays for them if the job is cancelled. Leftover materials belong to Contractor unless Owner paid for them separately. Materials Owner supplies are not covered by Contractor's warranty, and labor to replace defective Owner-supplied materials is extra.
+
+12. JOB SITE AND CLEANUP
+Contractor will keep the work area reasonably clean and haul off construction debris at completion. Normal construction can cause dust, noise, and some wear to lawns, landscaping, and driveways along the path in and out; Contractor will take reasonable care but is not responsible for that normal wear. Contractor may put a yard sign up during the job and may take photos of the Work for its records and advertising (never including personal information or your belongings without permission).
+
+13. SUBCONTRACTORS
+Contractor may use qualified subcontractors (such as electricians, plumbers, and drywallers) for parts of the Work. Owner will work through Contractor and will not hire Contractor's subcontractors or workers directly for this project.
+
+14. WARRANTY
+Contractor warrants its workmanship to be free of defects for {{warranty_years}} year(s) from substantial completion. Manufacturer warranties on materials and equipment are passed on to Owner. This warranty does not cover: normal wear and tear; settling, shrinking, or minor cracks in wood, drywall, caulk, paint, or concrete; damage from misuse, neglect, lack of maintenance, storms, or other acts of God; work done by others; or Owner-supplied materials. Owner must tell Contractor in writing (text or email is fine) within 30 days of finding a problem and give Contractor a fair chance to inspect and fix it. Repair or replacement is Owner's remedy under this warranty. The warranty applies only once the contract price is paid in full. THIS WARRANTY REPLACES ALL OTHER WARRANTIES, EXPRESS OR IMPLIED, TO THE EXTENT ALLOWED BY LAW.
+
+15. INSURANCE
+Contractor carries general liability insurance ({{insurance}}). Owner will keep homeowner's insurance on the property while the Work is underway.
+
+16. STOPPING WORK AND TERMINATION
+If Owner fails to pay on time, keeps Contractor from doing the Work, or otherwise seriously breaks this Agreement, Contractor may stop work or end this Agreement after giving Owner written notice and 7 days to fix the problem. If this Agreement ends for any reason other than Contractor's own breach, Owner will pay for all work completed, all materials ordered or delivered (including special-order items), and reasonable profit on the work performed.
+
+17. DISPUTES
+Both parties will first try to settle any disagreement by talking directly and in good faith. If it is not settled within 30 days, either party may take it to a court in Garland County, Arkansas. The winning party is entitled to reasonable attorney's fees and costs. Arkansas law governs this Agreement.
+
+18. ENTIRE AGREEMENT
+This Agreement, the estimate above, and any signed Change Orders are the entire agreement between Owner and Contractor. If any part of it cannot be enforced, the rest still applies. Electronic signatures count the same as handwritten signatures.
+
+19. OWNER'S RIGHT TO CANCEL
+If you signed this Agreement at your home or anywhere other than Contractor's place of business, you may cancel it without any penalty or obligation within three (3) business days after signing — by midnight on {{cancel_by_date}}. To cancel, send a signed and dated written notice (a text or email is fine) to {{business_name}}, {{business_phone}}, {{business_email}}. If you cancel, any payment you made will be returned within 10 business days.
+
+20. IMPORTANT NOTICE TO OWNER (ARKANSAS LIEN LAW)
+[PASTE THE RESIDENTIAL LIEN NOTICE FROM ARK. CODE ANN. § 18-44-115 HERE, WORD FOR WORD, IN CAPITAL LETTERS. Arkansas requires this notice in residential contracts before work begins. If it is missing or the wording is not exact, you can lose your right to file a lien if a customer doesn't pay. Have your attorney or the Arkansas Contractors Licensing Board confirm the exact text, then edit this template under Contracts → Edit.]
+
+
+By signing below, Owner confirms they have read this entire Agreement, including the Right to Cancel and the Notice to Owner, and agree to its terms.
+
+OWNER: {{customer_name}}
+
+Signature: ______________________________   Date: ____________
+
+
+CONTRACTOR: {{business_name}}
+
+By: {{contractor_signer}}   Signature: ______________________________   Date: ____________

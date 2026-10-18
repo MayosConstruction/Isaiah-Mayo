@@ -1,0 +1,30 @@
+CHANGE ORDER {{estimate_number}}
+Date: {{date}}
+
+Project address: {{job_address}}
+Owner: {{customer_name}}          Phone: {{customer_phone}}
+Contractor: {{business_name}} · {{business_phone}} · Arkansas License No. {{license_number}}
+
+This Change Order changes the agreement already in place for the project above. Every other term of that agreement stays the same.
+
+CHANGE TO THE WORK
+{{estimate_items}}
+
+Reason / details:
+{{estimate_notes}}
+
+PRICE AND SCHEDULE
+Contract price before this change:  {{original_price}}
+This Change Order:                  {{change_amount}}
+New contract price:                 {{new_total}}
+Time added to the schedule:         {{days_added}} day(s)
+
+Payment for this Change Order is due with the next scheduled payment (or at completion if no other payments remain).
+
+By signing, Owner authorizes Contractor to perform the change described above for the price shown.
+
+OWNER: {{customer_name}}
+Signature: ______________________________   Date: ____________
+
+CONTRACTOR: {{business_name}}
+By: {{contractor_signer}}   Signature: ______________________________   Date: ____________
