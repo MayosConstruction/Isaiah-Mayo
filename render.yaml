@@ -1,0 +1,27 @@
+# One-click setup for Render (render.com). See README → "Put it online".
+services:
+  - type: web
+    name: mayos-crm
+    runtime: node
+    plan: starter            # paid plan: needed so the disk (your data) is kept
+    buildCommand: npm install
+    startCommand: npm start
+    healthCheckPath: /
+    disk:
+      name: crm-data
+      mountPath: /var/data
+      sizeGB: 1
+    envVars:
+      - key: NODE_VERSION
+        value: "22"
+      - key: DATA_DIR
+        value: /var/data
+      - key: TZ
+        value: America/Chicago
+      - key: COOKIE_SECURE
+        value: "1"
+      # Render asks you to type these in when you deploy.
+      - key: ISAIAH_PASSWORD
+        sync: false
+      - key: MOSS_PASSWORD
+        sync: false

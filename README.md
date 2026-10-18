@@ -45,6 +45,16 @@ ISAIAH_PASSWORD=something MOSS_PASSWORD=somethingelse npm start
 | `COOKIE_SECURE` | off | Set to `1` when running on HTTPS (any real hosting) |
 | `ISAIAH_PASSWORD` / `MOSS_PASSWORD` | `mayo2026` | Starting passwords. Only used the very first time |
 
+## Put it online (one tap)
+
+[![Deploy to Render](https://render.com/images/deploy-to-render-button.svg)](https://render.com/deploy?repo=https://github.com/MayosConstruction/Isaiah-Mayo)
+
+1. Tap the button above and sign in to Render with GitHub.
+2. Type a password for Isaiah and one for Moss when it asks.
+3. Tap **Deploy** and wait a few minutes. Render shows your app's address, like `https://mayos-crm.onrender.com`.
+
+The setup lives in `render.yaml`: the Starter plan with a 1 GB disk for your data, Hot Springs time zone, and secure cookies. It costs about $7–8 a month.
+
 ## Using it on both your phones
 
 Both of you need to reach the same server so you see the same data. Two easy options:
