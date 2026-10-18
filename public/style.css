@@ -90,6 +90,10 @@ main { max-width: 1000px; margin: 0 auto; padding: 1rem; }
 .pill.Sent { background: #fff3e0; color: #a35a00; }
 .pill.Accepted { background: #e3f5ea; color: var(--green); }
 .pill.Declined { background: #fdecea; color: var(--red); }
+.pill.due { background: #fff3e0; color: #8a5300; }
+.partner-grid { display: grid; grid-template-columns: 1fr 1fr; gap: .8rem; }
+.partner-grid .pname { font-family: var(--display); font-weight: 800; font-size: 1.3rem; text-transform: uppercase; }
+.partner-grid div div { font-size: .92rem; }
 .pill.overdue { background: #fdecea; color: var(--red); }
 
 /* Jobs */
@@ -100,6 +104,7 @@ main { max-width: 1000px; margin: 0 auto; padding: 1rem; }
 .job-money strong { font-family: var(--display); font-size: 1.2rem; }
 .mini { margin: .4rem 0 0; padding-left: 1.1rem; font-size: .92rem; }
 .done-item { text-decoration: line-through; color: var(--muted); }
+.job-table td:first-child { white-space: nowrap; padding-right: .8rem; }
 .job-table tr.sep td { border-top: 1px solid var(--border); padding-top: .5rem; }
 .pill.job-InProgress { background: #fdecea; color: var(--brand); font-weight: 600; }
 .pill.job-Scheduled { background: #fff3e0; color: #8a5300; }

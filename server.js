@@ -52,7 +52,7 @@ CREATE TABLE IF NOT EXISTS jobs (
   price REAL DEFAULT 0,
   labor_cost REAL DEFAULT 0,
   materials_cost REAL DEFAULT 0,
-  materials_status TEXT DEFAULT 'Unspent',
+  materials_status TEXT DEFAULT 'Not bought yet',
   materials TEXT DEFAULT '[]',
   scope TEXT DEFAULT '[]',
   notes TEXT,
@@ -131,6 +131,22 @@ addColumn('transactions', 'status', "TEXT DEFAULT 'paid'"); // 'paid' or 'owed' 
 addColumn('todos', 'job_id', 'INTEGER REFERENCES jobs(id) ON DELETE SET NULL');
 addColumn('estimates', 'job_id', 'INTEGER REFERENCES jobs(id) ON DELETE SET NULL');
 addColumn('events', 'job_id', 'INTEGER REFERENCES jobs(id) ON DELETE SET NULL');
+
+// Moss and Isaiah are 50/50 partners: what they take from a job is "Partner pay",
+// everyone else on labor is a "Subcontractor". Older wording is converted here.
+const PARTNERS = ['Moss', 'Isaiah'];
+function normalizeWording() {
+  db.exec(`
+    UPDATE transactions SET paid_to = 'Moss' WHERE lower(trim(paid_to)) IN ('dad', 'moss', 'moss mayo');
+    UPDATE transactions SET paid_to = 'Isaiah' WHERE lower(trim(paid_to)) IN ('isaiah', 'isaiah mayo', 'me');
+    UPDATE transactions SET category = 'Partner pay' WHERE category = 'Labor / Sub' AND paid_to IN ('Moss', 'Isaiah');
+    UPDATE transactions SET category = 'Subcontractor' WHERE category = 'Labor / Sub';
+    UPDATE jobs SET materials_status = CASE materials_status
+      WHEN 'Paid' THEN 'Purchased' WHEN 'Unspent' THEN 'Not bought yet' WHEN 'Unpaid' THEN 'Bought, not paid yet'
+      ELSE materials_status END;
+  `);
+}
+normalizeWording();
 
 // ---- Password helpers ----
 function hashPassword(password, salt = crypto.randomBytes(16).toString('hex')) {
@@ -273,26 +289,37 @@ function today() {
 // ---------------------------------------------------------------------------
 // Dashboard summary
 // ---------------------------------------------------------------------------
+// Profit = money in minus business costs (subs, materials, other expenses).
+// Partner pay to Moss and Isaiah is how profit gets split, so it is not a cost.
+// "Due at completion" entries (status 'owed') are not counted until paid.
 function moneyBetween(from, to) {
   const r = db
     .prepare(`SELECT
       COALESCE(SUM(CASE WHEN type='in' THEN amount END), 0) AS money_in,
-      COALESCE(SUM(CASE WHEN type='out' THEN amount END), 0) AS money_out
+      COALESCE(SUM(CASE WHEN type='out' AND COALESCE(category,'') != 'Partner pay' THEN amount END), 0) AS costs,
+      COALESCE(SUM(CASE WHEN type='out' AND category = 'Partner pay' AND paid_to = 'Moss' THEN amount END), 0) AS moss,
+      COALESCE(SUM(CASE WHEN type='out' AND category = 'Partner pay' AND paid_to = 'Isaiah' THEN amount END), 0) AS isaiah
       FROM transactions WHERE date >= ? AND date <= ? AND COALESCE(status, 'paid') = 'paid'`)
     .get(from, to);
-  return { in: r.money_in, out: r.money_out, net: r.money_in - r.money_out };
+  return { in: r.money_in, costs: r.costs, profit: r.money_in - r.costs, paid: { Moss: r.moss, Isaiah: r.isaiah } };
 }
 
-// Money collected and paid out per job (only real, paid transactions count as collected/paid).
+// Per job: what the customer has paid, what was spent, and who got (or is due) labor money.
 function jobMoney() {
   const out = {};
-  for (const r of db.prepare(`SELECT job_id,
-      COALESCE(SUM(CASE WHEN type='in' AND COALESCE(status,'paid')='paid' THEN amount END), 0) AS collected,
-      COALESCE(SUM(CASE WHEN type='out' AND COALESCE(status,'paid')='paid' AND category='Labor / Sub' THEN amount END), 0) AS labor_paid,
-      COALESCE(SUM(CASE WHEN type='out' AND status='owed' THEN amount END), 0) AS owed_out,
-      COALESCE(SUM(CASE WHEN type='out' AND COALESCE(status,'paid')='paid' THEN amount END), 0) AS spent
-    FROM transactions WHERE job_id IS NOT NULL GROUP BY job_id`).all()) {
-    out[r.job_id] = { collected: r.collected, labor_paid: r.labor_paid, owed_out: r.owed_out, spent: r.spent };
+  const blank = () => ({ collected: 0, materials: 0, other: 0, subs: {}, partners: { Moss: { paid: 0, due: 0 }, Isaiah: { paid: 0, due: 0 } } });
+  for (const r of db.prepare(`SELECT job_id, type, category, paid_to, COALESCE(status,'paid') AS status, SUM(amount) AS total
+    FROM transactions WHERE job_id IS NOT NULL GROUP BY job_id, type, category, paid_to, COALESCE(status,'paid')`).all()) {
+    const j = (out[r.job_id] ||= blank());
+    const key = r.status === 'owed' ? 'due' : 'paid';
+    if (r.type === 'in') { if (key === 'paid') j.collected += r.total; continue; }
+    if (r.category === 'Partner pay' && PARTNERS.includes(r.paid_to)) j.partners[r.paid_to][key] += r.total;
+    else if (r.category === 'Subcontractor') {
+      const name = r.paid_to || 'Subcontractor';
+      (j.subs[name] ||= { paid: 0, due: 0 })[key] += r.total;
+    } else if (key === 'paid') {
+      if (r.category === 'Materials') j.materials += r.total; else j.other += r.total;
+    }
   }
   return out;
 }
@@ -313,7 +340,6 @@ function summary() {
     customerCount: db.prepare('SELECT COUNT(*) AS n FROM customers').get().n,
     jobs: db.prepare(`SELECT * FROM jobs WHERE status IN ('In Progress','Scheduled','Estimate Pending') ORDER BY ${JOB_ORDER}`).all(),
     jobMoney: jobMoney(),
-    owedOut: db.prepare("SELECT paid_to, SUM(amount) AS total FROM transactions WHERE status = 'owed' GROUP BY paid_to ORDER BY total DESC").all(),
   };
 }
 
@@ -343,6 +369,7 @@ function importData(data) {
         counts[table]++;
       }
     }
+    normalizeWording();
     db.exec('COMMIT');
   } catch (err) {
     db.exec('ROLLBACK');

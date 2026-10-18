@@ -70,9 +70,14 @@ Go to **Settings → Import** and pick a `.json` file: either a backup made by t
 
 Customer and job details are kept out of this repository on purpose, because the repository is public. Keep your starter or backup files somewhere private.
 
-## Owed vs. paid
+## How the money works
 
-A payout marked **Owed (not paid yet)**, like "$3,000 owed to Dad upon completion", shows on the job and under **Money → Still owed to people**. It doesn't count as money out until you tap **Mark paid**.
+- **Moss and Isaiah are 50/50 partners.** Money you pay yourselves from a job is **Partner pay**. It isn't a cost, it's your split.
+- **Subcontractors** (Tommy and Chris, electricians; Julio, drywaller; David, laborer) and **materials** are business **costs**.
+- **Profit** = money in − costs.
+- On each job, labor is broken down by sub, Moss, and Isaiah. Whatever labor isn't assigned to a sub or Moss shows as **Isaiah, rest of labor**.
+- A payment marked **Due when job is finished** shows on the job and under **Money → Due when jobs finish**. It doesn't count until you tap **Mark paid**.
+- **Materials status:** *Not bought yet*, *Purchased*, or *Bought, not paid yet*. Setting it to *Purchased* offers to log the purchase in Money.
 
 ## Backups
 

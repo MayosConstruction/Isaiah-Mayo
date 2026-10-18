@@ -10,14 +10,18 @@ const view = $('#view');
 const PEOPLE = ['Both', 'Isaiah', 'Moss'];
 const ESTIMATE_STATUSES = ['Draft', 'Sent', 'Accepted', 'Declined'];
 const IN_CATEGORIES = ['Job payment', 'Deposit', 'Other income'];
-const OUT_CATEGORIES = ['Labor / Sub', 'Materials', 'Fuel', 'Tools & equipment', 'Subcontractor', 'Dump / disposal', 'Insurance', 'Vehicle', 'Permits', 'Office / phone', 'Other expense'];
+const OUT_CATEGORIES = ['Subcontractor', 'Partner pay', 'Materials', 'Fuel', 'Tools & equipment', 'Dump / disposal', 'Insurance', 'Vehicle', 'Permits', 'Office / phone', 'Other expense'];
 const DOC_KINDS = ['Signed contract', 'Unsigned contract', 'Change order', 'Receipt', 'Photo', 'Other'];
 const BIZ = { name: "Mayo's Construction", phone: '870-617-3507', city: 'Hot Springs, AR', lines: 'Construction · Remodeling · Roofing', owners: 'Moss Mayo & Isaiah Mayo' };
 const LETTERHEAD = `<div class="who"><img src="/logo.png" alt="">
   <div><div class="biz">${BIZ.name}</div><div class="muted">${BIZ.lines}<br>${BIZ.city} · ${BIZ.phone}<br>${BIZ.owners}</div></div></div>`;
 let me = null;
 let customersCache = null;
-let peopleSeen = ['Dad', 'Isaiah'];
+// Moss and Isaiah are 50/50 partners. Regular subcontractors:
+const PARTNERS = ['Moss', 'Isaiah'];
+const SUBS = { Tommy: 'Electrician', Chris: 'Electrician', Julio: 'Drywaller', David: 'Laborer' };
+let peopleSeen = [...PARTNERS, ...Object.keys(SUBS)];
+function personLabel(name) { return SUBS[name] ? `${name} (${SUBS[name]})` : name; }
 
 function esc(s) {
   return String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
@@ -222,10 +226,10 @@ async function editTransaction(tx = {}, after) {
         <label>Amount ($) <input type="number" step="0.01" min="0" name="amount" required value="${esc(tx.amount)}" inputmode="decimal"></label>
         <label>Date <input type="date" name="date" required value="${esc(tx.date || todayStr())}"></label>
         <label>Category <input name="category" list="cat-list" value="${esc(tx.category)}"></label>
-        <label class="out-only">Paid to <input name="paid_to" list="people-list" value="${esc(tx.paid_to)}" placeholder="e.g. Dad, Chris, Lowe's"></label>
+        <label class="out-only">Paid to <input name="paid_to" list="people-list" value="${esc(tx.paid_to)}" placeholder="Moss, Isaiah, Chris, Lowe's…"></label>
         <label class="out-only">Paid yet? <select name="status">
           <option value="paid" ${tx.status !== 'owed' ? 'selected' : ''}>Paid</option>
-          <option value="owed" ${tx.status === 'owed' ? 'selected' : ''}>Owed (not paid yet)</option></select></label>
+          <option value="owed" ${tx.status === 'owed' ? 'selected' : ''}>Due when job is finished</option></select></label>
         <label class="out-only">Paid with <select name="paid_by">${options(['Business', 'Isaiah', 'Moss'], tx.paid_by || 'Business')}</select></label>
       </div>
       <datalist id="cat-list"></datalist>
@@ -251,6 +255,13 @@ async function editTransaction(tx = {}, after) {
         $('#cat-list', body).innerHTML = (t === 'in' ? IN_CATEGORIES : OUT_CATEGORIES).map((c) => `<option value="${esc(c)}">`).join('');
         $$('.out-only', body).forEach((el) => el.classList.toggle('hidden', t === 'in'));
       };
+      // Picking a partner or a known sub fills in the category.
+      $('[name=paid_to]', body).addEventListener('change', (e) => {
+        const cat = $('[name=category]', body);
+        const who = e.target.value.trim();
+        if (PARTNERS.includes(who)) cat.value = 'Partner pay';
+        else if (SUBS[who] && !cat.value) cat.value = 'Subcontractor';
+      });
       $('[name=job_id]', body).addEventListener('change', (e) => {
         const j = jobsCache.find((x) => x.id === Number(e.target.value));
         if (j && j.customer_id) $('[name=customer_id]', body).value = j.customer_id;
@@ -391,7 +402,7 @@ function wireEvents(root, list, after) {
 // ---------------------------------------------------------------------------
 const JOB_STATUSES = ['Estimate Pending', 'Scheduled', 'In Progress', 'Done', 'Lost'];
 const JOB_ICON = { 'Estimate Pending': '📝', Scheduled: '📆', 'In Progress': '🔨', Done: '✅', Lost: '✖️' };
-const MATERIAL_STATUSES = ['Unspent', 'Paid', 'Unpaid'];
+const MATERIAL_STATUSES = ['Not bought yet', 'Purchased', 'Bought, not paid yet'];
 let jobsCache = null;
 
 async function jobs(force) {
@@ -416,13 +427,21 @@ function linesToChecklist(text, old) {
 }
 function shortDate(s) { return s ? fmtDate(s, { month: 'numeric', day: 'numeric', year: '2-digit' }) : '—'; }
 function jobNumbers(job, jm = {}) {
-  const m = jm[job.id] || { collected: 0, labor_paid: 0, owed_out: 0, spent: 0 };
+  const m = jm[job.id] || { collected: 0, materials: 0, other: 0, subs: {}, partners: { Moss: { paid: 0, due: 0 }, Isaiah: { paid: 0, due: 0 } } };
+  const sum = (o) => o.paid + o.due;
+  const subsTotal = Object.values(m.subs).reduce((t, o) => t + sum(o), 0);
+  // Whatever labor isn't handed to subs or Moss (or already logged for Isaiah) is Isaiah's share.
+  const isaiahRest = Math.max(0, (job.labor_cost || 0) - subsTotal - sum(m.partners.Moss) - sum(m.partners.Isaiah));
   return {
     ...m,
+    subsTotal,
+    isaiahRest,
     owes: (job.price || 0) - m.collected,
-    laborLeft: (job.labor_cost || 0) - m.labor_paid - m.owed_out,
     leftover: (job.price || 0) - (job.labor_cost || 0) - (job.materials_cost || 0),
   };
+}
+function paidDue(o) {
+  return [o.paid ? `${money(o.paid)} paid` : '', o.due ? `${money(o.due)} at finish` : ''].filter(Boolean).join(' · ') || '—';
 }
 function statusPill(status) {
   return `<span class="pill job-${status.replace(/\s/g, '')}">${JOB_ICON[status] || ''} ${esc(status)}</span>`;
@@ -463,9 +482,9 @@ async function editJob(job = {}, after) {
         <label>Start <input type="date" name="start_date" value="${esc(job.start_date)}"></label>
         <label>Finish <input type="date" name="finish_date" value="${esc(job.finish_date)}"></label>
         <label>Price ($) <input type="number" step="0.01" name="price" value="${esc(job.price || '')}" inputmode="decimal"></label>
-        <label>Labor / Sub ($) <input type="number" step="0.01" name="labor_cost" value="${esc(job.labor_cost || '')}" inputmode="decimal"></label>
+        <label>Labor, us + subs ($) <input type="number" step="0.01" name="labor_cost" value="${esc(job.labor_cost || '')}" inputmode="decimal"></label>
         <label>Materials ($) <input type="number" step="0.01" name="materials_cost" value="${esc(job.materials_cost || '')}" inputmode="decimal"></label>
-        <label>Materials status <select name="materials_status">${options(MATERIAL_STATUSES, job.materials_status || 'Unspent')}</select></label>
+        <label>Materials status <select name="materials_status">${options(MATERIAL_STATUSES, job.materials_status || 'Not bought yet')}</select></label>
       </div>
       <label>Materials needed (one per line) <textarea name="materials_text">${esc(mats.map((i) => i.text).join('\n'))}</textarea></label>
       <label>Scope of work (one per line) <textarea name="scope_text">${esc(scope.map((i) => i.text).join('\n'))}</textarea></label>
@@ -555,7 +574,7 @@ async function pageJob(id) {
       <div class="muted">Start: ${shortDate(job.start_date)} &nbsp; Finish: ${shortDate(job.finish_date)} &nbsp; · <a href="https://maps.google.com/?q=${encodeURIComponent(job.address)}" target="_blank" rel="noopener">Map</a></div>
       <div class="row" style="margin-top:.75rem">
         <button class="btn primary" id="add-in">+ Payment received</button>
-        <button class="btn" id="add-out">+ Payout / expense</button>
+        <button class="btn" id="add-out">+ Pay someone / expense</button>
         <button class="btn" id="add-todo">+ To-do</button>
         <a class="btn" href="#/estimates/new?job=${id}">Make estimate</a>
         <a class="btn" href="#/contracts/new?job=${id}">Make contract</a>
@@ -567,19 +586,21 @@ async function pageJob(id) {
         <table class="totals job-table">
           <tr><td><strong>Price</strong></td><td class="num"><strong>${money(job.price)}</strong></td></tr>
           <tr><td>Collected</td><td class="num green">${money(n.collected)}</td></tr>
-          <tr><td>Customer owes</td><td class="num ${n.owes > 0 ? 'red' : ''}">${money(n.owes)}</td></tr>
-          <tr class="sep"><td><strong>Labor / Sub</strong></td><td class="num"><strong>${money(job.labor_cost)}</strong></td></tr>
-          <tr><td>Paid out</td><td class="num">${money(n.labor_paid)}</td></tr>
-          <tr><td>Still owed out</td><td class="num ${n.owed_out > 0 ? 'red' : ''}">${money(n.owed_out)}</td></tr>
-          <tr><td>Labor not handed out yet</td><td class="num">${money(n.laborLeft)}</td></tr>
+          <tr><td>Still owed</td><td class="num ${n.owes > 0 ? 'red' : ''}">${money(n.owes)}</td></tr>
+          <tr class="sep"><td><strong>Labor</strong></td><td class="num"><strong>${money(job.labor_cost)}</strong></td></tr>
+          ${Object.entries(n.subs).map(([name, o]) => `<tr><td>${esc(personLabel(name))}</td><td class="num">${paidDue(o)}</td></tr>`).join('')}
+          <tr><td>Moss</td><td class="num">${paidDue(n.partners.Moss)}</td></tr>
+          <tr><td>Isaiah</td><td class="num">${[n.partners.Isaiah.paid || n.partners.Isaiah.due ? paidDue(n.partners.Isaiah) : '', n.isaiahRest ? `${money(n.isaiahRest)} rest of labor` : ''].filter(Boolean).join(' · ') || '—'}</td></tr>
           <tr class="sep"><td><strong>Materials</strong></td><td class="num"><strong>${money(job.materials_cost)}</strong></td></tr>
-          <tr><td>Status</td><td class="num"><select id="mat-status" style="width:auto;margin:0;padding:.2rem .4rem;display:inline-block">${options(MATERIAL_STATUSES, job.materials_status || 'Unspent')}</select></td></tr>
-          <tr class="sep"><td><strong>Left over</strong> <span class="muted">(price − labor − materials)</span></td><td class="num"><strong>${money(n.leftover)}</strong></td></tr>
+          <tr><td>Status</td><td class="num"><select id="mat-status" style="width:auto;margin:0;padding:.2rem .4rem;display:inline-block">${options(MATERIAL_STATUSES, job.materials_status || 'Not bought yet')}</select></td></tr>
+          ${n.materials ? `<tr><td>Spent so far</td><td class="num">${money(n.materials)}</td></tr>` : ''}
+          <tr class="sep"><td><strong>Left over</strong></td><td class="num"><strong>${money(n.leftover)}</strong></td></tr>
+          ${n.leftover ? `<tr><td class="muted">Split 50/50</td><td class="num muted">${money(n.leftover / 2)} each</td></tr>` : ''}
         </table>
       </div>
       <div class="card">
-        <h3>Paid out / owed</h3>
-        <ul class="list" id="outs">${outs.map(txRow).join('') || '<li class="empty">No payouts yet. Use "+ Payout / expense" for Dad, subs, or materials.</li>'}</ul>
+        <h3>Labor & expenses</h3>
+        <ul class="list" id="outs">${outs.map(txRow).join('') || '<li class="empty">Nothing yet. Use "+ Pay someone / expense" for Moss, Isaiah, subs, or materials.</li>'}</ul>
         <h3 style="margin-top:1rem">Payments from customer</h3>
         <ul class="list" id="ins">${ins.map(txRow).join('') || '<li class="empty">Nothing collected yet.</li>'}</ul>
       </div>
@@ -592,9 +613,16 @@ async function pageJob(id) {
     </div>`;
   $('#edit').onclick = () => editJob(job, reload);
   $('#status').onchange = async (e) => { await api('PUT', `/jobs/${id}`, { status: e.target.value }); await jobs(true); toast('Status updated'); reload(); };
-  $('#mat-status').onchange = async (e) => { await api('PUT', `/jobs/${id}`, { materials_status: e.target.value }); toast('Saved'); };
+  $('#mat-status').onchange = async (e) => {
+    await api('PUT', `/jobs/${id}`, { materials_status: e.target.value });
+    toast('Saved');
+    // Offer to log the purchase so it shows in Money.
+    if (e.target.value === 'Purchased' && !n.materials && job.materials_cost) {
+      editTransaction({ type: 'out', job_id: job.id, customer_id: job.customer_id, category: 'Materials', amount: job.materials_cost, description: 'Materials purchased' }, reload);
+    }
+  };
   $('#add-in').onclick = () => editTransaction({ type: 'in', job_id: job.id, customer_id: job.customer_id, category: 'Job payment' }, reload);
-  $('#add-out').onclick = () => editTransaction({ type: 'out', job_id: job.id, customer_id: job.customer_id, category: 'Labor / Sub' }, reload);
+  $('#add-out').onclick = () => editTransaction({ type: 'out', job_id: job.id, customer_id: job.customer_id }, reload);
   $('#add-todo').onclick = () => editTodo({ job_id: job.id, customer_id: job.customer_id }, reload);
   wireTxs($('#outs'), outs, reload);
   wireTxs($('#ins'), ins, reload);
@@ -622,8 +650,16 @@ async function pageHome() {
   const current = s.jobs.filter((j) => j.status !== 'Estimate Pending');
   const pending = s.jobs.filter((j) => j.status === 'Estimate Pending');
   const custOwe = current.reduce((sum, j) => sum + Math.max(0, jobNumbers(j, s.jobMoney).owes), 0);
-  const weOwe = s.owedOut.reduce((sum, r) => sum + r.total, 0);
-  const half = s.month.net / 2;
+  // What each partner and sub has coming when current jobs finish.
+  const coming = { Moss: 0, Isaiah: 0 };
+  const subsDue = {};
+  current.forEach((j) => {
+    const n = jobNumbers(j, s.jobMoney);
+    coming.Moss += n.partners.Moss.due;
+    coming.Isaiah += n.partners.Isaiah.due + n.isaiahRest;
+    Object.entries(n.subs).forEach(([k, o]) => { if (o.due) subsDue[k] = (subsDue[k] || 0) + o.due; });
+  });
+
   const greet = new Date().getHours() < 12 ? 'Good morning' : new Date().getHours() < 17 ? 'Good afternoon' : 'Good evening';
   const byDay = {};
   s.events.forEach((e) => (byDay[e.date] = byDay[e.date] || []).push(e));
@@ -638,12 +674,18 @@ async function pageHome() {
     </div>
     <div class="stats">
       <div class="stat"><div class="label">In this month</div><div class="value green">${money(s.month.in)}</div></div>
-      <div class="stat"><div class="label">Out this month</div><div class="value red">${money(s.month.out)}</div></div>
-      <div class="stat"><div class="label">Profit this month</div><div class="value">${money(s.month.net)}</div></div>
-      <div class="stat"><div class="label">Each partner (50%)</div><div class="value">${money(half)}</div></div>
+      <div class="stat"><div class="label">Costs this month</div><div class="value red">${money(s.month.costs)}</div></div>
+      <div class="stat"><div class="label">Profit this month</div><div class="value">${money(s.month.profit)}</div></div>
       <div class="stat"><div class="label">Customers still owe</div><div class="value">${money(custOwe)}</div></div>
-      <div class="stat"><div class="label">We still owe out</div><div class="value">${money(weOwe)}</div>
-        ${s.owedOut.length ? `<div class="muted" style="font-size:.85rem">${s.owedOut.map((r) => `${esc(r.paid_to || '?')} ${money(r.total)}`).join(' · ')}</div>` : ''}</div>
+    </div>
+    <div class="card partners">
+      <h3>Partners · 50/50</h3>
+      <div class="partner-grid">
+        ${PARTNERS.map((p) => `<div><div class="pname">${p}</div>
+          <div>Paid this month <strong>${money(s.month.paid[p])}</strong></div>
+          <div>Coming when jobs finish <strong>${money(coming[p])}</strong></div></div>`).join('')}
+      </div>
+      ${Object.keys(subsDue).length ? `<p class="muted" style="margin:.6rem 0 0">Subs due at finish: ${Object.entries(subsDue).map(([k, v]) => `${esc(personLabel(k))} ${money(v)}`).join(' · ')}</p>` : ''}
     </div>
     <div class="spread"><h3 style="margin:0">Current jobs</h3><a href="#/jobs">All jobs</a></div>
     <div class="grid" style="margin-bottom:1rem">${current.map((j) => jobCard(j, s.jobMoney)).join('') || '<p class="empty">No current jobs. <a href="#/jobs">Add one</a>.</p>'}</div>
@@ -669,10 +711,10 @@ async function pageHome() {
         <h3>This year so far</h3>
         <table class="totals">
           <tr><td>Money in</td><td class="num green">${money(s.year.in)}</td></tr>
-          <tr><td>Money out</td><td class="num red">${money(s.year.out)}</td></tr>
-          <tr><td><strong>Profit</strong></td><td class="num"><strong>${money(s.year.net)}</strong></td></tr>
-          <tr><td>Isaiah's half</td><td class="num">${money(s.year.net / 2)}</td></tr>
-          <tr><td>Moss's half</td><td class="num">${money(s.year.net / 2)}</td></tr>
+          <tr><td>Costs</td><td class="num red">${money(s.year.costs)}</td></tr>
+          <tr><td><strong>Profit</strong></td><td class="num"><strong>${money(s.year.profit)}</strong></td></tr>
+          <tr><td>Paid to Moss</td><td class="num">${money(s.year.paid.Moss)}</td></tr>
+          <tr><td>Paid to Isaiah</td><td class="num">${money(s.year.paid.Isaiah)}</td></tr>
         </table>
         <p class="muted" style="margin-top:.5rem">${s.customerCount} customers on file</p>
       </div>
@@ -1007,11 +1049,11 @@ async function pageEstimatePrint(id) {
 
 function txRow(t) {
   const owed = t.status === 'owed';
-  const title = (t.paid_to ? (owed ? 'Owe ' : 'Paid ') + t.paid_to : t.description) || t.category || (t.type === 'in' ? 'Money in' : 'Money out');
+  const title = (t.paid_to ? (owed ? '' : 'Paid ') + personLabel(t.paid_to) : t.description) || t.category || (t.type === 'in' ? 'Money in' : 'Money out');
   return `<li class="clickable" data-tx="${t.id}">
     <div class="grow">
-      <div class="title">${esc(title)} ${owed ? '<span class="pill overdue">Owed</span>' : ''}</div>
-      <div class="sub">${owed ? 'due ' : ''}${fmtDate(t.date)}${t.paid_to && t.description ? ' · ' + esc(t.description) : ''}${t.category ? ' · ' + esc(t.category) : ''}${t.job_id ? ' · ' + esc(jobAddress(t.job_id)) : t.customer_id ? ' · ' + esc(customerName(t.customer_id)) : ''}${t.type === 'out' && t.paid_by && t.paid_by !== 'Business' ? ' · paid by ' + esc(t.paid_by) : ''}</div>
+      <div class="title">${esc(title)} ${owed ? '<span class="pill due">Due at finish</span>' : ''}</div>
+      <div class="sub">${owed ? 'finish ' : ''}${fmtDate(t.date)}${t.paid_to && t.description ? ' · ' + esc(t.description) : ''}${t.category ? ' · ' + esc(t.category) : ''}${t.job_id ? ' · ' + esc(jobAddress(t.job_id)) : t.customer_id ? ' · ' + esc(customerName(t.customer_id)) : ''}${t.type === 'out' && t.paid_by && t.paid_by !== 'Business' ? ' · paid by ' + esc(t.paid_by) : ''}</div>
     </div>
     ${owed ? `<button class="btn small" data-mark-paid="${t.id}">Mark paid</button>` : ''}
     <strong class="${owed ? 'muted' : t.type === 'in' ? 'green' : 'red'}">${t.type === 'in' ? '+' : '−'}${money(t.amount)}</strong>
@@ -1035,14 +1077,15 @@ async function pageMoney() {
   const [periodList, owedList] = await Promise.all([api('GET', `/transactions?from=${from}&to=${to}`), api('GET', '/transactions?status=owed')]);
   const list = periodList.filter((t) => t.status !== 'owed');
   const mIn = list.filter((t) => t.type === 'in').reduce((s, t) => s + t.amount, 0);
-  const mOut = list.filter((t) => t.type === 'out').reduce((s, t) => s + t.amount, 0);
+  const mOut = list.filter((t) => t.type === 'out' && t.category !== 'Partner pay').reduce((s, t) => s + t.amount, 0);
+  const partnerPaid = (who) => list.filter((t) => t.category === 'Partner pay' && t.paid_to === who).reduce((s, t) => s + t.amount, 0);
   const owedBy = {};
   owedList.forEach((t) => (owedBy[t.paid_to || 'Someone'] = (owedBy[t.paid_to || 'Someone'] || 0) + t.amount));
   const net = mIn - mOut;
   // Out-of-pocket: expenses a partner paid personally (business owes them back).
   const owed = (who) => list.filter((t) => t.type === 'out' && t.paid_by === who).reduce((s, t) => s + t.amount, 0);
   const byCat = {};
-  list.filter((t) => t.type === 'out').forEach((t) => (byCat[t.category || 'Other'] = (byCat[t.category || 'Other'] || 0) + t.amount));
+  list.filter((t) => t.type === 'out' && t.category !== 'Partner pay').forEach((t) => (byCat[t.category || 'Other'] = (byCat[t.category || 'Other'] || 0) + t.amount));
   view.innerHTML = `
     <div class="spread"><h2>Money</h2><button class="btn primary" id="add">+ Money in / out</button></div>
     <div class="row" style="margin-bottom:1rem">
@@ -1057,15 +1100,15 @@ async function pageMoney() {
     </div>
     <div class="stats">
       <div class="stat"><div class="label">Money in</div><div class="value green">${money(mIn)}</div></div>
-      <div class="stat"><div class="label">Money out</div><div class="value red">${money(mOut)}</div></div>
+      <div class="stat"><div class="label">Costs</div><div class="value red">${money(mOut)}</div><div class="muted" style="font-size:.8rem">Subs, materials, expenses</div></div>
       <div class="stat"><div class="label">Profit</div><div class="value">${money(net)}</div></div>
-      <div class="stat"><div class="label">Isaiah 50%</div><div class="value">${money(net / 2)}</div></div>
-      <div class="stat"><div class="label">Moss 50%</div><div class="value">${money(net / 2)}</div></div>
+      <div class="stat"><div class="label">Paid to Moss</div><div class="value">${money(partnerPaid('Moss'))}</div></div>
+      <div class="stat"><div class="label">Paid to Isaiah</div><div class="value">${money(partnerPaid('Isaiah'))}</div></div>
     </div>
     ${owed('Isaiah') || owed('Moss') ? `<div class="card"><h3>Paid out of pocket</h3><p class="muted" style="margin:0">Business expenses a partner paid with their own money (the business owes them back):
       Isaiah ${money(owed('Isaiah'))} · Moss ${money(owed('Moss'))}</p></div>` : ''}
-    ${owedList.length ? `<div class="card"><h3>Still owed to people</h3>
-      <p class="muted" style="margin:0 0 .4rem">${Object.entries(owedBy).map(([k, v]) => `${esc(k)} <strong>${money(v)}</strong>`).join(' · ')}</p>
+    ${owedList.length ? `<div class="card"><h3>Due when jobs finish</h3>
+      <p class="muted" style="margin:0 0 .4rem">${Object.entries(owedBy).map(([k, v]) => `${esc(personLabel(k))} <strong>${money(v)}</strong>`).join(' · ')}</p>
       <ul class="list" id="owed-list">${owedList.map(txRow).join('')}</ul></div>` : ''}
     <div class="grid">
       <div class="card" style="grid-column: 1 / -1"><ul class="list" id="tx-list">${list.map(txRow).join('') || '<li class="empty">No entries for this period.</li>'}</ul></div>

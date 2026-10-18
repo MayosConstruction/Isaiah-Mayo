@@ -49,8 +49,8 @@ const { server } = require('../server');
   await call('POST', '/transactions', { type: 'bogus', date: `${y}-${m}-06`, amount: 1 }, 400);
   const s = await call('GET', '/summary');
   assert.strictEqual(s.month.in, 1000);
-  assert.strictEqual(s.month.out, 250.5);
-  assert.strictEqual(s.month.net, 749.5);
+  assert.strictEqual(s.month.costs, 250.5);
+  assert.strictEqual(s.month.profit, 749.5);
 
   const tpls = await call('GET', '/templates');
   assert.ok(tpls.length >= 1 && tpls[0].body.includes('{{customer_name}}'));
@@ -69,19 +69,23 @@ const { server } = require('../server');
   await call('GET', '/me', undefined, 401);
   await call('POST', '/login', { username: 'isaiah', password: 'newpass123' });
 
-  // Jobs, owed payouts and import
+  // Jobs, partner pay vs. subs, "due at finish", and import
   const job = await call('POST', '/jobs', { address: '1 Test St', customer_id: c.id, price: 1000, labor_cost: 600, scope: [{ text: 'Do work', done: false }] }, 201);
   await call('POST', '/transactions', { type: 'in', date: `${y}-${m}-07`, amount: 400, job_id: job.id }, 201);
   await call('POST', '/transactions', { type: 'out', date: `${y}-${m}-07`, amount: 200, category: 'Labor / Sub', paid_to: 'Dad', job_id: job.id }, 201);
-  const owed = await call('POST', '/transactions', { type: 'out', date: `${y}-${m}-08`, amount: 300, category: 'Labor / Sub', paid_to: 'Dad', status: 'owed', job_id: job.id }, 201);
-  const jm = await call('GET', '/job-money');
-  assert.deepStrictEqual(jm[job.id], { collected: 400, labor_paid: 200, owed_out: 300, spent: 200 });
+  const owed = await call('POST', '/transactions', { type: 'out', date: `${y}-${m}-08`, amount: 100, category: 'Subcontractor', paid_to: 'Julio', status: 'owed', job_id: job.id }, 201);
+  await call('POST', '/import', {}); // runs the wording clean-up: Dad -> Moss, Labor / Sub -> Partner pay
+  const jm = (await call('GET', '/job-money'))[job.id];
+  assert.strictEqual(jm.collected, 400);
+  assert.deepStrictEqual(jm.partners.Moss, { paid: 200, due: 0 });
+  assert.deepStrictEqual(jm.subs.Julio, { paid: 0, due: 100 });
   const s2 = await call('GET', '/summary');
-  assert.strictEqual(s2.month.out, 250.5 + 200, 'owed payouts are not money out yet');
-  assert.strictEqual(s2.owedOut[0].total, 300);
+  assert.strictEqual(s2.month.costs, 250.5, 'partner pay and due-at-finish are not costs');
+  assert.strictEqual(s2.month.paid.Moss, 200);
+  assert.strictEqual(s2.month.profit, 1400 - 250.5);
   assert.strictEqual((await call('GET', '/transactions?status=owed')).length, 1);
   await call('PUT', `/transactions/${owed.id}`, { status: 'paid' });
-  assert.strictEqual((await call('GET', '/summary')).month.out, 250.5 + 500);
+  assert.strictEqual((await call('GET', '/summary')).month.costs, 350.5);
   const imp = await call('POST', '/import', {
     customers: [{ id: 50, name: 'Imported Person' }],
     jobs: [{ id: 9, address: '9 Import Rd', customer_id: 50, status: 'Estimate Pending' }],
