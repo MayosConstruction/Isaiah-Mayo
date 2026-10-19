@@ -902,6 +902,34 @@ function wireStarter(after) {
   };
 }
 
+// Day-by-day agenda: each day a job is on (start → finish) plus appointments.
+function agenda(jobList, events, fromStr, days) {
+  const out = [];
+  const start = parseDate(fromStr);
+  for (let i = 0; i < days; i++) {
+    const d = new Date(start); d.setDate(start.getDate() + i);
+    const ds = dateStr(d);
+    const jobsToday = jobList.filter((j) => j.start_date && (j.status === 'Scheduled' || j.status === 'In Progress')
+      && j.start_date <= ds && ds <= (j.finish_date || j.start_date));
+    const evs = events.filter((e) => e.date === ds);
+    if (jobsToday.length || evs.length) out.push({ date: ds, jobs: jobsToday, events: evs });
+  }
+  return out;
+}
+function jobDayRow(j, ds) {
+  const total = Math.round((parseDate(j.finish_date || j.start_date) - parseDate(j.start_date)) / 864e5) + 1;
+  const n = Math.round((parseDate(ds) - parseDate(j.start_date)) / 864e5) + 1;
+  const tag = n === 1 ? 'Start' : n === total ? 'Finish' : `Day ${n} of ${total}`;
+  return `<li class="clickable job-day" onclick="location.hash='#/jobs/${j.id}'">
+    <div class="grow"><div class="title">${JOB_ICON[j.status] || ''} ${esc(j.address)}</div>
+      <div class="sub">${esc(customerName(j.customer_id))} · ${esc(j.crew || 'Moss & Isaiah')}${j.arrival_time ? ' · ' + fmtTime(j.arrival_time) : ''}</div></div>
+    <span class="pill ${n === 1 ? 'job-InProgress' : 'job-Scheduled'}">${tag}</span></li>`;
+}
+function agendaHtml(days, { longDates = false } = {}) {
+  return days.map((d) => `<div class="day-head">${relDay(d.date)}${longDates ? ` <span class="muted" style="font-weight:400">${fmtLongDate(d.date)}</span>` : ''}</div>
+    <ul class="list">${d.jobs.map((j) => jobDayRow(j, d.date)).join('')}${d.events.map(eventRow).join('')}</ul>`).join('');
+}
+
 // ---------------------------------------------------------------------------
 // Pages
 // ---------------------------------------------------------------------------
@@ -922,8 +950,7 @@ async function pageHome() {
   });
 
   const greet = new Date().getHours() < 12 ? 'Good morning' : new Date().getHours() < 17 ? 'Good afternoon' : 'Good evening';
-  const byDay = {};
-  s.events.forEach((e) => (byDay[e.date] = byDay[e.date] || []).push(e));
+  const week = agenda(s.jobs, s.events, todayStr(), 7);
   view.innerHTML = `
     <div class="spread">
       <div><p class="eyebrow">Call the Mayos</p><h2 style="margin:0">${greet}, ${esc(me.name)}</h2></div>
@@ -959,7 +986,7 @@ async function pageHome() {
       </div>
       <div class="card">
         <div class="spread"><h3>Next 7 days</h3><a href="#/schedule">Schedule</a></div>
-        <div id="home-events">${Object.keys(byDay).map((d) => `<div class="day-head">${relDay(d)}</div><ul class="list">${byDay[d].map(eventRow).join('')}</ul>`).join('') || '<p class="empty">Nothing scheduled.</p>'}</div>
+        <div id="home-events">${agendaHtml(week) || '<p class="empty">Nothing scheduled.</p>'}</div>
       </div>
       <div class="card">
         <div class="spread"><h3>Estimates out / pending 📝</h3><a href="#/estimates">Estimates</a></div>
@@ -1030,13 +1057,14 @@ async function pageSchedule() {
   const jobsOn = (ds) => allJobs.filter((j) => j.start_date <= ds && ds <= (j.finish_date || j.start_date));
   if (sched.mode === 'list') {
     events = await api('GET', `/events?from=${todayStr()}`);
-    const byDay = {};
-    events.forEach((e) => (byDay[e.date] = byDay[e.date] || []).push(e));
     const upcoming = allJobs.filter((j) => (j.finish_date || j.start_date) >= todayStr());
-    body = `<div class="card"><h3>Jobs</h3><ul class="list">${upcoming.map((j) => `<li class="clickable" onclick="location.hash='#/jobs/${j.id}'">
+    const lastDay = [...upcoming.map((j) => j.finish_date || j.start_date), ...events.map((e) => e.date)].sort().pop() || todayStr();
+    const span = Math.min(120, Math.max(14, Math.round((parseDate(lastDay) - parseDate(todayStr())) / 864e5) + 1));
+    const days = agenda(allJobs, events, todayStr(), span);
+    body = `<div class="card"><h3>Jobs coming up</h3><ul class="list">${upcoming.map((j) => `<li class="clickable" onclick="location.hash='#/jobs/${j.id}'">
         <div class="grow"><div class="title">${JOB_ICON[j.status]} ${esc(j.address)}</div><div class="sub">${fmtDate(j.start_date)} – ${fmtDate(j.finish_date || j.start_date)} · ${esc(customerName(j.customer_id))}</div></div>
         <span class="muted">›</span></li>`).join('') || '<li class="empty">No scheduled jobs.</li>'}</ul></div>
-      <div class="card" id="ev-wrap"><h3>Appointments</h3>${Object.keys(byDay).map((d) => `<div class="day-head">${relDay(d)} <span class="muted" style="font-weight:400">${fmtLongDate(d)}</span></div><ul class="list">${byDay[d].map(eventRow).join('')}</ul>`).join('') || '<p class="empty">Nothing coming up. Add an appointment.</p>'}</div>`;
+      <div class="card" id="ev-wrap"><h3>Day by day</h3>${agendaHtml(days, { longDates: true }) || '<p class="empty">Nothing coming up. Add an appointment.</p>'}</div>`;
   } else {
     const [y, m] = sched.month.split('-').map(Number);
     const first = new Date(y, m - 1, 1);
