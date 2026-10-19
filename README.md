@@ -131,7 +131,7 @@ W-9s contain Social Security or tax ID numbers. They're stored on your app's pri
 
 ## Employees and the time clock
 
-**Presten Smith** has his own login (`presten`, starting password `presten2026`, $15/hr). When an employee logs in, all they see is a **Clock in / Clock out** screen, an optional job pick, and their hours for the week. They can't see customers, jobs, money, or anything else.
+**Presten Smith** (`presten`, starting password `presten2026`) and **Marques Spiller** (`marques`, starting password `marques2026`) each have their own login at $15/hr. When an employee logs in, all they see is a **Clock in / Clock out** screen, an optional job pick, and their hours for the week. They can't see customers, jobs, money, or anything else.
 
 On the **Team** page, you and Moss can:
 - see who's on the clock right now

@@ -227,10 +227,12 @@ db.exec(`CREATE TABLE IF NOT EXISTS time_entries (
   paid_tx_id INTEGER REFERENCES transactions(id) ON DELETE SET NULL,
   created_at TEXT DEFAULT (datetime('now'))
 )`);
-const EMPLOYEE_DEFAULT_PASSWORD = 'presten2026';
-if (!db.prepare("SELECT 1 FROM users WHERE username = 'presten'").get()) {
-  const { salt, hash } = hashPassword(process.env.PRESTEN_PASSWORD || EMPLOYEE_DEFAULT_PASSWORD);
-  db.prepare("INSERT INTO users (username, name, salt, hash, role, pay_rate) VALUES ('presten', 'Presten Smith', ?, ?, 'employee', 15)").run(salt, hash);
+// Employees, added once. Starting password is their login name + 2026 (change it on the Team page).
+for (const [username, name, rate] of [['presten', 'Presten Smith', 15], ['marques', 'Marques Spiller', 15]]) {
+  if (!db.prepare('SELECT 1 FROM users WHERE username = ?').get(username)) {
+    const { salt, hash } = hashPassword(process.env[`${username.toUpperCase()}_PASSWORD`] || `${username}2026`);
+    db.prepare("INSERT INTO users (username, name, salt, hash, role, pay_rate) VALUES (?, ?, ?, ?, 'employee', ?)").run(username, name, salt, hash, rate);
+  }
 }
 
 // ---- Business settings (license #, deposit %, warranty, etc.) ----
