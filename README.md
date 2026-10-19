@@ -101,6 +101,15 @@ With these set on Render (**Environment** tab), texts send straight from the app
 
 In Twilio, set the number's **"A message comes in"** webhook to `https://<your-app>.onrender.com/twilio/incoming` (HTTP POST). Then replies are saved on the job and forwarded to `TEXT_FORWARD_TO`. The first text to each customer automatically adds "Reply STOP to opt out." The app never opens your phone's Messages app. Until texting is connected, you can copy a text or email it.
 
+## Partners page
+
+**Partners** shows Isaiah's and Moss's money side by side. Both of you see the same page. For each partner it shows:
+- what they've been paid (month or year)
+- what's **coming when current jobs finish**, job by job
+- any business costs they paid out of their own pocket, which the business owes them back
+
+An **even-split check** at the top shows how far apart the two totals are. Use **+ Pay Isaiah / + Pay Moss** to log a payout.
+
 ## How the money works
 
 - **Moss and Isaiah are 50/50 partners.** Money you pay yourselves from a job is **Partner pay**. It isn't a cost, it's your split.

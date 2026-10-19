@@ -133,6 +133,11 @@ mark.blank { background: #fff3c4; color: #7a5200; border-radius: 4px; padding: 0
 .sig-space { height: 3rem; }
 .sig-label { font-size: .8rem; color: var(--muted); border-top: 1px solid var(--border); padding-top: .2rem; }
 
+.partner-cols { display: grid; gap: 1rem; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); }
+.partner-col { border-top: 5px solid var(--brand); }
+.partner-col .stats { grid-template-columns: 1fr 1fr; }
+.even-split { background: #fff8ea; }
+
 /* Forms */
 label { display: block; font-size: .88rem; color: var(--muted); margin-bottom: .7rem; }
 input, select, textarea {

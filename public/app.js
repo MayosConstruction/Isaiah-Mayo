@@ -932,7 +932,7 @@ async function pageHome() {
       <div class="stat"><div class="label">Customers still owe</div><div class="value">${money(custOwe)}</div></div>
     </div>
     <div class="card partners">
-      <h3>Partners · 50/50</h3>
+      <div class="spread" style="margin-bottom:.3rem"><h3 style="margin:0">Partners · 50/50</h3><a href="#/partners">See each partner's money ›</a></div>
       <div class="partner-grid">
         ${PARTNERS.map((p) => `<div><div class="pname">${p}</div>
           <div>Paid this month <strong>${money(s.month.paid[p])}</strong></div>
@@ -1357,6 +1357,83 @@ function wireTxs(root, list, after) {
     await api('PUT', `/transactions/${b.dataset.markPaid}`, { status: 'paid', date: todayStr() });
     toast('Marked paid'); after();
   }));
+}
+
+// Partners page: Isaiah's and Moss's money kept separate, both visible to both.
+const partnerView = { period: 'year', month: todayStr().slice(0, 7), year: todayStr().slice(0, 4) };
+async function pagePartners() {
+  await Promise.all([customers(), jobs(true)]);
+  const from = partnerView.period === 'month' ? `${partnerView.month}-01` : `${partnerView.year}-01-01`;
+  const to = partnerView.period === 'month' ? `${partnerView.month}-31` : `${partnerView.year}-12-31`;
+  const [periodTx, owedTx, jm] = await Promise.all([
+    api('GET', `/transactions?from=${from}&to=${to}`), api('GET', '/transactions?status=owed'), api('GET', '/job-money'),
+  ]);
+  const active = jobsCache.filter((j) => j.status === 'In Progress' || j.status === 'Scheduled');
+  const sum = (list) => list.reduce((t, x) => t + x.amount, 0);
+  const label = partnerView.period === 'month' ? fmtDate(`${partnerView.month}-01`, { month: 'long', year: 'numeric' }) : partnerView.year;
+
+  const info = (p) => {
+    const paidList = periodTx.filter((t) => t.category === 'Partner pay' && t.paid_to === p && t.status !== 'owed');
+    const pocketList = periodTx.filter((t) => t.type === 'out' && t.paid_by === p && t.status !== 'owed');
+    // Coming when jobs finish: logged "due at finish" pay, plus (for Isaiah) the rest of each job's labor.
+    const coming = active.map((j) => {
+      const n = jobNumbers(j, jm);
+      const amt = n.partners[p].due + (p === 'Isaiah' ? n.isaiahRest : 0);
+      return { job: j, amt };
+    }).filter((x) => x.amt > 0);
+    return { paidList, pocketList, paid: sum(paidList), pocket: sum(pocketList), coming, comingTotal: coming.reduce((t, x) => t + x.amt, 0) };
+  };
+  const people = me && me.name === 'Moss' ? ['Moss', 'Isaiah'] : ['Isaiah', 'Moss'];
+  const data = Object.fromEntries(people.map((p) => [p, info(p)]));
+  const diff = data.Isaiah.paid - data.Moss.paid;
+
+  const column = (p) => {
+    const d = data[p];
+    return `<div class="card partner-col">
+      <div class="spread"><h2 style="margin:0">${p}${me && me.name === p ? ' <span class="pill">You</span>' : ''}</h2>
+        <button class="btn small primary" data-pay="${p}">+ Pay ${p}</button></div>
+      <div class="stats" style="margin:.6rem 0">
+        <div class="stat"><div class="label">Paid · ${esc(String(label))}</div><div class="value">${money(d.paid)}</div></div>
+        <div class="stat"><div class="label">Coming when jobs finish</div><div class="value">${money(d.comingTotal)}</div></div>
+      </div>
+      <h3>Coming from current jobs</h3>
+      <ul class="list">${d.coming.map((x) => `<li class="clickable" onclick="location.hash='#/jobs/${x.job.id}'">
+        <div class="grow"><div class="title">${esc(x.job.address)}</div><div class="sub">${esc(customerName(x.job.customer_id))} · finish ${shortDate(x.job.finish_date)}</div></div>
+        <strong>${money(x.amt)}</strong></li>`).join('') || '<li class="empty">Nothing coming right now.</li>'}</ul>
+      <h3 style="margin-top:1rem">Paid to ${p}</h3>
+      <ul class="list" data-txs="${p}-paid">${d.paidList.map(txRow).join('') || '<li class="empty">No partner pay in this period.</li>'}</ul>
+      ${d.pocketList.length ? `<h3 style="margin-top:1rem">Business costs ${p} paid out of pocket</h3>
+        <p class="muted" style="margin:0 0 .3rem">The business owes ${p} <strong>${money(d.pocket)}</strong> back for these.</p>
+        <ul class="list" data-txs="${p}-pocket">${d.pocketList.map(txRow).join('')}</ul>` : ''}
+    </div>`;
+  };
+
+  view.innerHTML = `
+    <div class="spread"><div><p class="eyebrow">50/50 partners</p><h2 style="margin:0">Partners</h2></div></div>
+    <div class="row" style="margin-bottom:1rem">
+      <div class="tabs" style="margin:0">
+        <button class="btn small ${partnerView.period === 'month' ? 'active' : ''}" data-period="month">Month</button>
+        <button class="btn small ${partnerView.period === 'year' ? 'active' : ''}" data-period="year">Year</button>
+      </div>
+      ${partnerView.period === 'month'
+        ? `<input type="month" id="pick" value="${partnerView.month}" style="width:auto;margin:0">`
+        : `<input type="number" id="pick" value="${partnerView.year}" style="width:110px;margin:0">`}
+    </div>
+    <div class="card even-split">
+      <strong>Even-split check (${esc(String(label))}):</strong>
+      ${Math.abs(diff) < 0.01 ? ' Isaiah and Moss have been paid the same.'
+        : ` ${diff > 0 ? 'Isaiah' : 'Moss'} has been paid <strong>${money(Math.abs(diff))}</strong> more than ${diff > 0 ? 'Moss' : 'Isaiah'}.`}
+      <span class="muted">Some jobs split differently on purpose. This just keeps it visible.</span>
+    </div>
+    <div class="partner-cols">${people.map(column).join('')}</div>`;
+
+  $$('[data-pay]').forEach((b) => (b.onclick = () => editTransaction({ type: 'out', category: 'Partner pay', paid_to: b.dataset.pay }, pagePartners)));
+  people.forEach((p) => {
+    const lists = { paid: data[p].paidList, pocket: data[p].pocketList };
+    for (const [k, list] of Object.entries(lists)) { const el = $(`[data-txs="${p}-${k}"]`); if (el) wireTxs(el, list, pagePartners); }
+  });
+  $$('[data-period]').forEach((b) => (b.onclick = () => { partnerView.period = b.dataset.period; pagePartners(); }));
+  $('#pick').onchange = (e) => { if (!e.target.value) return; partnerView[partnerView.period] = e.target.value; pagePartners(); };
 }
 
 const moneyView = { period: 'month', month: todayStr().slice(0, 7), year: todayStr().slice(0, 4) };
@@ -1824,6 +1901,7 @@ async function route() {
     else if (section === 'estimates' && parts[1]) await pageEstimateEdit(parts[1], query);
     else if (section === 'estimates') await pageEstimates();
     else if (section === 'money') await pageMoney();
+    else if (section === 'partners') await pagePartners();
     else if (section === 'contracts' && parts[1] === 'new') await pageContractNew(query);
     else if (section === 'contracts') await pageContracts();
     else if (section === 'templates' && parts[1]) await pageTemplateEdit(parts[1]);
