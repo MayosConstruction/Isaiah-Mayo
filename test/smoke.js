@@ -51,7 +51,6 @@ const { server } = require('../server');
   assert.strictEqual(s.month.in, 1000);
   assert.strictEqual(s.month.costs, 250.5);
   assert.strictEqual(s.month.profit, 749.5);
-  assert.strictEqual(s.allTime.cash, 1000, 'cost Moss paid out of pocket does not reduce business cash');
 
   const tpls = await call('GET', '/templates');
   assert.ok(tpls.length >= 1 && tpls[0].body.includes('{{customer_name}}'));

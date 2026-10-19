@@ -139,8 +139,6 @@ mark.blank { background: #fff3c4; color: #7a5200; border-radius: 4px; padding: 0
 .even-split { background: #fff8ea; }
 
 .running { border-left: 5px solid var(--green); }
-.running .cash { font-family: var(--display); font-size: 1.15rem; text-transform: uppercase; }
-.running .cash strong { font-size: 1.5rem; margin-left: .3rem; }
 .running-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: .5rem; }
 .running-grid span { display: block; font-size: .75rem; color: var(--muted); text-transform: uppercase; letter-spacing: .5px; }
 .running-grid strong { font-family: var(--display); font-size: 1.2rem; }

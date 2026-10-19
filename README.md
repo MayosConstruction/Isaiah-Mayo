@@ -103,9 +103,7 @@ In Twilio, set the number's **"A message comes in"** webhook to `https://<your-a
 
 ## Running totals
 
-- **Cash in the business** (on Home and Money) is all money collected minus everything the business has paid out. Costs a partner covered out of pocket don't count against it until they're paid back.
-- **Money → Running totals · all time** shows collected, costs, profit, and paid to Moss and Isaiah since the start.
-- Every entry in the Money list shows the **balance after it**, like a checkbook.
+**Money → Running totals · all time** shows total collected, costs, profit, and what's been paid to Moss and Isaiah since the start.
 
 ## Subcontractors and W-9s
 
