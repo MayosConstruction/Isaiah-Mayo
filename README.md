@@ -87,7 +87,19 @@ The link works only for that one estimate and can be signed once.
 
 On a job tap **💬 Text customer** (also on customer pages and appointments). Pick a message, such as *schedule reminder*, *on our way*, *running late*, *who's coming*, *job update*, or *job finished*. Then pick **who's coming** (Moss, Isaiah, both, or a sub) and the arrival time. The text is written for you, and you can edit it before sending. It sends from **your own phone number** through Messages, so replies come straight to you. Every text is logged on the job under *Texts & updates sent*.
 
-## Business texting (from a Mayo's Construction number)
+## Business texting with OpenPhone (simplest)
+
+1. Sign up at openphone.com and get a business number.
+2. In OpenPhone, go to **Settings → API** and create an API key.
+3. On Render (**Environment**), add `OPENPHONE_API_KEY` (the key) and `OPENPHONE_NUMBER` (your OpenPhone number), then save.
+
+Texts send straight from the app from your business number, and customer replies show up in the OpenPhone app on your phones.
+
+## Contact card (your name and logo on customers' phones)
+
+`https://<your-app>.onrender.com/contact` is your business contact card: name, numbers, website, and logo. The first text each customer gets includes this link. Once they tap it and save, their iPhone shows **Mayo's Construction** with your logo on every text and call.
+
+## Business texting with Twilio (optional: name and logo through RCS)
 
 With these set on Render (**Environment** tab), texts send straight from the app using your business number, and your phone's Messages app never opens:
 

@@ -1998,8 +1998,10 @@ async function pageSettings() {
       <h3>Business texting</h3>
       ${SETTINGS.texting_enabled
         ? `<p class="green" style="margin:0">✓ On. Texts go out from <strong>${esc(SETTINGS.texting_number)}</strong>.</p>
-           <p class="muted" style="margin:.4rem 0 0">${SETTINGS.texting_forward ? 'Customer replies are forwarded to your phone and saved on the job.' : 'Customer replies are saved on the job. Add TEXT_FORWARD_TO on Render to also get them on your phone.'}</p>`
-        : `<p class="muted" style="margin:0">Not connected yet. Once your Twilio account is set up and added on Render, texts send from the app as Mayo's Construction (with your logo on iPhones through RCS) and never open your phone's Messages app.</p>`}
+           <p class="muted" style="margin:.4rem 0 0">${SETTINGS.texting_provider === 'openphone' ? 'Through OpenPhone. Customer replies show up in the OpenPhone app.'
+             : SETTINGS.texting_forward ? 'Customer replies are forwarded to your phone and saved on the job.' : 'Customer replies are saved on the job. Add TEXT_FORWARD_TO on Render to also get them on your phone.'}</p>`
+        : `<p class="muted" style="margin:0">Not connected yet. Connect OpenPhone (or Twilio) on Render and texts send straight from the app from your business number.</p>`}
+      <p style="margin:.6rem 0 0">Contact card: <a href="/contact">${esc(location.origin)}/contact</a>. The first text each customer gets includes this link. Once they save it, their iPhone shows Mayo's Construction and your logo.</p>
     </div>
     <form class="card" id="pw">
       <h3>Change your password</h3>

@@ -197,6 +197,29 @@ const { server } = require('../server');
   delete process.env.TWILIO_MESSAGING_SERVICE_SID;
   fakeTwilio.close();
 
+  // OpenPhone instead of Twilio
+  const sentToOpenPhone = [];
+  const fakeOpenPhone = http.createServer((req, res) => {
+    let b = '';
+    req.on('data', (d) => (b += d));
+    req.on('end', () => { sentToOpenPhone.push({ url: req.url, auth: req.headers.authorization, body: JSON.parse(b) }); res.end('{"data":{"id":"AC1"}}'); });
+  });
+  await new Promise((r) => fakeOpenPhone.listen(0, r));
+  Object.assign(process.env, { OPENPHONE_API_KEY: 'opkey', OPENPHONE_NUMBER: '501-555-0002', OPENPHONE_API_BASE: `http://localhost:${fakeOpenPhone.address().port}` });
+  assert.strictEqual((await call('GET', '/settings')).texting_provider, 'openphone');
+  const op = await call('POST', '/send-text', { to: '501-555-0300', body: 'Hello from OpenPhone' });
+  assert.strictEqual(op.from, '(501) 555-0002');
+  assert.strictEqual(sentToOpenPhone[0].url, '/v1/messages');
+  assert.strictEqual(sentToOpenPhone[0].auth, 'opkey');
+  assert.deepStrictEqual(sentToOpenPhone[0].body.to, ['+15015550300']);
+  assert.strictEqual(sentToOpenPhone[0].body.from, '+15015550002');
+  assert.ok(/Save our contact: http:\/\/localhost:\d+\/contact/.test(sentToOpenPhone[0].body.content), 'first text links the contact card');
+  const vcf = await (await fetch(`http://localhost:${server.address().port}/contact`)).text();
+  assert.ok(vcf.startsWith('BEGIN:VCARD') && vcf.includes("FN:Mayo's Construction") && vcf.includes('TEL;TYPE=CELL,TEXT,pref:+15015550002') && vcf.includes('PHOTO;ENCODING=b;TYPE=PNG:'));
+  assert.ok(vcf.split('\r\n').every((l) => l.length <= 75), 'vCard lines are folded');
+  for (const k of ['OPENPHONE_API_KEY', 'OPENPHONE_NUMBER', 'OPENPHONE_API_BASE']) delete process.env[k];
+  fakeOpenPhone.close();
+
   // Subcontractors and W-9s
   const subs = await call('GET', '/subs');
   assert.deepStrictEqual(subs.map((x) => x.name).sort(), ['Chris', 'David', 'Julio', 'Tommy']);

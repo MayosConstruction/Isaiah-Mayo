@@ -533,12 +533,70 @@ function unlockStarter(code) {
 // ---------------------------------------------------------------------------
 //   TWILIO_MESSAGING_SERVICE_SID (optional): a Twilio Messaging Service with an RCS sender,
 //     so iPhones (iOS 18+) see "Mayo's Construction" with the logo; others get a normal text.
+//
+// Or OpenPhone instead of Twilio (simpler setup; replies land in the OpenPhone app):
+//   OPENPHONE_API_KEY, OPENPHONE_NUMBER (the OpenPhone business number)
 function textingConfig() {
+  const { OPENPHONE_API_KEY: opKey, OPENPHONE_NUMBER: opNumber } = process.env;
+  if (opKey && opNumber) return { provider: 'openphone', key: opKey, from: toE164(opNumber) };
   const { TWILIO_ACCOUNT_SID: sid, TWILIO_AUTH_TOKEN: token, TWILIO_FROM_NUMBER: from, TWILIO_MESSAGING_SERVICE_SID: service } = process.env;
-  return sid && token && (from || service) ? { sid, token, from: toE164(from), service } : null;
+  return sid && token && (from || service) ? { provider: 'twilio', sid, token, from: toE164(from), service } : null;
 }
 function senderLabel(cfg) {
   return cfg.service ? `${bizInfo().name}${cfg.from ? ' / ' + prettyPhone(cfg.from) : ''}` : prettyPhone(cfg.from);
+}
+function publicBaseUrl(req) {
+  if (process.env.APP_URL) return process.env.APP_URL.replace(/\/$/, '');
+  const proto = String(req.headers['x-forwarded-proto'] || 'http').split(',')[0];
+  return `${proto}://${req.headers.host}`;
+}
+
+async function deliverText(cfg, to, text) {
+  if (cfg.provider === 'openphone') {
+    const base = process.env.OPENPHONE_API_BASE || 'https://api.openphone.com';
+    const r = await fetch(`${base}/v1/messages`, {
+      method: 'POST',
+      headers: { Authorization: cfg.key, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ content: text, from: cfg.from, to: [to] }),
+    });
+    const out = await r.json().catch(() => ({}));
+    if (!r.ok) throw httpError(502, 'Text not sent: ' + (out.message || `OpenPhone error ${r.status}`));
+    return;
+  }
+  const base = process.env.TWILIO_API_BASE || 'https://api.twilio.com';
+  const r = await fetch(`${base}/2010-04-01/Accounts/${cfg.sid}/Messages.json`, {
+    method: 'POST',
+    headers: {
+      Authorization: 'Basic ' + Buffer.from(`${cfg.sid}:${cfg.token}`).toString('base64'),
+      'Content-Type': 'application/x-www-form-urlencoded',
+    },
+    body: new URLSearchParams(cfg.service ? { To: to, MessagingServiceSid: cfg.service, Body: text } : { To: to, From: cfg.from, Body: text }),
+  });
+  const out = await r.json().catch(() => ({}));
+  if (!r.ok) throw httpError(502, 'Text not sent: ' + (out.message || `Twilio error ${r.status}`));
+}
+
+// The business contact card (name, number, logo). Once a customer saves it,
+// their iPhone shows "Mayo's Construction" and the logo on every text and call.
+function contactCard() {
+  const b = bizInfo();
+  const textNumber = textingConfig()?.from;
+  const photo = fs.readFileSync(path.join(PUBLIC_DIR, 'apple-touch-icon.png')).toString('base64');
+  const lines = [
+    'BEGIN:VCARD', 'VERSION:3.0',
+    `FN:${b.name}`, `ORG:${b.name}`, `N:;${b.name};;;`,
+    textNumber ? `TEL;TYPE=CELL,TEXT,pref:${textNumber}` : '',
+    b.phone ? `TEL;TYPE=WORK,VOICE:${toE164(b.phone)}` : '',
+    b.email ? `EMAIL;TYPE=WORK:${b.email}` : '',
+    'URL:https://mayosconstruction.netlify.app',
+    `ADR;TYPE=WORK:;;;${b.city.replace(/,/g, '\\,')};;;`,
+    `NOTE:${b.lines}`,
+    `PHOTO;ENCODING=b;TYPE=PNG:${photo}`,
+    'END:VCARD',
+  ].filter(Boolean);
+  // vCard lines over 75 characters are folded (continuation lines start with a space).
+  const fold = (l) => (l.length <= 75 ? l : l.match(/.{1,74}/g).join('\r\n '));
+  return lines.map(fold).join('\r\n') + '\r\n';
 }
 function toE164(p) {
   const d = String(p || '').replace(/\D/g, '');
@@ -551,27 +609,18 @@ function prettyPhone(p) {
   return d.length === 10 ? `(${d.slice(0, 3)}) ${d.slice(3, 6)}-${d.slice(6)}` : p;
 }
 
-async function sendText(body, user) {
+async function sendText(body, user, req) {
   const cfg = textingConfig();
   if (!cfg) throw httpError(400, 'Business texting is not set up yet (see Settings).');
   const to = toE164(body.to);
   let text = String(body.body || '').trim();
   if (to.length < 11) throw httpError(400, 'That phone number does not look right.');
   if (!text) throw httpError(400, 'The message is empty.');
-  // The first business text to a number tells them how to opt out (required by carriers).
+  // The first business text to a number tells them how to opt out (required by carriers)
+  // and links our contact card so they see our name and logo from then on.
   const texted = db.prepare("SELECT 1 FROM messages WHERE channel = 'sms' AND to_number = ?").get(to);
-  if (!texted) text += '\nReply STOP to opt out.';
-  const base = process.env.TWILIO_API_BASE || 'https://api.twilio.com';
-  const r = await fetch(`${base}/2010-04-01/Accounts/${cfg.sid}/Messages.json`, {
-    method: 'POST',
-    headers: {
-      Authorization: 'Basic ' + Buffer.from(`${cfg.sid}:${cfg.token}`).toString('base64'),
-      'Content-Type': 'application/x-www-form-urlencoded',
-    },
-    body: new URLSearchParams(cfg.service ? { To: to, MessagingServiceSid: cfg.service, Body: text } : { To: to, From: cfg.from, Body: text }),
-  });
-  const out = await r.json().catch(() => ({}));
-  if (!r.ok) throw httpError(502, 'Text not sent: ' + (out.message || `Twilio error ${r.status}`));
+  if (!texted) text += `\nSave our contact: ${publicBaseUrl(req)}/contact\nReply STOP to opt out.`;
+  await deliverText(cfg, to, text);
   insertResource('messages', {
     job_id: body.job_id, customer_id: body.customer_id, kind: body.kind, channel: 'sms', body: text, sent_by: user.name,
   });
@@ -583,7 +632,7 @@ async function sendText(body, user) {
 // forward it to TEXT_FORWARD_TO so the reply lands on a real phone.
 function twilioSignatureOk(req, params) {
   const cfg = textingConfig();
-  if (!cfg) return false;
+  if (!cfg || cfg.provider !== 'twilio') return false;
   const proto = String(req.headers['x-forwarded-proto'] || 'http').split(',')[0];
   const url = `${proto}://${req.headers.host}${req.url}`;
   const data = url + Object.keys(params).sort().map((k) => k + params[k]).join('');
@@ -925,11 +974,14 @@ async function handleApi(req, res, url) {
   const user = currentUser(req);
   if (!user) throw httpError(401, 'Please log in');
   if (parts[0] === 'send-text' && method === 'POST') {
-    return send(res, 200, await sendText(await readBody(req), user));
+    return send(res, 200, await sendText(await readBody(req), user, req));
   }
   if (parts[0] === 'settings') {
     const cfg = textingConfig();
-    const texting = { texting_enabled: !!cfg, texting_number: cfg ? senderLabel(cfg) : '', texting_forward: !!process.env.TEXT_FORWARD_TO };
+    const texting = {
+      texting_enabled: !!cfg, texting_number: cfg ? senderLabel(cfg) : '', texting_provider: cfg?.provider || '',
+      texting_forward: cfg?.provider === 'openphone' || !!process.env.TEXT_FORWARD_TO,
+    };
     if (method === 'GET') return send(res, 200, { ...getSettings(), ...texting });
     if (method === 'PUT') return send(res, 200, { ...saveSettings(await readBody(req)), ...texting });
   }
@@ -1048,7 +1100,12 @@ async function handleApi(req, res, url) {
 const server = http.createServer(async (req, res) => {
   const url = new URL(req.url, 'http://localhost');
   try {
-    if (url.pathname === '/twilio/incoming' && req.method === 'POST') {
+    if (url.pathname === '/contact' || url.pathname === '/contact.vcf') {
+      send(res, 200, contactCard(), {
+        'Content-Type': 'text/vcard; charset=utf-8',
+        'Content-Disposition': 'inline; filename="Mayos-Construction.vcf"',
+      });
+    } else if (url.pathname === '/twilio/incoming' && req.method === 'POST') {
       await handleIncomingText(req, res);
     } else if (url.pathname.startsWith('/api/')) {
       // Basic CSRF guard: state-changing API calls must come from our own page.
