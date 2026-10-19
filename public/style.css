@@ -145,6 +145,10 @@ mark.blank { background: #fff3c4; color: #7a5200; border-radius: 4px; padding: 0
 .running-grid span { display: block; font-size: .75rem; color: var(--muted); text-transform: uppercase; letter-spacing: .5px; }
 .running-grid strong { font-family: var(--display); font-size: 1.2rem; }
 
+.sub-card { cursor: pointer; margin-bottom: 0; border-left: 5px solid var(--ink); }
+.sub-card.inactive { opacity: .55; }
+.card.warn { background: #fff3e0; border-color: #e0b84a; }
+
 /* Forms */
 label { display: block; font-size: .88rem; color: var(--muted); margin-bottom: .7rem; }
 input, select, textarea {

@@ -107,6 +107,17 @@ In Twilio, set the number's **"A message comes in"** webhook to `https://<your-a
 - **Money → Running totals · all time** shows collected, costs, profit, and paid to Moss and Isaiah since the start.
 - Every entry in the Money list shows the **balance after it**, like a checkbook.
 
+## Subcontractors and W-9s
+
+The **Subs** page lists each subcontractor (Tommy and Chris, electricians; Julio, drywaller; David, laborer; add more anytime) with their phone, email, business name, license #, and:
+- **W-9 on file** or missing. Uploading a W-9 on their page marks it on file automatically.
+- **Insurance**: expiration date, with a warning 30 days before and once it's expired. Upload their insurance certificate too.
+- **Paid this year** (and past years), plus anything still due at job finish.
+- **1099 needed** once a sub is paid the 1099 threshold or more in a year ($2,000 by default for 2026 payments; change it in Settings).
+- A warning when someone's been paid with no W-9 on file, and a **1099 list** download for your accountant.
+
+W-9s contain Social Security or tax ID numbers. They're stored on your app's private disk, and only you and Moss can open them while logged in.
+
 ## Partners page
 
 **Partners** shows Isaiah's and Moss's money side by side. Both of you see the same page. For each partner it shows:

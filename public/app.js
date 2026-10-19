@@ -11,7 +11,7 @@ const PEOPLE = ['Both', 'Isaiah', 'Moss'];
 const ESTIMATE_STATUSES = ['Draft', 'Sent', 'Accepted', 'Declined'];
 const IN_CATEGORIES = ['Job payment', 'Deposit', 'Other income'];
 const OUT_CATEGORIES = ['Subcontractor', 'Partner pay', 'Materials', 'Fuel', 'Tools & equipment', 'Dump / disposal', 'Insurance', 'Vehicle', 'Permits', 'Office / phone', 'Other expense'];
-const DOC_KINDS = ['Signed contract', 'Unsigned contract', 'Change order', 'Receipt', 'Photo', 'Other'];
+const DOC_KINDS = ['Signed contract', 'Unsigned contract', 'Change order', 'W-9', 'Insurance certificate', 'Receipt', 'Photo', 'Other'];
 // Business info comes from Settings → Business info (loaded at login).
 let SETTINGS = {};
 const BIZ = {
@@ -29,8 +29,16 @@ let me = null;
 let customersCache = null;
 // Moss and Isaiah are 50/50 partners. Regular subcontractors:
 const PARTNERS = ['Moss', 'Isaiah'];
-const SUBS = { Tommy: 'Electrician', Chris: 'Electrician', Julio: 'Drywaller', David: 'Laborer' };
+// Subcontractors (name → trade), loaded from the Subs page at login.
+let SUBS = { Tommy: 'Electrician', Chris: 'Electrician', Julio: 'Drywaller', David: 'Laborer' };
 let peopleSeen = [...PARTNERS, ...Object.keys(SUBS)];
+async function loadSubs() {
+  try {
+    const list = await api('GET', '/subs');
+    SUBS = Object.fromEntries(list.filter((x) => x.active !== 0).map((x) => [x.name, x.trade || 'Subcontractor']));
+    peopleSeen = [...new Set([...PARTNERS, ...Object.keys(SUBS), ...peopleSeen])];
+  } catch {}
+}
 function personLabel(name) { return SUBS[name] ? `${name} (${SUBS[name]})` : name; }
 
 function esc(s) {
@@ -330,12 +338,12 @@ async function uploadDocument(preset = {}, after) {
   openModal(`
     <form>
       <h2>Upload a document</h2>
-      <p class="muted">Snap a photo of a signed contract or pick a PDF.</p>
+      <p class="muted">${preset.sub_id ? 'Snap a photo or pick a PDF. Only you and Moss can see these files.' : 'Snap a photo of a signed contract or pick a PDF.'}</p>
       <label>File <input type="file" name="file" required accept="image/*,application/pdf,.doc,.docx"></label>
       <label>Name <input name="name" required placeholder="e.g. Smith deck contract - signed" value="${esc(preset.name)}"></label>
       <div class="form-grid">
         <label>Type <select name="kind">${options(DOC_KINDS, preset.kind || 'Signed contract')}</select></label>
-        <label>Customer <select name="customer_id">${customerOptions(preset.customer_id)}</select></label>
+        ${preset.sub_id ? '' : `<label>Customer <select name="customer_id">${customerOptions(preset.customer_id)}</select></label>`}
       </div>
       ${modalActions(false).replace('>Save<', '>Upload<')}
     </form>`, {
@@ -344,7 +352,7 @@ async function uploadDocument(preset = {}, after) {
       if (!file) throw new Error('Pick a file');
       if (file.size > 20 * 1024 * 1024) throw new Error('That file is over 20 MB');
       const data = await fileToBase64(file);
-      await api('POST', '/documents', { name: d.name, kind: d.kind, customer_id: d.customer_id, original_name: file.name, mime: file.type, data });
+      await api('POST', '/documents', { name: d.name, kind: d.kind, customer_id: d.customer_id, sub_id: preset.sub_id, original_name: file.name, mime: file.type, data });
       toast('Uploaded'); after && after();
     },
     onReady: (body) => {
@@ -502,7 +510,7 @@ async function editJob(job = {}, after) {
         <label>Labor, us + subs ($) <input type="number" step="0.01" name="labor_cost" value="${esc(job.labor_cost || '')}" inputmode="decimal"></label>
         <label>Materials ($) <input type="number" step="0.01" name="materials_cost" value="${esc(job.materials_cost || '')}" inputmode="decimal"></label>
         <label>Materials status <select name="materials_status">${options(MATERIAL_STATUSES, job.materials_status || 'Not bought yet')}</select></label>
-        <label>Who's going <select name="crew">${options(CREW_CHOICES, job.crew || 'Moss & Isaiah')}</select></label>
+        <label>Who's going <select name="crew">${options(crewChoices(), job.crew || 'Moss & Isaiah')}</select></label>
         <label>Usual arrival time <input type="time" name="arrival_time" value="${esc(job.arrival_time || '')}"></label>
       </div>
       <label>Materials needed (one per line) <textarea name="materials_text">${esc(mats.map((i) => i.text).join('\n'))}</textarea></label>
@@ -671,7 +679,7 @@ async function pageJob(id) {
 // Texting & emailing customers (opens your phone's Messages / Mail app,
 // so texts come from your own number) and the message log.
 // ---------------------------------------------------------------------------
-const CREW_CHOICES = ['Moss & Isaiah', 'Moss', 'Isaiah', ...Object.keys(SUBS)];
+const crewChoices = () => ['Moss & Isaiah', 'Moss', 'Isaiah', ...Object.keys(SUBS)];
 function phoneDigits(p) {
   const d = String(p || '').replace(/\D/g, '');
   return d.length === 10 ? '+1' + d : d ? '+' + d : '';
@@ -720,7 +728,7 @@ async function textCustomer(ctx, after) {
       ${!c.phone ? '<p class="error">No phone number on file. Add one on the customer page, or send by email.</p>' : ''}
       <label>Message <select name="kind">${options(kinds, ctx.kind || 'Schedule reminder')}</select></label>
       <div class="form-grid">
-        <label>Who's coming <select name="crew">${options(CREW_CHOICES.includes(job.crew) || !job.crew ? CREW_CHOICES : [job.crew, ...CREW_CHOICES], job.crew || 'Moss & Isaiah')}</select></label>
+        <label>Who's coming <select name="crew">${options(crewChoices().includes(job.crew) || !job.crew ? crewChoices() : [job.crew, ...crewChoices()], job.crew || 'Moss & Isaiah')}</select></label>
         <label>Day <input type="date" name="date" value="${esc(ev.date || (job.start_date && job.start_date >= todayStr() ? job.start_date : todayStr()))}"></label>
         <label>Arrival time <input type="time" name="time" value="${esc(ev.start_time || job.arrival_time || '08:00')}"></label>
       </div>
@@ -1377,6 +1385,133 @@ function wireTxs(root, list, after) {
   }));
 }
 
+// ---------------------------------------------------------------------------
+// Subcontractors: contact info, W-9s, insurance, and what they've been paid
+// ---------------------------------------------------------------------------
+function insuranceStatus(sub) {
+  if (!sub.insurance_expires) return { cls: 'overdue', text: 'No insurance on file' };
+  const days = Math.round((parseDate(sub.insurance_expires) - parseDate(todayStr())) / 864e5);
+  if (days < 0) return { cls: 'overdue', text: `Insurance expired ${fmtDate(sub.insurance_expires)}` };
+  if (days <= 30) return { cls: 'due', text: `Insurance expires ${fmtDate(sub.insurance_expires)}` };
+  return { cls: 'Accepted', text: `Insured through ${fmtDate(sub.insurance_expires)}` };
+}
+function paidToSub(txs, name, year) {
+  return txs.filter((t) => t.type === 'out' && t.paid_to === name && t.status !== 'owed' && (!year || t.date.startsWith(year)))
+    .reduce((s, t) => s + t.amount, 0);
+}
+
+async function editSub(sub = {}, after) {
+  const isEdit = !!sub.id;
+  openModal(`
+    <form>
+      <h2>${isEdit ? 'Edit subcontractor' : 'New subcontractor'}</h2>
+      <div class="form-grid">
+        <label>Name <input name="name" required value="${esc(sub.name)}"></label>
+        <label>Trade <input name="trade" value="${esc(sub.trade)}" placeholder="Electrician, drywaller, laborer…"></label>
+        <label>Business name <input name="company" value="${esc(sub.company)}"></label>
+        <label>License # <input name="license_number" value="${esc(sub.license_number)}"></label>
+        <label>Phone <input type="tel" name="phone" value="${esc(sub.phone)}"></label>
+        <label>Email <input type="email" name="email" value="${esc(sub.email)}"></label>
+        <label>Insurance expires <input type="date" name="insurance_expires" value="${esc(sub.insurance_expires)}"></label>
+      </div>
+      <label class="row"><input type="checkbox" name="w9_on_file" ${sub.w9_on_file ? 'checked' : ''}> W-9 on file</label>
+      ${isEdit ? `<label class="row"><input type="checkbox" name="active" ${sub.active !== 0 ? 'checked' : ''}> Still working with them</label>` : ''}
+      <label>Notes <textarea name="notes">${esc(sub.notes)}</textarea></label>
+      ${modalActions(isEdit)}
+    </form>`, {
+    onSubmit: async (d) => {
+      if (!isEdit) d.active = true;
+      const saved = isEdit ? await api('PUT', `/subs/${sub.id}`, d) : await api('POST', '/subs', d);
+      await loadSubs();
+      toast('Saved'); after && after(saved);
+    },
+    onDelete: async () => { await api('DELETE', `/subs/${sub.id}`); await loadSubs(); toast('Deleted'); location.hash = '#/subs'; },
+  });
+}
+
+async function pageSubs() {
+  const [subs, txs] = await Promise.all([api('GET', '/subs'), api('GET', '/transactions')]);
+  const year = todayStr().slice(0, 4);
+  const threshold = Number(SETTINGS.threshold_1099 || 2000);
+  const rows = subs.map((s) => ({ s, paid: paidToSub(txs, s.name, year) }));
+  const needs1099 = rows.filter((r) => r.paid >= threshold);
+  const missingW9 = rows.filter((r) => r.paid > 0 && !r.s.w9_on_file);
+  view.innerHTML = `
+    <div class="spread"><div><p class="eyebrow">Subcontractors</p><h2 style="margin:0">Subs</h2></div>
+      <div class="row"><button class="btn" id="csv1099">1099 list (${year})</button><button class="btn primary" id="add">+ New sub</button></div></div>
+    ${missingW9.length ? `<div class="card warn">⚠️ Paid this year with <strong>no W-9 on file</strong>: ${missingW9.map((r) => esc(r.s.name)).join(', ')}. Get one before tax time.</div>` : ''}
+    <div class="grid">${rows.map(({ s, paid }) => {
+      const ins = insuranceStatus(s);
+      return `<div class="card clickable sub-card ${s.active === 0 ? 'inactive' : ''}" onclick="location.hash='#/subs/${s.id}'">
+        <div class="spread" style="margin-bottom:.3rem"><h3 style="margin:0">${esc(s.name)}</h3><span class="muted">${esc(s.trade || '')}</span></div>
+        ${s.company ? `<div class="muted">${esc(s.company)}</div>` : ''}
+        <div class="row" style="margin:.4rem 0">
+          <span class="pill ${s.w9_on_file ? 'Accepted' : 'overdue'}">${s.w9_on_file ? '✓ W-9 on file' : 'W-9 missing'}</span>
+          <span class="pill ${ins.cls}">${esc(ins.text)}</span>
+          ${paid >= threshold ? '<span class="pill due">1099 needed</span>' : ''}
+        </div>
+        <div>Paid in ${year}: <strong>${money(paid)}</strong></div>
+      </div>`;
+    }).join('') || '<p class="empty">No subcontractors yet.</p>'}</div>
+    <p class="muted" style="font-size:.85rem">"1099 needed" shows once a sub has been paid ${money(threshold)} or more this year (the federal 1099-NEC threshold for 2026 payments; you can change it in Settings). Check with your accountant.</p>`;
+  $('#add').onclick = () => editSub({}, (s) => (location.hash = `#/subs/${s.id}`));
+  $('#csv1099').onclick = () => {
+    const lines = [['Name', 'Business', 'Trade', 'Phone', 'Email', `Paid in ${year}`, 'W-9 on file', '1099 needed']]
+      .concat(rows.map(({ s, paid }) => [s.name, s.company || '', s.trade || '', s.phone || '', s.email || '', paid.toFixed(2), s.w9_on_file ? 'Yes' : 'No', paid >= threshold ? 'Yes' : 'No']));
+    const csv = lines.map((r) => r.map((v) => `"${String(v).replace(/"/g, '""')}"`).join(',')).join('\n');
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(new Blob([csv], { type: 'text/csv' }));
+    a.download = `mayo-1099-list-${year}.csv`;
+    a.click();
+  };
+}
+
+async function pageSub(id) {
+  await Promise.all([customers(), jobs()]);
+  const [sub, docs, txs] = await Promise.all([api('GET', `/subs/${id}`), api('GET', `/documents?sub_id=${id}`), api('GET', '/transactions')]);
+  const mine = txs.filter((t) => t.type === 'out' && t.paid_to === sub.name);
+  const year = todayStr().slice(0, 4);
+  const years = [...new Set(mine.filter((t) => t.status !== 'owed').map((t) => t.date.slice(0, 4)))].sort().reverse();
+  const due = mine.filter((t) => t.status === 'owed').reduce((s, t) => s + t.amount, 0);
+  const ins = insuranceStatus(sub);
+  const reload = () => pageSub(id);
+  const tel = (sub.phone || '').replace(/[^\d+]/g, '');
+  view.innerHTML = `
+    <p><a href="#/subs">‹ All subs</a></p>
+    <div class="card">
+      <div class="spread"><div><h2 style="margin:0">${esc(sub.name)}</h2><div class="muted">${esc([sub.trade, sub.company].filter(Boolean).join(' · '))}</div></div>
+        <button class="btn" id="edit">Edit</button></div>
+      ${sub.phone ? `<div>📞 ${esc(sub.phone)} &nbsp; <a href="tel:${esc(tel)}">Call</a></div>` : ''}
+      ${sub.email ? `<div>✉️ <a href="mailto:${esc(sub.email)}">${esc(sub.email)}</a></div>` : ''}
+      ${sub.license_number ? `<div>License # ${esc(sub.license_number)}</div>` : ''}
+      <div class="row" style="margin:.5rem 0">
+        <span class="pill ${sub.w9_on_file ? 'Accepted' : 'overdue'}">${sub.w9_on_file ? '✓ W-9 on file' : 'W-9 missing'}</span>
+        <span class="pill ${ins.cls}">${esc(ins.text)}</span>
+      </div>
+      ${sub.notes ? `<p class="muted" style="white-space:pre-wrap">${esc(sub.notes)}</p>` : ''}
+      <div class="row">
+        <button class="btn primary" id="pay">+ Pay ${esc(sub.name)}</button>
+        <button class="btn" id="up-w9">Upload W-9</button>
+        <button class="btn" id="up-ins">Upload insurance certificate</button>
+      </div>
+    </div>
+    <div class="stats">
+      <div class="stat"><div class="label">Paid in ${year}</div><div class="value">${money(paidToSub(txs, sub.name, year))}</div></div>
+      <div class="stat"><div class="label">Due at job finish</div><div class="value">${money(due)}</div></div>
+      ${years.filter((y) => y !== year).map((y) => `<div class="stat"><div class="label">Paid in ${y}</div><div class="value">${money(paidToSub(txs, sub.name, y))}</div></div>`).join('')}
+    </div>
+    <div class="grid">
+      <div class="card"><h3>W-9, insurance & documents</h3><ul class="list" id="s-docs">${docs.map(docRow).join('') || '<li class="empty">Nothing uploaded yet.</li>'}</ul></div>
+      <div class="card"><h3>Payments</h3><ul class="list" id="s-txs">${mine.map(txRow).join('') || '<li class="empty">No payments yet.</li>'}</ul></div>
+    </div>`;
+  $('#edit').onclick = () => editSub(sub, reload);
+  $('#pay').onclick = () => editTransaction({ type: 'out', category: 'Subcontractor', paid_to: sub.name }, reload);
+  $('#up-w9').onclick = () => uploadDocument({ sub_id: sub.id, kind: 'W-9', name: `${sub.name} - W-9` }, reload);
+  $('#up-ins').onclick = () => uploadDocument({ sub_id: sub.id, kind: 'Insurance certificate', name: `${sub.name} - insurance certificate` }, reload);
+  wireDocDeletes($('#s-docs'), reload);
+  wireTxs($('#s-txs'), mine, reload);
+}
+
 // Partners page: Isaiah's and Moss's money kept separate, both visible to both.
 const partnerView = { period: 'year', month: todayStr().slice(0, 7), year: todayStr().slice(0, 4) };
 async function pagePartners() {
@@ -1847,6 +1982,7 @@ async function pageSettings() {
         <label>Default deposit % <input type="number" min="0" max="100" name="deposit_percent" value="${esc(SETTINGS.deposit_percent)}"></label>
         <label>Workmanship warranty (years) <input type="number" min="0" name="warranty_years" value="${esc(SETTINGS.warranty_years)}"></label>
         <label>Late fee <input name="late_fee" value="${esc(SETTINGS.late_fee)}"></label>
+        <label>1099 threshold ($) <input type="number" name="threshold_1099" value="${esc(SETTINGS.threshold_1099)}"></label>
       </div>
       <label>"Not included" list (goes in every agreement) <textarea name="exclusions" style="min-height:150px">${esc(SETTINGS.exclusions)}</textarea></label>
       <button class="btn primary">Save business info</button>
@@ -1939,6 +2075,8 @@ async function route() {
     else if (section === 'estimates') await pageEstimates();
     else if (section === 'money') await pageMoney();
     else if (section === 'partners') await pagePartners();
+    else if (section === 'subs' && parts[1]) await pageSub(parts[1]);
+    else if (section === 'subs') await pageSubs();
     else if (section === 'contracts' && parts[1] === 'new') await pageContractNew(query);
     else if (section === 'contracts') await pageContracts();
     else if (section === 'templates' && parts[1]) await pageTemplateEdit(parts[1]);
@@ -1960,6 +2098,7 @@ async function showApp() {
   $('#login').classList.add('hidden');
   $('#app').classList.remove('hidden');
   try { SETTINGS = await api('GET', '/settings'); } catch {}
+  await loadSubs();
   route();
 }
 async function showVersion(el) {

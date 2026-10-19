@@ -198,6 +198,18 @@ const { server } = require('../server');
   delete process.env.TWILIO_MESSAGING_SERVICE_SID;
   fakeTwilio.close();
 
+  // Subcontractors and W-9s
+  const subs = await call('GET', '/subs');
+  assert.deepStrictEqual(subs.map((x) => x.name).sort(), ['Chris', 'David', 'Julio', 'Tommy']);
+  const julio = subs.find((x) => x.name === 'Julio');
+  assert.strictEqual(julio.w9_on_file, 0);
+  await call('POST', '/documents', { name: 'Julio W-9', kind: 'W-9', sub_id: julio.id, original_name: 'w9.pdf', mime: 'application/pdf', data: Buffer.from('%PDF w9').toString('base64') }, 201);
+  assert.strictEqual((await call('GET', `/subs/${julio.id}`)).w9_on_file, 1, 'uploading a W-9 marks it on file');
+  assert.strictEqual((await call('GET', `/documents?sub_id=${julio.id}`)).length, 1);
+  const newSub = await call('POST', '/subs', { name: 'Ray', trade: 'Plumber', insurance_expires: '2027-01-01' }, 201);
+  assert.strictEqual(newSub.trade, 'Plumber');
+  assert.strictEqual((await call('GET', '/settings')).threshold_1099, '2000');
+
   const backup = await call('GET', '/backup');
   assert.ok(backup.customers.length === 2 && backup.jobs.length === 2);
 

@@ -108,6 +108,19 @@ CREATE TABLE IF NOT EXISTS templates (
   body TEXT NOT NULL,
   created_at TEXT DEFAULT (datetime('now'))
 );
+CREATE TABLE IF NOT EXISTS subs (
+  id INTEGER PRIMARY KEY,
+  name TEXT NOT NULL,
+  trade TEXT,
+  company TEXT,
+  phone TEXT, email TEXT,
+  license_number TEXT,
+  insurance_expires TEXT,
+  w9_on_file INTEGER DEFAULT 0,
+  notes TEXT,
+  active INTEGER DEFAULT 1,
+  created_at TEXT DEFAULT (datetime('now'))
+);
 CREATE TABLE IF NOT EXISTS messages (
   id INTEGER PRIMARY KEY,
   job_id INTEGER REFERENCES jobs(id) ON DELETE CASCADE,
@@ -143,6 +156,13 @@ addColumn('todos', 'job_id', 'INTEGER REFERENCES jobs(id) ON DELETE SET NULL');
 addColumn('estimates', 'job_id', 'INTEGER REFERENCES jobs(id) ON DELETE SET NULL');
 addColumn('events', 'job_id', 'INTEGER REFERENCES jobs(id) ON DELETE SET NULL');
 addColumn('messages', 'to_number', 'TEXT');
+addColumn('documents', 'sub_id', 'INTEGER REFERENCES subs(id) ON DELETE SET NULL');
+// The regular subcontractors, added once.
+if (!db.prepare('SELECT 1 FROM subs LIMIT 1').get()) {
+  for (const [name, trade] of [['Tommy', 'Electrician'], ['Chris', 'Electrician'], ['Julio', 'Drywaller'], ['David', 'Laborer']]) {
+    db.prepare('INSERT INTO subs (name, trade) VALUES (?, ?)').run(name, trade);
+  }
+}
 addColumn('jobs', 'crew', "TEXT DEFAULT 'Moss & Isaiah'"); // who's coming
 addColumn('jobs', 'arrival_time', 'TEXT');
 // Online signing: the customer opens /sign/<token>, reviews, and signs.
@@ -206,6 +226,7 @@ const SETTING_DEFAULTS = {
   deposit_percent: '50',
   warranty_years: '1',
   late_fee: '1.5% per month',
+  threshold_1099: '2000', // federal 1099-NEC filing threshold for payments made in 2026 and later
   exclusions: [
     '  • Painting or staining',
     '  • Electrical, plumbing, or HVAC work',
@@ -268,6 +289,10 @@ const RESOURCES = {
   estimates: { cols: ['number', 'kind', 'customer_id', 'job_id', 'title', 'date', 'status', 'items', 'tax_rate', 'notes', 'deposit_percent', 'days_added'], required: [], order: 'id DESC' },
   transactions: { cols: ['type', 'date', 'amount', 'category', 'description', 'paid_by', 'paid_to', 'status', 'customer_id', 'job_id'], required: ['type', 'date', 'amount'], order: 'date DESC, id DESC' },
   templates: { cols: ['name', 'body'], required: ['name', 'body'], order: 'name COLLATE NOCASE' },
+  subs: {
+    cols: ['name', 'trade', 'company', 'phone', 'email', 'license_number', 'insurance_expires', 'w9_on_file', 'notes', 'active'],
+    required: ['name'], order: 'active DESC, name COLLATE NOCASE',
+  },
   messages: { cols: ['job_id', 'customer_id', 'kind', 'channel', 'body', 'sent_by'], required: ['body'], order: 'id DESC' },
 };
 
@@ -275,7 +300,7 @@ function cleanValue(col, v) {
   if (v === undefined) return undefined;
   if (v === '' || v === null) return null;
   if (col === 'items' || col === 'materials' || col === 'scope') return typeof v === 'string' ? v : JSON.stringify(v);
-  if (col === 'done') return v ? 1 : 0;
+  if (col === 'done' || col === 'w9_on_file' || col === 'active') return v ? 1 : 0;
   if (['amount', 'tax_rate', 'price', 'labor_cost', 'materials_cost', 'deposit_percent', 'days_added'].includes(col)) return Number(v) || 0;
   if (col === 'customer_id' || col === 'job_id') return Number(v) || null;
   return String(v);
@@ -712,9 +737,11 @@ function saveDocument(body, user) {
   const filename = crypto.randomBytes(12).toString('hex') + ext;
   fs.writeFileSync(path.join(UPLOAD_DIR, filename), buf);
   const info = db
-    .prepare('INSERT INTO documents (name, kind, customer_id, filename, mime, size, uploaded_by) VALUES (?,?,?,?,?,?,?)')
-    .run(String(body.name), String(body.kind || 'Signed contract'), Number(body.customer_id) || null, filename,
+    .prepare('INSERT INTO documents (name, kind, customer_id, sub_id, filename, mime, size, uploaded_by) VALUES (?,?,?,?,?,?,?,?)')
+    .run(String(body.name), String(body.kind || 'Signed contract'), Number(body.customer_id) || null, Number(body.sub_id) || null, filename,
       String(body.mime || 'application/octet-stream'), buf.length, user.name);
+  // Uploading a W-9 marks it on file for that sub.
+  if (body.sub_id && /w-?9/i.test(String(body.kind))) db.prepare('UPDATE subs SET w9_on_file = 1 WHERE id = ?').run(Number(body.sub_id));
   return db.prepare('SELECT * FROM documents WHERE id = ?').get(info.lastInsertRowid);
 }
 
@@ -934,7 +961,9 @@ async function handleApi(req, res, url) {
     if (!parts[1] && method === 'GET') {
       const rows = url.searchParams.get('customer_id')
         ? db.prepare('SELECT * FROM documents WHERE customer_id = ? ORDER BY id DESC').all(Number(url.searchParams.get('customer_id')))
-        : db.prepare('SELECT * FROM documents ORDER BY id DESC').all();
+        : url.searchParams.get('sub_id')
+          ? db.prepare('SELECT * FROM documents WHERE sub_id = ? ORDER BY id DESC').all(Number(url.searchParams.get('sub_id')))
+          : db.prepare('SELECT * FROM documents ORDER BY id DESC').all();
       return send(res, 200, rows);
     }
     if (!parts[1] && method === 'POST') return send(res, 201, saveDocument(await readBody(req), user));
