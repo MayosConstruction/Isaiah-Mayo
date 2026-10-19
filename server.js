@@ -853,6 +853,7 @@ const MIME = {
 
 function serveStatic(req, res, pathname) {
   let rel = pathname === '/' || /^\/load\/[\w-]+$/.test(pathname) ? '/index.html' : /^\/sign\/[a-f0-9]+$/.test(pathname) ? '/sign.html' : pathname;
+  if (pathname === '/privacy' || pathname === '/terms') rel = pathname + '.html';
   const file = path.resolve(PUBLIC_DIR, '.' + decodeURIComponent(rel));
   if (!file.startsWith(PUBLIC_DIR + path.sep)) return send(res, 404, 'Not found');
   fs.readFile(file, (err, data) => {
