@@ -232,6 +232,45 @@ const { server } = require('../server');
   assert.strictEqual(newSub.trade, 'Plumber');
   assert.strictEqual((await call('GET', '/settings')).threshold_1099, '2000');
 
+  // Employee: Presten can only clock in/out; owners manage hours and pay
+  const ownerCookie = cookie;
+  cookie = '';
+  assert.ok((await call('GET', '/login-names')).some((n) => n.username === 'presten'));
+  const pr = await call('POST', '/login', { username: 'presten', password: 'presten2026' });
+  assert.strictEqual(pr.role, 'employee');
+  await call('GET', '/customers', undefined, 403);
+  await call('GET', '/summary', undefined, 403);
+  await call('GET', '/team', undefined, 403);
+  let clk = await call('GET', '/clock');
+  assert.strictEqual(clk.open, undefined);
+  clk = await call('POST', '/clock/in', { job_id: job.id });
+  assert.ok(clk.open && clk.open.job_id === job.id);
+  await call('POST', '/clock/in', {}, 400);
+  clk = await call('POST', '/clock/out', {});
+  assert.strictEqual(clk.open, undefined);
+  assert.strictEqual(clk.week.length, 1);
+  cookie = ownerCookie;
+  const team = await call('GET', '/team');
+  const presten = team.find((t) => t.username === 'presten');
+  assert.strictEqual(presten.pay_rate, 15);
+  // Wipe the seconds-long test shift, add a real 8-hour shift, then pay it
+  const prEntries = await call('GET', `/team/${presten.id}/entries`);
+  await call('DELETE', `/team/${presten.id}/entries/${prEntries[0].id}`);
+  await call('POST', `/team/${presten.id}/entries`, { clock_in: `${y}-${m}-10T13:00:00Z`, clock_out: `${y}-${m}-10T21:00:00Z` });
+  assert.strictEqual((await call('GET', '/team')).find((t) => t.id === presten.id).unpaid_pay, 120);
+  const costsBefore = (await call('GET', '/summary')).month.costs;
+  const paidOut = await call('POST', `/team/${presten.id}/pay`, {});
+  assert.strictEqual(paidOut.amount, 120);
+  assert.strictEqual((await call('GET', '/summary')).month.costs, costsBefore + 120, 'payroll is a business cost');
+  assert.strictEqual((await call('GET', '/team')).find((t) => t.id === presten.id).unpaid_pay, 0);
+  await call('POST', `/team/${presten.id}/pay`, {}, 400);
+  // Deactivating an employee locks them out
+  await call('PUT', `/team/${presten.id}`, { active: false });
+  cookie = '';
+  await call('POST', '/login', { username: 'presten', password: 'presten2026' }, 401);
+  cookie = ownerCookie;
+  await call('PUT', `/team/${presten.id}`, { active: true });
+
   const backup = await call('GET', '/backup');
   assert.ok(backup.customers.length === 2 && backup.jobs.length === 2);
 

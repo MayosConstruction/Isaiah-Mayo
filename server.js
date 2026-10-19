@@ -213,6 +213,26 @@ for (const [username, name, envVar] of [
     }
   }
 }
+// ---- Team: owners see everything; employees can only clock in and out ----
+addColumn('users', 'role', "TEXT DEFAULT 'owner'");
+addColumn('users', 'pay_rate', 'REAL DEFAULT 0');
+addColumn('users', 'active', 'INTEGER DEFAULT 1');
+db.exec(`CREATE TABLE IF NOT EXISTS time_entries (
+  id INTEGER PRIMARY KEY,
+  user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  clock_in TEXT NOT NULL,
+  clock_out TEXT,
+  job_id INTEGER REFERENCES jobs(id) ON DELETE SET NULL,
+  note TEXT,
+  paid_tx_id INTEGER REFERENCES transactions(id) ON DELETE SET NULL,
+  created_at TEXT DEFAULT (datetime('now'))
+)`);
+const EMPLOYEE_DEFAULT_PASSWORD = 'presten2026';
+if (!db.prepare("SELECT 1 FROM users WHERE username = 'presten'").get()) {
+  const { salt, hash } = hashPassword(process.env.PRESTEN_PASSWORD || EMPLOYEE_DEFAULT_PASSWORD);
+  db.prepare("INSERT INTO users (username, name, salt, hash, role, pay_rate) VALUES ('presten', 'Presten Smith', ?, ?, 'employee', 15)").run(salt, hash);
+}
+
 // ---- Business settings (license #, deposit %, warranty, etc.) ----
 db.exec('CREATE TABLE IF NOT EXISTS settings (key TEXT PRIMARY KEY, value TEXT)');
 const SETTING_DEFAULTS = {
@@ -689,6 +709,133 @@ function applyDataUpdates() {
 }
 
 // ---------------------------------------------------------------------------
+// Time clock (employees) and payroll (owners)
+// ---------------------------------------------------------------------------
+function entryHours(e) {
+  const end = e.clock_out ? new Date(e.clock_out) : new Date();
+  return Math.max(0, (end - new Date(e.clock_in)) / 36e5);
+}
+function weekStartISO() {
+  // Monday 00:00 local time
+  const d = new Date();
+  d.setHours(0, 0, 0, 0);
+  d.setDate(d.getDate() - ((d.getDay() + 6) % 7));
+  return d.toISOString();
+}
+function clockStatus(user) {
+  const open = db.prepare('SELECT * FROM time_entries WHERE user_id = ? AND clock_out IS NULL ORDER BY id DESC LIMIT 1').get(user.id);
+  const week = db.prepare('SELECT * FROM time_entries WHERE user_id = ? AND clock_in >= ? ORDER BY clock_in DESC').all(user.id, weekStartISO());
+  const jobs = db.prepare("SELECT id, address FROM jobs WHERE status IN ('In Progress','Scheduled') ORDER BY start_date").all();
+  const u = db.prepare('SELECT pay_rate FROM users WHERE id = ?').get(user.id);
+  return {
+    open, jobs, pay_rate: u.pay_rate || 0,
+    week: week.map((e) => ({ ...e, hours: entryHours(e), job: jobs.find((j) => j.id === e.job_id)?.address || null })),
+    week_hours: week.reduce((t, e) => t + entryHours(e), 0),
+  };
+}
+function clockIn(user, body) {
+  if (db.prepare('SELECT 1 FROM time_entries WHERE user_id = ? AND clock_out IS NULL').get(user.id)) throw httpError(400, "You're already clocked in.");
+  db.prepare('INSERT INTO time_entries (user_id, clock_in, job_id, note) VALUES (?, ?, ?, ?)')
+    .run(user.id, new Date().toISOString(), Number(body.job_id) || null, body.note ? String(body.note) : null);
+  return clockStatus(user);
+}
+function clockOut(user, body) {
+  const open = db.prepare('SELECT * FROM time_entries WHERE user_id = ? AND clock_out IS NULL ORDER BY id DESC LIMIT 1').get(user.id);
+  if (!open) throw httpError(400, "You're not clocked in.");
+  db.prepare('UPDATE time_entries SET clock_out = ?, note = COALESCE(?, note) WHERE id = ?').run(new Date().toISOString(), body.note ? String(body.note) : null, open.id);
+  return clockStatus(user);
+}
+
+async function teamApi(req, parts, method, url, owner) {
+  // GET /team → employees with status and totals
+  if (!parts[1] && method === 'GET') {
+    return db.prepare("SELECT id, username, name, pay_rate, active FROM users WHERE role = 'employee' ORDER BY active DESC, name").all().map((u) => {
+      const entries = db.prepare('SELECT * FROM time_entries WHERE user_id = ? ORDER BY clock_in DESC').all(u.id);
+      const unpaid = entries.filter((e) => e.clock_out && !e.paid_tx_id);
+      const unpaidHours = unpaid.reduce((t, e) => t + entryHours(e), 0);
+      const weekHours = entries.filter((e) => e.clock_in >= weekStartISO()).reduce((t, e) => t + entryHours(e), 0);
+      return { ...u, open: entries.find((e) => !e.clock_out) || null, unpaid_hours: unpaidHours, unpaid_pay: Math.round(unpaidHours * u.pay_rate * 100) / 100, week_hours: weekHours };
+    });
+  }
+  // POST /team → add an employee
+  if (!parts[1] && method === 'POST') {
+    const b = await readBody(req);
+    const name = String(b.name || '').trim();
+    const username = String(b.username || name.split(' ')[0] || '').toLowerCase().replace(/[^a-z0-9]/g, '');
+    if (!name || !username) throw httpError(400, 'Name is required');
+    if (!b.password || String(b.password).length < 6) throw httpError(400, 'Password must be at least 6 characters');
+    if (db.prepare('SELECT 1 FROM users WHERE username = ?').get(username)) throw httpError(400, `The login name "${username}" is taken`);
+    const { salt, hash } = hashPassword(b.password);
+    const info = db.prepare("INSERT INTO users (username, name, salt, hash, role, pay_rate) VALUES (?, ?, ?, ?, 'employee', ?)").run(username, name, salt, hash, Number(b.pay_rate) || 0);
+    return db.prepare('SELECT id, username, name, pay_rate, active FROM users WHERE id = ?').get(info.lastInsertRowid);
+  }
+  const id = Number(parts[1]);
+  const emp = db.prepare("SELECT * FROM users WHERE id = ? AND role = 'employee'").get(id);
+  if (!emp) throw httpError(404, 'Not found');
+  // GET /team/:id/entries?from&to
+  if (parts[2] === 'entries' && method === 'GET') {
+    const from = url.searchParams.get('from') || '0000';
+    const rows = db.prepare('SELECT * FROM time_entries WHERE user_id = ? AND clock_in >= ? ORDER BY clock_in DESC').all(id, from);
+    return rows.map((e) => ({ ...e, hours: entryHours(e) }));
+  }
+  // POST /team/:id/entries → add a missed shift; PUT/DELETE /team/:id/entries/:entryId → fix one
+  if (parts[2] === 'entries') {
+    const b = method === 'DELETE' ? {} : await readBody(req);
+    if (method === 'POST') {
+      if (!b.clock_in || !b.clock_out) throw httpError(400, 'Start and end times are required');
+      db.prepare('INSERT INTO time_entries (user_id, clock_in, clock_out, job_id, note) VALUES (?,?,?,?,?)')
+        .run(id, new Date(b.clock_in).toISOString(), new Date(b.clock_out).toISOString(), Number(b.job_id) || null, b.note || null);
+      return { ok: true };
+    }
+    const entryId = Number(parts[3]);
+    const e = db.prepare('SELECT * FROM time_entries WHERE id = ? AND user_id = ?').get(entryId, id);
+    if (!e) throw httpError(404, 'Not found');
+    if (method === 'DELETE') { db.prepare('DELETE FROM time_entries WHERE id = ?').run(entryId); return { ok: true }; }
+    if (method === 'PUT') {
+      db.prepare('UPDATE time_entries SET clock_in = ?, clock_out = ?, job_id = ?, note = ? WHERE id = ?')
+        .run(b.clock_in ? new Date(b.clock_in).toISOString() : e.clock_in, b.clock_out ? new Date(b.clock_out).toISOString() : e.clock_out,
+          b.job_id !== undefined ? Number(b.job_id) || null : e.job_id, b.note !== undefined ? b.note || null : e.note, entryId);
+      return { ok: true };
+    }
+  }
+  // POST /team/:id/pay → pay all finished, unpaid hours (records a Payroll expense)
+  if (parts[2] === 'pay' && method === 'POST') {
+    const b = await readBody(req);
+    const unpaid = db.prepare('SELECT * FROM time_entries WHERE user_id = ? AND clock_out IS NOT NULL AND paid_tx_id IS NULL ORDER BY clock_in').all(id);
+    if (!unpaid.length) throw httpError(400, 'No unpaid hours.');
+    const hours = unpaid.reduce((t, e) => t + entryHours(e), 0);
+    const amount = Math.round(hours * emp.pay_rate * 100) / 100;
+    db.exec('BEGIN');
+    try {
+      const tx = insertResource('transactions', {
+        type: 'out', date: b.date || today(), amount, category: 'Payroll', paid_to: emp.name, paid_by: 'Business', status: 'paid',
+        description: `${hours.toFixed(2)} hrs × ${fmtMoney(emp.pay_rate)}/hr (${unpaid[0].clock_in.slice(0, 10)} to ${unpaid[unpaid.length - 1].clock_in.slice(0, 10)})`,
+      });
+      db.prepare(`UPDATE time_entries SET paid_tx_id = ? WHERE id IN (${unpaid.map(() => '?').join(',')})`).run(tx.id, ...unpaid.map((e) => e.id));
+      db.exec('COMMIT');
+      return { ok: true, hours, amount };
+    } catch (err) { db.exec('ROLLBACK'); throw err; }
+  }
+  // PUT /team/:id → pay rate, active, new password
+  if (!parts[2] && method === 'PUT') {
+    const b = await readBody(req);
+    if (b.pay_rate !== undefined) db.prepare('UPDATE users SET pay_rate = ? WHERE id = ?').run(Number(b.pay_rate) || 0, id);
+    if (b.active !== undefined) {
+      db.prepare('UPDATE users SET active = ? WHERE id = ?').run(b.active ? 1 : 0, id);
+      if (!b.active) db.prepare('DELETE FROM sessions WHERE user_id = ?').run(id);
+    }
+    if (b.password) {
+      if (String(b.password).length < 6) throw httpError(400, 'Password must be at least 6 characters');
+      const { salt, hash } = hashPassword(b.password);
+      db.prepare('UPDATE users SET salt = ?, hash = ? WHERE id = ?').run(salt, hash, id);
+      db.prepare('DELETE FROM sessions WHERE user_id = ?').run(id);
+    }
+    return db.prepare('SELECT id, username, name, pay_rate, active FROM users WHERE id = ?').get(id);
+  }
+  throw httpError(404, 'Not found');
+}
+
+// ---------------------------------------------------------------------------
 // Online signing
 // ---------------------------------------------------------------------------
 function bizInfo() {
@@ -878,10 +1025,10 @@ function currentUser(req) {
   const token = parseCookies(req).sid;
   if (!token) return null;
   const row = db
-    .prepare('SELECT u.id, u.username, u.name, s.expires_at FROM sessions s JOIN users u ON u.id = s.user_id WHERE s.token = ?')
+    .prepare('SELECT u.id, u.username, u.name, u.role, u.active, s.expires_at FROM sessions s JOIN users u ON u.id = s.user_id WHERE s.token = ?')
     .get(token);
-  if (!row || row.expires_at < Date.now()) return null;
-  return { id: row.id, username: row.username, name: row.name, token };
+  if (!row || row.expires_at < Date.now() || row.active === 0) return null;
+  return { id: row.id, username: row.username, name: row.name, role: row.role || 'owner', token };
 }
 
 function sessionCookie(token, maxAgeSec) {
@@ -935,14 +1082,18 @@ async function handleApi(req, res, url) {
     const ip = req.socket.remoteAddress;
     if (tooManyFailures(ip)) throw httpError(429, 'Too many tries. Wait 15 minutes.');
     const { username, password } = await readBody(req);
-    const u = db.prepare('SELECT * FROM users WHERE username = ?').get(String(username || '').toLowerCase().trim());
+    const u = db.prepare('SELECT * FROM users WHERE username = ? AND COALESCE(active, 1) = 1').get(String(username || '').toLowerCase().trim());
     if (!u || !checkPassword(password || '', u.salt, u.hash)) {
       noteFailure(ip);
       throw httpError(401, 'Wrong name or password');
     }
     const token = crypto.randomBytes(32).toString('hex');
     db.prepare('INSERT INTO sessions (token, user_id, expires_at) VALUES (?,?,?)').run(token, u.id, Date.now() + SESSION_DAYS * 864e5);
-    return send(res, 200, { id: u.id, username: u.username, name: u.name }, { 'Set-Cookie': sessionCookie(token, SESSION_DAYS * 86400) });
+    return send(res, 200, { id: u.id, username: u.username, name: u.name, role: u.role || 'owner' }, { 'Set-Cookie': sessionCookie(token, SESSION_DAYS * 86400) });
+  }
+  // Names for the login screen's "Who are you?" list.
+  if (parts[0] === 'login-names' && method === 'GET') {
+    return send(res, 200, db.prepare("SELECT username, name FROM users WHERE COALESCE(active, 1) = 1 ORDER BY CASE role WHEN 'owner' THEN 0 ELSE 1 END, id").all());
   }
 
   // ---- Customer signing (no login: the long random link is the key) ----
@@ -973,6 +1124,21 @@ async function handleApi(req, res, url) {
 
   const user = currentUser(req);
   if (!user) throw httpError(401, 'Please log in');
+
+  // Employees can only clock in/out and change their own password.
+  if (user.role === 'employee') {
+    if (parts[0] === 'me' && method === 'GET') return send(res, 200, { id: user.id, username: user.username, name: user.name, role: user.role });
+    if (parts[0] === 'logout' || parts[0] === 'password' || parts[0] === 'clock') { /* allowed below */ }
+    else throw httpError(403, 'Not allowed');
+  }
+  if (parts[0] === 'clock') {
+    if (method === 'GET') return send(res, 200, clockStatus(user));
+    if (parts[1] === 'in' && method === 'POST') return send(res, 200, clockIn(user, await readBody(req)));
+    if (parts[1] === 'out' && method === 'POST') return send(res, 200, clockOut(user, await readBody(req)));
+  }
+  if (user.role !== 'employee' && parts[0] === 'team') {
+    return send(res, method === 'POST' && !parts[1] ? 201 : 200, await teamApi(req, parts, method, url, user));
+  }
   if (parts[0] === 'send-text' && method === 'POST') {
     return send(res, 200, await sendText(await readBody(req), user, req));
   }
@@ -991,7 +1157,7 @@ async function handleApi(req, res, url) {
     return send(res, 200, { ok: true }, { 'Set-Cookie': sessionCookie('', 0) });
   }
   if (parts[0] === 'me' && method === 'GET') {
-    return send(res, 200, { id: user.id, username: user.username, name: user.name });
+    return send(res, 200, { id: user.id, username: user.username, name: user.name, role: user.role });
   }
   if (parts[0] === 'password' && method === 'POST') {
     const { current, next } = await readBody(req);
@@ -1008,7 +1174,7 @@ async function handleApi(req, res, url) {
   }
   if (parts[0] === 'backup' && method === 'GET') {
     const out = { exported_at: new Date().toISOString() };
-    for (const t of [...Object.keys(RESOURCES), 'documents']) out[t] = db.prepare(`SELECT * FROM ${t}`).all();
+    for (const t of [...Object.keys(RESOURCES), 'documents', 'time_entries']) out[t] = db.prepare(`SELECT * FROM ${t}`).all();
     return send(res, 200, JSON.stringify(out, null, 2), {
       'Content-Type': 'application/json',
       'Content-Disposition': `attachment; filename="mayo-crm-backup-${today()}.json"`,

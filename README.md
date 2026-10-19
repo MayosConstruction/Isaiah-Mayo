@@ -14,6 +14,7 @@ Works on your phone or a computer. There's nothing extra to install except Node.
 | **Schedule** | Appointments and job days. List of what's coming up, or a month calendar |
 | **Customers** | Name, phone, email, address, and notes. Each customer page shows their estimates, payments, appointments, to-dos, and contracts. Tap to call, text, or open in Maps |
 | **Estimates** | Line items with automatic totals and optional tax. Status (Draft / Sent / Accepted / Declined). Printable, or save as PDF |
+| **Team** | Employee time clock, hours, and pay (see below) |
 | **Money** | Money in and money out with categories, by month or year. Shows the partner split, what each partner paid out of their own pocket, and where the money went. **Export CSV** for taxes or your accountant |
 | **Contracts** | Contract templates with fill-in blanks. Pick a customer and estimate and the names, address, work, and price fill in for you. Print it, save a copy, and **upload the signed copy** (phone photo or PDF) to the customer's file |
 | **Settings** | Change your password, download a backup |
@@ -127,6 +128,19 @@ The **Subs** page lists each subcontractor (Tommy and Chris, electricians; Julio
 - A warning when someone's been paid with no W-9 on file, and a **1099 list** download for your accountant.
 
 W-9s contain Social Security or tax ID numbers. They're stored on your app's private disk, and only you and Moss can open them while logged in.
+
+## Employees and the time clock
+
+**Presten Smith** has his own login (`presten`, starting password `presten2026`, $15/hr). When an employee logs in, all they see is a **Clock in / Clock out** screen, an optional job pick, and their hours for the week. They can't see customers, jobs, money, or anything else.
+
+On the **Team** page, you and Moss can:
+- see who's on the clock right now
+- see hours this week and unpaid hours and pay (hours × rate)
+- fix a shift, or add one they forgot to clock
+- tap **Pay** to mark the hours paid. This records a **Payroll** expense under Money.
+- change the pay rate, reset a password, add new employees, or turn off someone's login
+
+The app tracks gross pay only. Payroll taxes and withholding for a W-2 employee are handled by your accountant or a payroll service.
 
 ## Partners page
 

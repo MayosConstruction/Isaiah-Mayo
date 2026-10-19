@@ -1,6 +1,6 @@
 {
   "name": "mayo-construction-crm",
-  "version": "1.14.0",
+  "version": "1.15.0",
   "description": "Simple CRM for Mayo's Construction (Hot Springs, AR): to-dos, schedule, customers, estimates, money in/out, contracts.",
   "private": true,
   "main": "server.js",

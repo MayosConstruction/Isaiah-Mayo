@@ -147,6 +147,16 @@ mark.blank { background: #fff3c4; color: #7a5200; border-radius: 4px; padding: 0
 .sub-card.inactive { opacity: .55; }
 .card.warn { background: #fff3e0; border-color: #e0b84a; }
 
+/* Time clock */
+.clock-page { max-width: 480px; margin: 0 auto; }
+.clock-card { text-align: center; border-top: 6px solid var(--ink); }
+.clock-card.on { border-top-color: var(--green); }
+.clock-status { font-family: var(--display); font-weight: 800; font-size: 1.8rem; text-transform: uppercase; }
+.clock-card.on .clock-status { color: var(--green); }
+.clock-elapsed { font-family: var(--display); font-size: 3rem; font-weight: 800; line-height: 1.1; }
+.clock-btn { width: 100%; font-size: 1.6rem; padding: .9rem; margin-top: 1rem; }
+.clock-card.on .clock-btn { background: var(--ink); border-color: var(--ink); }
+
 /* Forms */
 label { display: block; font-size: .88rem; color: var(--muted); margin-bottom: .7rem; }
 input, select, textarea {

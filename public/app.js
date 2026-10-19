@@ -680,6 +680,7 @@ async function pageJob(id) {
 // so texts come from your own number) and the message log.
 // ---------------------------------------------------------------------------
 const crewChoices = () => ['Moss & Isaiah', 'Moss', 'Isaiah', ...Object.keys(SUBS)];
+function smsHref(phone, body) { return `sms:${phoneDigits(phone)}?&body=${encodeURIComponent(body)}`; }
 function phoneDigits(p) {
   const d = String(p || '').replace(/\D/g, '');
   return d.length === 10 ? '+1' + d : d ? '+' + d : '';
@@ -736,10 +737,9 @@ async function textCustomer(ctx, after) {
       <div class="modal-actions">
         <button type="button" class="btn left" data-close>Cancel</button>
         ${c.email ? '<a class="btn" id="send-email" href="#">Email</a>' : ''}
-        ${SETTINGS.texting_enabled ? '<a class="btn primary" id="send-text" href="#">Send text</a>' : '<button type="button" class="btn" id="copy-text">Copy text</button>'}
+        <a class="btn primary" id="send-text" href="#">Send text</a>
       </div>
-      ${SETTINGS.texting_enabled ? `<p class="muted" style="font-size:.85rem;margin:.4rem 0 0">Sends as ${esc(SETTINGS.texting_number)}.</p>`
-        : '<p class="error" style="font-size:.85rem;margin:.4rem 0 0">Business texting isn\'t connected yet, so texts can\'t be sent from the app. See Settings → Business texting.</p>'}
+      <p class="muted" style="font-size:.85rem;margin:.4rem 0 0">${SETTINGS.texting_enabled ? `Sends as ${esc(SETTINGS.texting_number)}.` : 'Opens Messages on your phone with this text ready, so it comes from your own number.'}</p>
     </form>`, {
     onReady: (body) => {
       const f = $('form', body);
@@ -777,15 +777,12 @@ async function textCustomer(ctx, after) {
           } catch (err) { alert(err.message); } finally { btn.style.pointerEvents = ''; }
           return;
         }
-        e.currentTarget.href = mailHref(c.email, "Mayo's Construction", text);
+        e.currentTarget.href = channel === 'text' ? smsHref(c.phone, text) : mailHref(c.email, "Mayo's Construction", text);
         logMessage({ job_id: job.id, customer_id: c.id, kind: f.kind.value, channel, body: text });
         remember();
         setTimeout(() => { $('#modal').close(); after && after(); }, 600);
       };
-      if (SETTINGS.texting_enabled) $('#send-text', body).addEventListener('click', send('text'));
-      else $('#copy-text', body).addEventListener('click', async () => {
-        try { await navigator.clipboard.writeText(f.body.value); toast('Text copied'); } catch { prompt('Copy this text:', f.body.value); }
-      });
+      $('#send-text', body).addEventListener('click', send('text'));
       if (c.email) $('#send-email', body).addEventListener('click', send('email'));
     },
   });
@@ -851,10 +848,10 @@ function shareSignLink(c, est, link, text, after) {
   openModal(`
     <div>
       <h2>Link ready</h2>
-      <p class="muted">${SETTINGS.texting_enabled ? `Texts go out as ${esc(SETTINGS.texting_number)}.` : 'Business texting isn\'t connected yet. You can email it or copy the link.'}</p>
+      <p class="muted">${SETTINGS.texting_enabled ? `Texts go out as ${esc(SETTINGS.texting_number)}.` : 'Send it from your phone:'}</p>
       <textarea id="share-text" style="min-height:120px">${esc(text)}</textarea>
       <div class="row" style="margin-top:.6rem">
-        ${c.phone && SETTINGS.texting_enabled ? '<a class="btn primary" id="share-sms" href="#">Send by text</a>' : ''}
+        ${c.phone ? '<a class="btn primary" id="share-sms" href="#">Send by text</a>' : ''}
         ${c.email ? '<a class="btn" id="share-email" href="#">Send by email</a>' : ''}
         <button class="btn" id="share-copy" type="button">Copy link</button>
         <button class="btn" type="button" data-close>Done</button>
@@ -864,7 +861,8 @@ function shareSignLink(c, est, link, text, after) {
     onReady: (body) => {
       const txt = () => $('#share-text', body).value;
       const log = (channel) => logMessage({ job_id: est.job_id, customer_id: c.id, kind: 'Estimate to sign', channel, body: txt() });
-      if (c.phone && SETTINGS.texting_enabled) $('#share-sms', body).addEventListener('click', async (e) => {
+      if (c.phone) $('#share-sms', body).addEventListener('click', async (e) => {
+        if (!SETTINGS.texting_enabled) { e.currentTarget.href = smsHref(c.phone, txt()); log('text'); return; }
         e.preventDefault();
         try { await sendBusinessText({ to: c.phone, body: txt(), job_id: est.job_id, customer_id: c.id, kind: 'Estimate to sign' }); $('#modal').close(); }
         catch (err) { alert(err.message); }
@@ -1522,6 +1520,157 @@ async function pageSub(id) {
   wireTxs($('#s-txs'), mine, reload);
 }
 
+// ---------------------------------------------------------------------------
+// Time clock (what an employee sees) and Team page (owners: hours and pay)
+// ---------------------------------------------------------------------------
+function fmtClock(iso) {
+  return iso ? new Date(iso).toLocaleString('en-US', { weekday: 'short', month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' }) : '';
+}
+function fmtHours(h) {
+  const mins = Math.round(h * 60);
+  return `${Math.floor(mins / 60)}h ${String(mins % 60).padStart(2, '0')}m`;
+}
+// <input type="datetime-local"> wants local "YYYY-MM-DDTHH:MM"
+function toLocalInput(iso) {
+  if (!iso) return '';
+  const d = new Date(iso);
+  return `${dateStr(d)}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+}
+
+let clockTimer = null;
+async function pageClock() {
+  clearInterval(clockTimer);
+  const st = await api('GET', '/clock');
+  const on = !!st.open;
+  view.innerHTML = `
+    <div class="clock-page">
+      <p class="eyebrow">Hi, ${esc(me.name.split(' ')[0])}</p>
+      <div class="card clock-card ${on ? 'on' : ''}">
+        <div class="clock-status">${on ? 'On the clock' : 'Off the clock'}</div>
+        ${on ? `<div class="clock-elapsed" id="elapsed"></div>
+          <div class="muted">Since ${fmtClock(st.open.clock_in)}${st.open.job_id ? ' · ' + esc(st.jobs.find((j) => j.id === st.open.job_id)?.address || '') : ''}</div>`
+        : `<label style="margin-top:.8rem">Job (optional) <select id="job"><option value="">— Pick the job —</option>${st.jobs.map((j) => `<option value="${j.id}">${esc(j.address)}</option>`).join('')}</select></label>`}
+        <button class="btn primary clock-btn" id="clock">${on ? 'Clock out' : 'Clock in'}</button>
+      </div>
+      <div class="card">
+        <div class="spread"><h3 style="margin:0">This week</h3><strong>${fmtHours(st.week_hours)}</strong></div>
+        <ul class="list">${st.week.map((e) => `<li><div class="grow"><div class="title" style="font-weight:600">${fmtClock(e.clock_in)}</div>
+          <div class="sub">${e.clock_out ? 'to ' + new Date(e.clock_out).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' }) : 'still clocked in'}${e.job ? ' · ' + esc(e.job) : ''}</div></div>
+          <strong>${fmtHours(e.hours)}</strong></li>`).join('') || '<li class="empty">No hours yet this week.</li>'}</ul>
+      </div>
+      <div class="row" style="justify-content:center"><button class="btn small" id="pw">Change password</button><button class="btn small" id="out">Log out</button></div>
+    </div>`;
+  if (on) {
+    const tick = () => { const el = $('#elapsed'); if (el) el.textContent = fmtHours((Date.now() - new Date(st.open.clock_in)) / 36e5); };
+    tick();
+    clockTimer = setInterval(tick, 30000);
+  }
+  $('#clock').onclick = async () => {
+    try {
+      if (on) await api('POST', '/clock/out', {});
+      else await api('POST', '/clock/in', { job_id: $('#job').value });
+      toast(on ? 'Clocked out' : 'Clocked in');
+      pageClock();
+    } catch (err) { alert(err.message); }
+  };
+  $('#out').onclick = async () => { clearInterval(clockTimer); await api('POST', '/logout'); showLogin(); };
+  $('#pw').onclick = () => openModal(`
+    <form><h2>Change password</h2>
+      <label>Current password <input type="password" name="current" required></label>
+      <label>New password <input type="password" name="next" required minlength="6"></label>
+      ${modalActions(false)}</form>`, { onSubmit: async (d) => { await api('POST', '/password', d); toast('Password changed'); } });
+}
+
+async function pageTeam() {
+  const team = await api('GET', '/team');
+  view.innerHTML = `
+    <div class="spread"><div><p class="eyebrow">Employees</p><h2 style="margin:0">Team</h2></div><button class="btn primary" id="add">+ New employee</button></div>
+    <div class="grid">${team.map((u) => `<div class="card clickable sub-card ${u.active ? '' : 'inactive'}" onclick="location.hash='#/team/${u.id}'">
+      <div class="spread" style="margin-bottom:.3rem"><h3 style="margin:0">${esc(u.name)}</h3><span class="muted">${money(u.pay_rate)}/hr</span></div>
+      <div class="row" style="margin-bottom:.4rem">${u.open ? `<span class="pill Accepted">● On the clock since ${new Date(u.open.clock_in).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' })}</span>` : '<span class="pill">Off the clock</span>'}
+        ${u.active ? '' : '<span class="pill overdue">Inactive</span>'}</div>
+      <div>This week: <strong>${fmtHours(u.week_hours)}</strong></div>
+      <div>Unpaid: <strong>${fmtHours(u.unpaid_hours)}</strong> = <strong class="red">${money(u.unpaid_pay)}</strong></div>
+    </div>`).join('') || '<p class="empty">No employees yet.</p>'}</div>`;
+  $('#add').onclick = () => openModal(`
+    <form><h2>New employee</h2>
+      <label>Full name <input name="name" required placeholder="e.g. Presten Smith"></label>
+      <div class="form-grid">
+        <label>Login name <input name="username" placeholder="first name"></label>
+        <label>Pay rate ($/hr) <input type="number" step="0.01" name="pay_rate" required></label>
+      </div>
+      <label>Starting password <input name="password" required minlength="6"></label>
+      ${modalActions(false)}</form>`, { onSubmit: async (d) => { await api('POST', '/team', d); toast('Employee added'); pageTeam(); } });
+}
+
+async function pageTeamMember(id) {
+  const [team, entries] = await Promise.all([api('GET', '/team'), api('GET', `/team/${id}/entries`), jobs()]);
+  const u = team.find((x) => x.id === Number(id));
+  if (!u) { view.innerHTML = '<p>Not found.</p>'; return; }
+  const reload = () => pageTeamMember(id);
+  const paidIds = [...new Set(entries.filter((e) => e.paid_tx_id).map((e) => e.paid_tx_id))];
+  view.innerHTML = `
+    <p><a href="#/team">‹ Team</a></p>
+    <div class="card">
+      <div class="spread"><div><h2 style="margin:0">${esc(u.name)}</h2><div class="muted">Login: ${esc(u.username)} · ${money(u.pay_rate)}/hr</div></div>
+        <div class="row"><button class="btn" id="edit">Edit</button></div></div>
+      <div class="row" style="margin:.5rem 0">${u.open ? `<span class="pill Accepted">● On the clock since ${fmtClock(u.open.clock_in)}</span>` : '<span class="pill">Off the clock</span>'}</div>
+      <div class="stats" style="margin:.6rem 0 0">
+        <div class="stat"><div class="label">This week</div><div class="value">${fmtHours(u.week_hours)}</div></div>
+        <div class="stat"><div class="label">Unpaid hours</div><div class="value">${fmtHours(u.unpaid_hours)}</div></div>
+        <div class="stat"><div class="label">Owed (${money(u.pay_rate)}/hr)</div><div class="value red">${money(u.unpaid_pay)}</div></div>
+      </div>
+      <div class="row" style="margin-top:.6rem">
+        ${u.unpaid_pay > 0 ? `<button class="btn primary" id="pay">Pay ${esc(u.name.split(' ')[0])} ${money(u.unpaid_pay)}</button>` : ''}
+        <button class="btn" id="add">+ Add missed shift</button>
+      </div>
+    </div>
+    <div class="card"><h3>Hours</h3>
+      <ul class="list" id="entries">${entries.map((e) => `<li class="clickable" data-entry="${e.id}">
+        <div class="grow"><div class="title" style="font-weight:600">${fmtClock(e.clock_in)}</div>
+          <div class="sub">${e.clock_out ? 'to ' + fmtClock(e.clock_out) : 'still clocked in'}${e.job_id ? ' · ' + esc(jobAddress(e.job_id)) : ''}${e.note ? ' · ' + esc(e.note) : ''}</div></div>
+        ${e.paid_tx_id ? '<span class="pill Accepted">Paid</span>' : e.clock_out ? '<span class="pill due">Unpaid</span>' : ''}
+        <strong>${fmtHours(e.hours)}</strong></li>`).join('') || '<li class="empty">No hours yet.</li>'}</ul>
+      <p class="muted" style="font-size:.85rem">Tap a shift to fix the times if they forgot to clock in or out. ${paidIds.length ? `Paid ${paidIds.length} time${paidIds.length > 1 ? 's' : ''} so far; payments show under Money as "Payroll".` : ''}</p>
+    </div>`;
+
+  const shiftForm = (e = {}) => openModal(`
+    <form><h2>${e.id ? 'Fix shift' : 'Add missed shift'}</h2>
+      <div class="form-grid">
+        <label>Clocked in <input type="datetime-local" name="clock_in" required value="${toLocalInput(e.clock_in)}"></label>
+        <label>Clocked out <input type="datetime-local" name="clock_out" ${e.id && !e.clock_out ? '' : 'required'} value="${toLocalInput(e.clock_out)}"></label>
+      </div>
+      <label>Job <select name="job_id">${jobOptions(e.job_id)}</select></label>
+      <label>Note <input name="note" value="${esc(e.note)}"></label>
+      ${e.paid_tx_id ? '<p class="muted">This shift was already paid. Changing it won\'t change that payment.</p>' : ''}
+      ${modalActions(!!e.id)}</form>`, {
+    onSubmit: async (d) => {
+      const body = { ...d, clock_in: d.clock_in && new Date(d.clock_in).toISOString(), clock_out: d.clock_out ? new Date(d.clock_out).toISOString() : undefined };
+      if (e.id) await api('PUT', `/team/${id}/entries/${e.id}`, body); else await api('POST', `/team/${id}/entries`, body);
+      toast('Saved'); reload();
+    },
+    onDelete: async () => { await api('DELETE', `/team/${id}/entries/${e.id}`); toast('Deleted'); reload(); },
+  });
+  $$('[data-entry]').forEach((el) => el.addEventListener('click', () => shiftForm(entries.find((x) => x.id === Number(el.dataset.entry)))));
+  $('#add').onclick = () => shiftForm();
+  const pay = $('#pay');
+  if (pay) pay.onclick = async () => {
+    if (!confirm(`Record paying ${u.name} ${money(u.unpaid_pay)} for ${fmtHours(u.unpaid_hours)}?\n\nThis marks those hours paid and adds a Payroll expense under Money.`)) return;
+    try { const r = await api('POST', `/team/${id}/pay`, {}); toast(`Recorded ${money(r.amount)} paid`); reload(); } catch (err) { alert(err.message); }
+  };
+  $('#edit').onclick = () => openModal(`
+    <form><h2>Edit ${esc(u.name)}</h2>
+      <label>Pay rate ($/hr) <input type="number" step="0.01" name="pay_rate" value="${esc(u.pay_rate)}"></label>
+      <label>New password (leave blank to keep) <input name="password" minlength="6"></label>
+      <label class="row"><input type="checkbox" name="active" ${u.active ? 'checked' : ''}> Active (can log in)</label>
+      ${modalActions(false)}</form>`, {
+    onSubmit: async (d) => {
+      if (!d.password) delete d.password;
+      await api('PUT', `/team/${id}`, d); toast('Saved'); reload();
+    },
+  });
+}
+
 // Partners page: Isaiah's and Moss's money kept separate, both visible to both.
 const partnerView = { period: 'year', month: todayStr().slice(0, 7), year: todayStr().slice(0, 4) };
 async function pagePartners() {
@@ -2000,7 +2149,7 @@ async function pageSettings() {
         ? `<p class="green" style="margin:0">✓ On. Texts go out from <strong>${esc(SETTINGS.texting_number)}</strong>.</p>
            <p class="muted" style="margin:.4rem 0 0">${SETTINGS.texting_provider === 'openphone' ? 'Through OpenPhone. Customer replies show up in the OpenPhone app.'
              : SETTINGS.texting_forward ? 'Customer replies are forwarded to your phone and saved on the job.' : 'Customer replies are saved on the job. Add TEXT_FORWARD_TO on Render to also get them on your phone.'}</p>`
-        : `<p class="muted" style="margin:0">Not connected yet. Connect OpenPhone (or Twilio) on Render and texts send straight from the app from your business number.</p>`}
+        : `<p class="muted" style="margin:0">Texts open Messages on your phone, so they come from your own number. (Optional: connect OpenPhone or Twilio on Render to send from a business number instead.)</p>`}
       <p style="margin:.6rem 0 0">Contact card: <a href="/contact">${esc(location.origin)}/contact</a>. The first text each customer gets includes this link. Once they save it, their iPhone shows Mayo's Construction and your logo.</p>
     </div>
     <form class="card" id="pw">
@@ -2051,6 +2200,8 @@ async function pageSettings() {
 // ---------------------------------------------------------------------------
 async function route() {
   if (!me) return;
+  // Employees only get the time clock.
+  if (me.role === 'employee') { await pageClock().catch((err) => { view.innerHTML = `<p class="error">${esc(err.message)}</p>`; }); return; }
   const [pathPart, qs] = location.hash.replace(/^#/, '').split('?');
   const parts = pathPart.split('/').filter(Boolean);
   const query = new URLSearchParams(qs || '');
@@ -2086,6 +2237,8 @@ async function route() {
     else if (section === 'partners') await pagePartners();
     else if (section === 'subs' && parts[1]) await pageSub(parts[1]);
     else if (section === 'subs') await pageSubs();
+    else if (section === 'team' && parts[1]) await pageTeamMember(parts[1]);
+    else if (section === 'team') await pageTeam();
     else if (section === 'contracts' && parts[1] === 'new') await pageContractNew(query);
     else if (section === 'contracts') await pageContracts();
     else if (section === 'templates' && parts[1]) await pageTemplateEdit(parts[1]);
@@ -2106,8 +2259,12 @@ function showLogin() {
 async function showApp() {
   $('#login').classList.add('hidden');
   $('#app').classList.remove('hidden');
-  try { SETTINGS = await api('GET', '/settings'); } catch {}
-  await loadSubs();
+  const employee = me.role === 'employee';
+  $('#nav').classList.toggle('hidden', employee);
+  if (!employee) {
+    try { SETTINGS = await api('GET', '/settings'); } catch {}
+    await loadSubs();
+  }
   route();
 }
 async function showVersion(el) {
@@ -2133,6 +2290,14 @@ $('#login-form').addEventListener('submit', async (e) => {
 window.addEventListener('hashchange', route);
 
 showVersion($('#login-version'));
+// Fill the "Who are you?" list (owners and employees).
+fetch('/api/login-names').then((r) => r.json()).then((names) => {
+  const sel = $('#login-form [name=username]');
+  const keep = sel.value;
+  sel.innerHTML = names.map((n) => `<option value="${esc(n.username)}">${esc(n.name)}</option>`).join('');
+  try { sel.value = localStorage.getItem('mayo-user') || keep; } catch { sel.value = keep; }
+  if (!sel.value && names[0]) sel.value = names[0].username;
+}).catch(() => {});
 // A plain link like /load/MAYO-XXXX-… works too (some phones drop the part after #).
 if (location.pathname.startsWith('/load/')) {
   history.replaceState(null, '', '/#/load?code=' + encodeURIComponent(location.pathname.slice(6)));
