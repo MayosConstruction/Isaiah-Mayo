@@ -930,6 +930,7 @@ async function pageHome() {
       <div class="stat"><div class="label">Costs this month</div><div class="value red">${money(s.month.costs)}</div></div>
       <div class="stat"><div class="label">Profit this month</div><div class="value">${money(s.month.profit)}</div></div>
       <div class="stat"><div class="label">Customers still owe</div><div class="value">${money(custOwe)}</div></div>
+      <div class="stat"><div class="label">Cash in the business</div><div class="value">${money(s.allTime.cash)}</div><div class="muted" style="font-size:.8rem">All money in minus all paid out</div></div>
     </div>
     <div class="card partners">
       <div class="spread" style="margin-bottom:.3rem"><h3 style="margin:0">Partners · 50/50</h3><a href="#/partners">See each partner's money ›</a></div>
@@ -1338,8 +1339,24 @@ async function pageEstimatePrint(id) {
     </div>`;
 }
 
-function txRow(t) {
+// Running balance after each entry, oldest first (like a checkbook). Only real,
+// paid money counts, and costs a partner covered out of pocket don't touch the business's cash.
+function runningBalances(all) {
+  const out = {};
+  let bal = 0;
+  [...all].filter((t) => t.status !== 'owed')
+    .sort((a, b) => (a.date === b.date ? a.id - b.id : a.date < b.date ? -1 : 1))
+    .forEach((t) => {
+      if (t.type === 'in') bal += t.amount;
+      else if (!t.paid_by || t.paid_by === 'Business') bal -= t.amount;
+      out[t.id] = bal;
+    });
+  return out;
+}
+
+function txRow(t, balances) {
   const owed = t.status === 'owed';
+  const bal = balances && typeof balances === 'object' ? balances[t.id] : undefined;
   const title = (t.paid_to ? (owed ? '' : 'Paid ') + personLabel(t.paid_to) : t.description) || t.category || (t.type === 'in' ? 'Money in' : 'Money out');
   return `<li class="clickable" data-tx="${t.id}">
     <div class="grow">
@@ -1347,7 +1364,8 @@ function txRow(t) {
       <div class="sub">${owed ? 'finish ' : ''}${fmtDate(t.date)}${t.paid_to && t.description ? ' · ' + esc(t.description) : ''}${t.category ? ' · ' + esc(t.category) : ''}${t.job_id ? ' · ' + esc(jobAddress(t.job_id)) : t.customer_id ? ' · ' + esc(customerName(t.customer_id)) : ''}${t.type === 'out' && t.paid_by && t.paid_by !== 'Business' ? ' · paid by ' + esc(t.paid_by) : ''}</div>
     </div>
     ${owed ? `<button class="btn small" data-mark-paid="${t.id}">Mark paid</button>` : ''}
-    <strong class="${owed ? 'muted' : t.type === 'in' ? 'green' : 'red'}">${t.type === 'in' ? '+' : '−'}${money(t.amount)}</strong>
+    <div style="text-align:right"><strong class="${owed ? 'muted' : t.type === 'in' ? 'green' : 'red'}">${t.type === 'in' ? '+' : '−'}${money(t.amount)}</strong>
+      ${bal !== undefined ? `<div class="sub" title="Cash in the business after this">Bal ${money(bal)}</div>` : ''}</div>
   </li>`;
 }
 function wireTxs(root, list, after) {
@@ -1442,7 +1460,15 @@ async function pageMoney() {
   const from = moneyView.period === 'month' ? `${moneyView.month}-01` : `${moneyView.year}-01-01`;
   const to = moneyView.period === 'month' ? `${moneyView.month}-31` : `${moneyView.year}-12-31`;
   await jobs();
-  const [periodList, owedList] = await Promise.all([api('GET', `/transactions?from=${from}&to=${to}`), api('GET', '/transactions?status=owed')]);
+  const [periodList, owedList, allTx] = await Promise.all([
+    api('GET', `/transactions?from=${from}&to=${to}`), api('GET', '/transactions?status=owed'), api('GET', '/transactions'),
+  ]);
+  const balances = runningBalances(allTx);
+  const paidAll = allTx.filter((t) => t.status !== 'owed');
+  const allIn = paidAll.filter((t) => t.type === 'in').reduce((s, t) => s + t.amount, 0);
+  const allCosts = paidAll.filter((t) => t.type === 'out' && t.category !== 'Partner pay').reduce((s, t) => s + t.amount, 0);
+  const allPaid = (who) => paidAll.filter((t) => t.category === 'Partner pay' && t.paid_to === who).reduce((s, t) => s + t.amount, 0);
+  const cashNow = allIn - paidAll.filter((t) => t.type === 'out' && (!t.paid_by || t.paid_by === 'Business')).reduce((s, t) => s + t.amount, 0);
   const list = periodList.filter((t) => t.status !== 'owed');
   const mIn = list.filter((t) => t.type === 'in').reduce((s, t) => s + t.amount, 0);
   const mOut = list.filter((t) => t.type === 'out' && t.category !== 'Partner pay').reduce((s, t) => s + t.amount, 0);
@@ -1473,13 +1499,24 @@ async function pageMoney() {
       <div class="stat"><div class="label">Paid to Moss</div><div class="value">${money(partnerPaid('Moss'))}</div></div>
       <div class="stat"><div class="label">Paid to Isaiah</div><div class="value">${money(partnerPaid('Isaiah'))}</div></div>
     </div>
+    <div class="card running">
+      <div class="spread" style="margin-bottom:.4rem"><h3 style="margin:0">Running totals · all time</h3>
+        <div class="cash">Cash in the business <strong>${money(cashNow)}</strong></div></div>
+      <div class="running-grid">
+        <div><span>Collected</span><strong class="green">${money(allIn)}</strong></div>
+        <div><span>Costs</span><strong class="red">${money(allCosts)}</strong></div>
+        <div><span>Profit</span><strong>${money(allIn - allCosts)}</strong></div>
+        <div><span>Paid to Moss</span><strong>${money(allPaid('Moss'))}</strong></div>
+        <div><span>Paid to Isaiah</span><strong>${money(allPaid('Isaiah'))}</strong></div>
+      </div>
+    </div>
     ${owed('Isaiah') || owed('Moss') ? `<div class="card"><h3>Paid out of pocket</h3><p class="muted" style="margin:0">Business expenses a partner paid with their own money (the business owes them back):
       Isaiah ${money(owed('Isaiah'))} · Moss ${money(owed('Moss'))}</p></div>` : ''}
     ${owedList.length ? `<div class="card"><h3>Due when jobs finish</h3>
       <p class="muted" style="margin:0 0 .4rem">${Object.entries(owedBy).map(([k, v]) => `${esc(personLabel(k))} <strong>${money(v)}</strong>`).join(' · ')}</p>
       <ul class="list" id="owed-list">${owedList.map(txRow).join('')}</ul></div>` : ''}
     <div class="grid">
-      <div class="card" style="grid-column: 1 / -1"><ul class="list" id="tx-list">${list.map(txRow).join('') || '<li class="empty">No entries for this period.</li>'}</ul></div>
+      <div class="card" style="grid-column: 1 / -1"><ul class="list" id="tx-list">${list.map((t) => txRow(t, balances)).join('') || '<li class="empty">No entries for this period.</li>'}</ul></div>
       ${Object.keys(byCat).length ? `<div class="card"><h3>Where the money went</h3><table class="totals">${Object.entries(byCat).sort((a, b) => b[1] - a[1]).map(([k, v]) => `<tr><td>${esc(k)}</td><td class="num">${money(v)}</td></tr>`).join('')}</table></div>` : ''}
     </div>`;
   $('#add').onclick = () => editTransaction({}, pageMoney);

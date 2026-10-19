@@ -374,10 +374,15 @@ function moneyBetween(from, to) {
       COALESCE(SUM(CASE WHEN type='in' THEN amount END), 0) AS money_in,
       COALESCE(SUM(CASE WHEN type='out' AND COALESCE(category,'') != 'Partner pay' THEN amount END), 0) AS costs,
       COALESCE(SUM(CASE WHEN type='out' AND category = 'Partner pay' AND paid_to = 'Moss' THEN amount END), 0) AS moss,
-      COALESCE(SUM(CASE WHEN type='out' AND category = 'Partner pay' AND paid_to = 'Isaiah' THEN amount END), 0) AS isaiah
+      COALESCE(SUM(CASE WHEN type='out' AND category = 'Partner pay' AND paid_to = 'Isaiah' THEN amount END), 0) AS isaiah,
+      -- Cash that actually left the business (not costs a partner covered out of pocket).
+      COALESCE(SUM(CASE WHEN type='out' AND COALESCE(paid_by, 'Business') = 'Business' THEN amount END), 0) AS cash_out
       FROM transactions WHERE date >= ? AND date <= ? AND COALESCE(status, 'paid') = 'paid'`)
     .get(from, to);
-  return { in: r.money_in, costs: r.costs, profit: r.money_in - r.costs, paid: { Moss: r.moss, Isaiah: r.isaiah } };
+  return {
+    in: r.money_in, costs: r.costs, profit: r.money_in - r.costs, paid: { Moss: r.moss, Isaiah: r.isaiah },
+    cash: r.money_in - r.cash_out,
+  };
 }
 
 // Per job: what the customer has paid, what was spent, and who got (or is due) labor money.
@@ -409,6 +414,7 @@ function summary() {
     today: t,
     month: moneyBetween(`${y}-${m}-01`, `${y}-${m}-31`),
     year: moneyBetween(`${y}-01-01`, `${y}-12-31`),
+    allTime: moneyBetween('0000-01-01', '9999-12-31'),
     todos: db.prepare('SELECT * FROM todos WHERE done = 0 ORDER BY due_date IS NULL, due_date, id DESC LIMIT 10').all(),
     overdue: db.prepare('SELECT COUNT(*) AS n FROM todos WHERE done = 0 AND due_date < ?').get(t).n,
     events: db.prepare('SELECT * FROM events WHERE date >= ? AND date <= ? ORDER BY date, start_time IS NULL, start_time').all(t, weekAheadStr),
