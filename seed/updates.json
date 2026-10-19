@@ -1,0 +1,14 @@
+{
+  "note": "One-time money updates. Jobs are matched by a hash of their address so no customer details are stored here.",
+  "updates": [
+    {
+      "id": "2026-10-19-isaiah-partner-pay",
+      "entries": [
+        { "job": "d720108ee856891e", "type": "out", "category": "Partner pay", "paid_to": "Isaiah", "amount": 1500, "date": "2026-10-09", "status": "paid" },
+        { "job": "d720108ee856891e", "type": "out", "category": "Partner pay", "paid_to": "Isaiah", "amount": 1500, "date": "2026-10-22", "status": "owed" },
+        { "job": "cf56eab1745fb6f4", "type": "out", "category": "Partner pay", "paid_to": "Isaiah", "amount": 750, "date": "2026-10-17", "status": "paid" },
+        { "job": "bc8cd3735238336f", "type": "out", "category": "Partner pay", "paid_to": "Isaiah", "amount": 1750, "date": "2026-10-15", "status": "paid" }
+      ]
+    }
+  ]
+}

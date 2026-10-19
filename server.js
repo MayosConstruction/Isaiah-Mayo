@@ -607,6 +607,39 @@ async function handleIncomingText(req, res) {
 }
 
 // ---------------------------------------------------------------------------
+// One-time money updates shipped with the app (seed/updates.json). Each update
+// runs once, after the jobs it refers to exist. Jobs are matched by a hash of
+// the address, so the public code holds no customer details.
+// ---------------------------------------------------------------------------
+function addressHash(address) {
+  return crypto.createHash('sha256').update(String(address || '').trim().toLowerCase()).digest('hex').slice(0, 16);
+}
+function applyDataUpdates() {
+  const file = path.join(__dirname, 'seed', 'updates.json');
+  if (!fs.existsSync(file)) return;
+  const jobsByHash = {};
+  for (const j of db.prepare('SELECT id, address, customer_id FROM jobs').all()) jobsByHash[addressHash(j.address)] = j;
+  for (const u of JSON.parse(fs.readFileSync(file, 'utf8')).updates || []) {
+    const key = 'update:' + u.id;
+    if (db.prepare('SELECT 1 FROM settings WHERE key = ?').get(key)) continue;
+    if (!u.entries.every((e) => jobsByHash[e.job])) continue; // wait until those jobs are loaded
+    db.exec('BEGIN');
+    try {
+      for (const e of u.entries) {
+        const job = jobsByHash[e.job];
+        insertResource('transactions', { ...e, job: undefined, job_id: job.id, customer_id: job.customer_id });
+      }
+      db.prepare('INSERT INTO settings (key, value) VALUES (?, ?)').run(key, new Date().toISOString());
+      db.exec('COMMIT');
+      console.log(`[update] Applied ${u.id}`);
+    } catch (err) {
+      db.exec('ROLLBACK');
+      console.error(`[update] ${u.id} failed:`, err.message);
+    }
+  }
+}
+
+// ---------------------------------------------------------------------------
 // Online signing
 // ---------------------------------------------------------------------------
 function bizInfo() {
@@ -938,11 +971,14 @@ async function handleApi(req, res, url) {
     const data = unlockStarter((await readBody(req)).code);
     if (!data) { noteFailure(ip); throw httpError(400, "That code didn't work. Check it and try again."); }
     const result = importData(data);
+    applyDataUpdates();
     db.prepare("INSERT OR REPLACE INTO settings (key, value) VALUES ('starter_loaded', ?)").run(new Date().toISOString());
     return send(res, 200, result);
   }
   if (parts[0] === 'import' && method === 'POST') {
-    return send(res, 200, importData(await readBody(req)));
+    const result = importData(await readBody(req));
+    applyDataUpdates();
+    return send(res, 200, result);
   }
 
   if (parts[0] === 'estimates' && parts[2] === 'send' && method === 'POST') {
@@ -1026,6 +1062,8 @@ const server = http.createServer(async (req, res) => {
     if (!res.headersSent) send(res, status, { error: status === 500 ? 'Something went wrong' : err.message });
   }
 });
+
+applyDataUpdates();
 
 // Clean up expired sessions once a day.
 setInterval(() => db.prepare('DELETE FROM sessions WHERE expires_at < ?').run(Date.now()), 864e5).unref();
