@@ -79,3 +79,15 @@ def svg_d(p, box=150, center=100):
     pen = SVGPathPen(None, ntos=lambda v: f"{v:.2f}".rstrip("0").rstrip("."))
     p.draw(TransformPen(pen, (s, 0, 0, s, tx, ty)))
     return pen.getCommands()
+
+def hook(font, overlap=0.29, drop=0.45, gap=3, c_scale=1.0):
+    """The "hook" layout: the M sits high and the C drops down, set in front of
+    the M's right leg. overlap is how far the C slides over the M (fraction of
+    the M's width); drop is how far it sits below the M (fraction of cap height)."""
+    M = glyph(font, 'M')
+    mx0, my0, mx1, my1 = M.bounds
+    C0 = glyph(font, 'C', 100 * c_scale)
+    cx0 = C0.bounds[0]
+    x = mx1 - overlap * (mx1 - mx0) - cx0
+    y = drop * (-my0)
+    return front(glyph(font, 'C', 100 * c_scale, x=x, y=y), M, gap)
