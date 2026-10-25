@@ -1,0 +1,70 @@
+<!doctype html>
+<html><head><meta charset="utf-8">
+<style>
+  body { margin: 0; background: #fafafa; font-family: Inter, sans-serif; color: #151515; }
+  .panel { width: 1170px; padding: 30px 0 10px; }
+  h1 { font-size: 34px; margin: 0 60px 4px; }
+  h2 { font-size: 26px; margin: 0 60px 4px; }
+  p { font-size: 19px; margin: 0 60px; color: #555; }
+  .piece { fill: #f5e3da; }
+  .stripe { stroke: #d9875a; stroke-width: 4; }
+  .outline { fill: none; stroke: #151515; stroke-width: 3; stroke-linejoin: round; }
+  .seam { stroke: #a42f28; stroke-width: 6; stroke-linecap: round; }
+  .tag rect { fill: #a42f28; }
+  .tag text { fill: #fff; font: 700 22px Inter, sans-serif; text-anchor: middle; dominant-baseline: central; }
+  .lbl { font: 600 20px Inter, sans-serif; fill: #555; text-anchor: middle; }
+  .arrow { stroke: #555; stroke-width: 2.5; fill: none; marker-end: url(#ah); }
+  .note { font: 500 18px Inter, sans-serif; fill: #777; }
+</style></head>
+<body>
+<svg width="0" height="0" style="position:absolute"><defs>
+  <marker id="ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#555"/></marker>
+  <!-- Stripe fills: run direction of each piece -->
+  <pattern id="horiz" width="40" height="37.2" patternUnits="userSpaceOnUse" y="100"><line x1="0" y1="9" x2="40" y2="9" class="stripe"/></pattern>
+  <pattern id="vert" width="37.2" height="40" patternUnits="userSpaceOnUse" x="110"><line x1="9" y1="0" x2="9" y2="40" class="stripe"/></pattern>
+  <pattern id="vertR" width="37.2" height="40" patternUnits="userSpaceOnUse" x="832"><line x1="9" y1="0" x2="9" y2="40" class="stripe"/></pattern>
+</defs></svg>
+
+<div class="panel">
+  <h1>Countertop layout: 45° miter at every turn</h1>
+  <p>The stripes follow each run and change direction at the 45° seam. Not to scale. Measure on site.</p>
+</div>
+
+<!-- A: square corners, matches the sketch -->
+<div class="panel">
+  <h2>A · Square inside corners (your sketch)</h2>
+  <svg width="1170" height="880" viewBox="0 80 1170 880">
+    <polygon class="piece" points="110,100 1060,100 832,328 338,328"/>
+    <polygon fill="url(#horiz)" points="110,100 1060,100 832,328 338,328"/>
+    <polygon class="piece" points="110,100 338,328 338,928 110,928"/>
+    <polygon fill="url(#vert)" points="110,100 338,328 338,928 110,928"/>
+    <polygon class="piece" points="1060,100 1060,928 832,928 832,328"/>
+    <polygon fill="url(#vertR)" points="1060,100 1060,928 832,928 832,328"/>
+    <line class="seam" x1="110" y1="100" x2="338" y2="328"/>
+    <line class="seam" x1="1060" y1="100" x2="832" y2="328"/>
+    <polygon class="outline" points="110,100 1060,100 1060,928 832,928 832,328 338,328 338,928 110,928"/>
+    <g class="tag" transform="translate(255,215)"><rect x="-58" y="-20" width="116" height="40" rx="6"/><text>45°</text></g>
+    <g class="tag" transform="translate(915,215)"><rect x="-58" y="-20" width="116" height="40" rx="6"/><text>45°</text></g>
+  </svg>
+</div>
+
+<!-- B: angled inside corners, like the customer's cabinets -->
+<div class="panel">
+  <h2>B · Angled inside corners (like the kitchen in the video)</h2>
+  <p>Each 45° seam starts at the back corner and lands in the middle of the angled front edge.</p>
+  <svg width="1170" height="880" viewBox="0 80 1170 880">
+    <polygon class="piece" points="110,100 1060,100 772,388 712,328 458,328 398,388"/>
+    <polygon fill="url(#horiz)" points="110,100 1060,100 772,388 712,328 458,328 398,388"/>
+    <polygon class="piece" points="110,100 398,388 338,448 338,928 110,928"/>
+    <polygon fill="url(#vert)" points="110,100 398,388 338,448 338,928 110,928"/>
+    <polygon class="piece" points="1060,100 1060,928 832,928 832,448 772,388"/>
+    <polygon fill="url(#vertR)" points="1060,100 1060,928 832,928 832,448 772,388"/>
+    <line class="seam" x1="110" y1="100" x2="398" y2="388"/>
+    <line class="seam" x1="1060" y1="100" x2="772" y2="388"/>
+    <polygon class="outline" points="110,100 1060,100 1060,928 832,928 832,448 712,328 458,328 338,448 338,928 110,928"/>
+    <g class="tag" transform="translate(255,215)"><rect x="-58" y="-20" width="116" height="40" rx="6"/><text>45°</text></g>
+    <g class="tag" transform="translate(915,215)"><rect x="-58" y="-20" width="116" height="40" rx="6"/><text>45°</text></g>
+    <text class="note" x="585" y="465" text-anchor="middle">angled front at each inside corner</text>
+  </svg>
+</div>
+</body></html>
