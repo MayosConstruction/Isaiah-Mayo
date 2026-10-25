@@ -10,7 +10,7 @@ A = 28                # sink corner: angled front cuts in this far on each run (
 C = 9                 # angled drawer at the stove-side corner
 T = math.tan(math.radians(22.5)) * D   # where a seam from a 45° front bend meets the wall
 
-LEG_END = 62; TRASH = (62, 77); STOVE = (77, 107); PANTRY = (107, 143)
+LEG_END = 77; STOVE = (77, 107); PANTRY = (107, 143)   # counter runs straight to the stove (no trash gap)
 RIGHT_END = 96
 
 # Sink corner: square back corner, angled front. Seams bisect each 45° bend.
@@ -91,8 +91,6 @@ svg = f"""
 <polygon class="outline" points="{poly(outline)}"/>
 <polygon class="outline" points="{poly(pantry)}"/>
 
-<rect class="open" x="{at(0,0)[0]:.1f}" y="{at(0,TRASH[0])[1]:.1f}" width="{D*S:.1f}" height="{(TRASH[1]-TRASH[0])*S:.1f}"/>
-{lbl(D/2, sum(TRASH)/2, "trash", "sm")}
 <rect class="stove" x="{at(0,0)[0]:.1f}" y="{at(0,STOVE[0])[1]:.1f}" width="{D*S:.1f}" height="{(STOVE[1]-STOVE[0])*S:.1f}"/>
 {burners}
 {lbl(D + 5, sum(STOVE)/2 - 1.5, "STOVE", "lbl", 'style="text-anchor:start"')}
