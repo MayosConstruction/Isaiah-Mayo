@@ -23,9 +23,9 @@ async function renderPng(page, html, file) {
   await page.screenshot({ path: file, omitBackground: true });
 }
 
-const captionHtml = (text) => `<!doctype html><html><head><style>
+const captionHtml = (text, top = 300) => `<!doctype html><html><head><style>
   html, body { margin: 0; width: ${W}px; height: ${H}px; background: transparent; }
-  .cap { position: absolute; top: 300px; left: 90px; right: 90px; text-align: center;
+  .cap { position: absolute; top: ${top}px; left: 90px; right: 90px; text-align: center;
     font: 700 58px/1.22 Inter, sans-serif; color: #fff; letter-spacing: -0.01em; text-wrap: balance;
     text-shadow: 0 2px 6px rgba(0,0,0,.75), 0 0 18px rgba(0,0,0,.45); }
   .cap div + div { margin-top: 14px; }
@@ -57,18 +57,14 @@ async function build(name, reel, page) {
   const dir = path.join(TMP, name);
   fs.mkdirSync(dir, { recursive: true });
 
+  // "bw": true turns a clip black and white, for the punchline switch.
   const parts = reel.clips.map((c, i) => {
     const file = path.join(dir, `part${i}.mp4`);
     ff(['-ss', String(c.from), '-to', String(c.to), '-i', path.join(RAW, c.file),
-      '-vf', FRAME, '-af', 'aresample=48000,aformat=channel_layouts=stereo',
+      '-vf', FRAME + (c.bw ? ',hue=s=0,eq=contrast=1.08' : ''), '-af', 'aresample=48000,aformat=channel_layouts=stereo',
       '-c:v', 'libx264', '-preset', 'medium', '-crf', '18', '-c:a', 'aac', '-b:a', '192k', file]);
     return file;
   });
-
-  const caption = path.join(dir, 'caption.png');
-  await renderPng(page, captionHtml(reel.caption), caption);
-  const end = path.join(TMP, 'endcard.png');
-  if (!fs.existsSync(end)) await renderPng(page, endCardHtml(), end);
 
   const list = path.join(dir, 'list.txt');
   fs.writeFileSync(list, parts.map((p) => `file '${p}'`).join('\n'));
@@ -76,18 +72,45 @@ async function build(name, reel, page) {
   ff(['-f', 'concat', '-safe', '0', '-i', list, '-c', 'copy', body]);
   const bodyLen = parseFloat(execFileSync('ffprobe', ['-v', 'error', '-show_entries', 'format=duration', '-of', 'csv=p=0', body]).toString());
 
-  // Caption over the footage, then a quick fade into the end card. Job-site audio is
-  // kept quiet so a trending sound can go on top in Instagram/TikTok.
+  // Captions: either one "caption" for the whole reel, or timed "captions"
+  // ({ from, to, text, top }) so punchline lines can pop in one at a time.
+  const captions = reel.captions || [{ from: 0, to: bodyLen, text: reel.caption }];
+  const capFiles = [];
+  for (const [i, c] of captions.entries()) {
+    const file = path.join(dir, `caption${i}.png`);
+    await renderPng(page, captionHtml(c.text, c.top), file);
+    capFiles.push(file);
+  }
+  let chain = `[0:v]null[c0];`;
+  captions.forEach((c, i) => {
+    chain += `[c${i}][${i + 1}:v]overlay=0:0:shortest=1:enable='between(t,${c.from},${c.to ?? bodyLen})'[c${i + 1}];`;
+  });
+  const last = `[c${captions.length}]`;
+  const capInputs = capFiles.flatMap((f) => ['-loop', '1', '-i', f]);
   const out = path.join(OUT, `${name}.mp4`);
-  ff(['-i', body, '-loop', '1', '-i', caption, '-loop', '1', '-t', String(END_SECONDS + 0.5), '-i', end,
+  const enc = ['-c:v', 'libx264', '-preset', 'slow', '-crf', '20', '-profile:v', 'high', '-pix_fmt', 'yuv420p',
+    '-c:a', 'aac', '-b:a', '192k', '-movflags', '+faststart', out];
+  // Job-site audio is kept quiet so a trending sound can go on top in Instagram/TikTok.
+  const vol = reel.volume ?? 0.5;
+
+  if (reel.endCard === false) {
+    ff(['-i', body, ...capInputs, '-filter_complex', `${chain}${last}format=yuv420p[v];[0:a]volume=${vol}[a]`,
+      '-map', '[v]', '-map', '[a]', '-t', bodyLen.toFixed(3), ...enc]);
+    console.log(`${out} (${bodyLen.toFixed(1)}s)`);
+    return;
+  }
+
+  // Quick fade into the Mayo's end card.
+  const end = path.join(TMP, 'endcard.png');
+  if (!fs.existsSync(end)) await renderPng(page, endCardHtml(), end);
+  const n = capFiles.length + 1;
+  ff(['-i', body, ...capInputs, '-loop', '1', '-t', String(END_SECONDS + 0.5), '-i', end,
     '-filter_complex',
-    `[0:v][1:v]overlay=0:0:shortest=1,format=yuv420p,settb=1/${FPS}[main];` +
-    `[2:v]scale=${W}:${H},fps=${FPS},setsar=1,format=yuv420p,settb=1/${FPS}[card];` +
+    `${chain}${last}format=yuv420p,settb=1/${FPS}[main];` +
+    `[${n}:v]scale=${W}:${H},fps=${FPS},setsar=1,format=yuv420p,settb=1/${FPS}[card];` +
     `[main][card]xfade=transition=fade:duration=0.4:offset=${(bodyLen - 0.4).toFixed(3)}[v];` +
-    `[0:a]volume=0.5,apad,afade=t=out:st=${(bodyLen - 0.4).toFixed(3)}:d=0.4[a]`,
-    '-map', '[v]', '-map', '[a]', '-t', (bodyLen + END_SECONDS).toFixed(3),
-    '-c:v', 'libx264', '-preset', 'slow', '-crf', '20', '-profile:v', 'high', '-pix_fmt', 'yuv420p',
-    '-c:a', 'aac', '-b:a', '192k', '-movflags', '+faststart', out]);
+    `[0:a]volume=${vol},apad,afade=t=out:st=${(bodyLen - 0.4).toFixed(3)}:d=0.4[a]`,
+    '-map', '[v]', '-map', '[a]', '-t', (bodyLen + END_SECONDS).toFixed(3), ...enc]);
   console.log(`${out} (${(bodyLen + END_SECONDS).toFixed(1)}s)`);
 }
 
