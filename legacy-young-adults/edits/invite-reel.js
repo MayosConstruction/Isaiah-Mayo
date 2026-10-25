@@ -10,27 +10,27 @@ const ROOT = path.resolve(__dirname, '..');
 const RAW = path.join(ROOT, 'raw-footage');
 const TMP = path.join(ROOT, '.tmp', 'invite-reel');
 const OUT = path.join(ROOT, 'finished', 'invite-reel.mp4');
-const W = 1080, H = 1920, FPS = 30, END = 3.2;
+const W = 1080, H = 1920, FPS = 30, END = 2.6;
 
 const ff = (args) => execFileSync('ffmpeg', ['-v', 'error', '-y', ...args], { stdio: 'inherit' });
 const FRAME = `scale=${W}:${H}:force_original_aspect_ratio=increase,crop=${W}:${H},setsar=1`;
-// Warm, punchy sunset look.
-const GRADE = 'eq=contrast=1.08:saturation=1.15:brightness=0.01,colorbalance=rs=0.04:bs=-0.04:rh=0.03:bh=-0.03,vignette=PI/5';
+// Light touch so it still looks like phone footage.
+const GRADE = 'eq=contrast=1.04:saturation=1.06';
 
 // speed < 1 is slow motion; punch zooms in over the clip.
+// Mixes every night: cards, kickball, arrivals, hanging out. Real audio stays in.
 const shots = [
-  { file: 'IMG_2244.mov', from: 0.3, to: 2.0 },
-  { file: 'IMG_4197.mov', from: 0.0, to: 1.6 },
-  { file: 'IMG_4198.mov', from: 0.3, to: 2.5 },
-  { file: 'IMG_4198.mov', from: 2.5, to: 3.2, speed: 0.4, punch: 0.18 },
-  { file: 'IMG_4198.mov', from: 3.2, to: 4.7, speed: 1.5 },
-  { file: 'IMG_4197.mov', from: 5.8, to: 8.3 },
+  { file: 'IMG_4469.mov', from: 5.0, to: 6.9 },   // spoon grab, she loses it
+  { file: 'IMG_4198.mov', from: 2.2, to: 3.4 },   // the kick
+  { file: 'IMG_4471.mov', from: 0.5, to: 2.0 },   // talking to the camera
+  { file: 'IMG_4197.mov', from: 0.0, to: 1.3 },   // rounding the bases
+  { file: 'IMG_4469.mov', from: 0.0, to: 1.7 },   // cards around the table
+  { file: 'IMG_2244.mov', from: 0.3, to: 1.6 },   // everyone pulling in
+  { file: 'IMG_4197.mov', from: 6.0, to: 8.3 },   // hanging out under the pavilion
 ];
-// Captions on the output timeline (seconds).
+// One small native-looking caption, nothing else over the footage.
 const captions = [
-  { from: 0, to: 1.7, lines: ['Your new favorite', 'Wednesday'] },
-  { from: 1.7, to: 5.5, lines: ['Kickball night'] },
-  { from: 8.25, to: 10.75, lines: ['Good people.', 'Good times.'] },
+  { from: 0, to: 1.9, lines: ['wednesday nights'] },
 ];
 
 async function png(page, html, file) {
@@ -41,22 +41,17 @@ async function png(page, html, file) {
 const FONTS = '<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Anton&family=Inter:wght@600&display=swap">';
 const captionHtml = (lines) => `<!doctype html><html><head>${FONTS}<style>
 html,body{margin:0;width:${W}px;height:${H}px;background:transparent}
-.c{position:absolute;top:560px;left:80px;right:80px;text-align:center;color:#fff;text-transform:uppercase;
-font:400 118px/1.0 Anton,sans-serif;letter-spacing:.01em;text-shadow:0 4px 24px rgba(0,0,0,.55),0 2px 4px rgba(0,0,0,.4)}
+.c{position:absolute;top:330px;left:80px;right:80px;text-align:center;color:#fff;
+font:600 54px/1.2 Inter,sans-serif;text-shadow:0 2px 10px rgba(0,0,0,.5)}
 </style></head><body><div class="c">${lines.join('<br>')}</div></body></html>`;
+// Plain end card: just who, when, where.
 const endHtml = () => `<!doctype html><html><head>${FONTS}<style>
-html,body{margin:0;width:${W}px;height:${H}px;background:#0d0d0d;color:#fff}
+html,body{margin:0;width:${W}px;height:${H}px;background:#000;color:#fff}
 .w{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;padding-bottom:160px;text-align:center}
-.k{font:600 40px Inter,sans-serif;letter-spacing:.34em;text-transform:uppercase;color:#f2b33d;margin-bottom:36px}
-.l{font:400 250px/0.9 Anton,sans-serif;letter-spacing:.04em;text-transform:uppercase}
-.y{font:600 46px Inter,sans-serif;letter-spacing:.62em;text-transform:uppercase;margin-top:30px;padding-left:.62em}
-.r{width:120px;height:6px;background:#f2b33d;margin:56px auto 50px}
-.d{font:400 92px/1.05 Anton,sans-serif;text-transform:uppercase;letter-spacing:.02em}
-.p{font:600 40px Inter,sans-serif;letter-spacing:.2em;text-transform:uppercase;color:#cfcfcf;margin-top:22px}
-.a{display:inline-block;margin-top:40px;border:3px solid #f2b33d;color:#f2b33d;font:600 34px Inter,sans-serif;letter-spacing:.24em;padding:14px 28px 14px 36px;text-transform:uppercase}
-</style></head><body><div class="w"><div class="k">Come hang with us</div><div class="l">Legacy</div>
-<div class="y">Young Adults</div><div class="r"></div>
-<div class="d">Every Wednesday<br>6:30 PM</div><div class="p">Legacy Church</div><div class="a">Ages 18–25</div></div></body></html>`;
+.t{font:600 64px Inter,sans-serif;letter-spacing:-.01em}
+.s{font:500 40px/1.6 Inter,sans-serif;color:#bdbdbd;margin-top:26px}
+</style></head><body><div class="w"><div class="t">legacy young adults</div>
+<div class="s">wednesdays · 6:30pm<br>legacy church · 18–25</div></div></body></html>`;
 
 (async () => {
   fs.mkdirSync(TMP, { recursive: true });
@@ -91,8 +86,8 @@ html,body{margin:0;width:${W}px;height:${H}px;background:#0d0d0d;color:#fff}
   ff(['-f', 'concat', '-safe', '0', '-i', path.join(TMP, 'list.txt'), '-c', 'copy', body]);
   const bodyLen = parseFloat(execFileSync('ffprobe', ['-v', 'error', '-show_entries', 'format=duration', '-of', 'csv=p=0', body]).toString());
 
-  // Grade, captions, then a quick fade into the end card. Field audio stays low
-  // so a song can go on top in Instagram/TikTok.
+  // Grade, caption, then a quick fade into the end card. The real audio (laughing,
+  // the kick) stays in; add a song under it in the app.
   const inputs = ['-i', body, ...capFiles.flatMap((f) => ['-loop', '1', '-i', f]), '-loop', '1', '-t', String(END + 0.5), '-i', endPng];
   let g = `[0:v]${GRADE}[c0];`;
   captions.forEach((c, i) => {
@@ -101,7 +96,7 @@ html,body{margin:0;width:${W}px;height:${H}px;background:#0d0d0d;color:#fff}
   const e = captions.length + 1;
   g += `[c${captions.length}]format=yuv420p,settb=1/${FPS}[main];[${e}:v]fps=${FPS},format=yuv420p,setsar=1,settb=1/${FPS}[end];` +
        `[main][end]xfade=transition=fade:duration=0.3:offset=${(bodyLen - 0.3).toFixed(3)}[v];` +
-       `[0:a]volume=0.4,apad,afade=t=out:st=${(bodyLen - 0.3).toFixed(3)}:d=0.3[a]`;
+       `[0:a]volume=0.9,apad,afade=t=out:st=${(bodyLen - 0.3).toFixed(3)}:d=0.3[a]`;
   fs.mkdirSync(path.dirname(OUT), { recursive: true });
   ff([...inputs, '-filter_complex', g, '-map', '[v]', '-map', '[a]', '-t', (bodyLen + END).toFixed(3),
     '-c:v', 'libx264', '-preset', 'slow', '-crf', '19', '-pix_fmt', 'yuv420p', '-c:a', 'aac', '-b:a', '192k',
