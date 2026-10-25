@@ -18,16 +18,16 @@ const FRAME = `scale=${W}:${H}:force_original_aspect_ratio=increase,crop=${W}:${
 // Warm, faded, darker film look like the reference.
 const GRADE = 'eq=brightness=-0.09:contrast=1.12:saturation=0.85,colorbalance=rs=0.14:gs=0.04:bs=-0.14:rm=0.12:gm=0.03:bm=-0.12:rh=0.06:bh=-0.08,curves=all=0/0.03 0.5/0.40 1/0.86,vignette=PI/4';
 
-const opener = { file: 'IMG_4462.mov', from: 0, to: 4.0 };
+const opener = { file: 'B700A7F7.mov', from: 0.6, to: 4.6 };
 const captions = [
   { from: 0, to: 2.9, text: 'So you do repairs, right?' },
   { from: 2.9, to: 4.0, text: 'and so much more...' },
 ];
 // Each burst: a background clip, with cards popping on every ~0.3s.
 const bursts = [
-  { bg: { file: 'IMG_4464.mov', from: 6.0, to: 7.8 }, cards: [
+  { bg: { file: 'IMG_2148.mov', from: 1.0, to: 2.8 }, cards: [
     ['IMG_4458.mov', 1.0, 'p'], ['IMG_2235.mov', 2.0, 's'], ['286CBA62-05B5-407D-BB65-7426E54C714D.mov', 0.3, 'l'],
-    ['IMG_4466.mov', 3.3, 'p'], ['IMG_2340.mov', 2.0, 's']] },
+    ['IMG_4464.mov', 6.5, 'p'], ['IMG_2340.mov', 2.0, 's']] },
   { bg: { file: 'IMG_4467.mov', from: 3.6, to: 5.3 }, cards: [
     ['IMG_2240.mov', 1.0, 's'], ['IMG_4462.mov', 3.5, 'l'], ['286CBA62-05B5-407D-BB65-7426E54C714D.mov', 4.0, 'p'],
     ['IMG_4464.mov', 11.0, 's'], ['IMG_2241.mov', 6.0, 'p']] },
