@@ -1,0 +1,23 @@
+{
+  "deck-build": {
+    "caption": "New composite deck going down",
+    "clips": [
+      { "file": "IMG_4458.mov", "from": 0.3, "to": 1.8 },
+      { "file": "IMG_4462.mov", "from": 0.6, "to": 2.6 },
+      { "file": "IMG_4466.mov", "from": 0.0, "to": 1.6 },
+      { "file": "IMG_4464.mov", "from": 6.8, "to": 8.8 },
+      { "file": "IMG_4466.mov", "from": 2.6, "to": 4.6 },
+      { "file": "IMG_4467.mov", "from": 4.0, "to": 7.0 }
+    ]
+  },
+  "repairs": {
+    "caption": "Repairs are our specialty.",
+    "clips": [
+      { "file": "IMG_2340.mov", "from": 1.0, "to": 3.2 },
+      { "file": "IMG_2235.mov", "from": 0.3, "to": 3.3 },
+      { "file": "IMG_2240.mov", "from": 0.0, "to": 2.0 },
+      { "file": "IMG_2241.mov", "from": 0.5, "to": 3.5 },
+      { "file": "IMG_2241.mov", "from": 5.0, "to": 6.6 }
+    ]
+  }
+}
