@@ -9,8 +9,9 @@ from fontTools.pens.transformPen import TransformPen
 FONTS = os.path.join(os.path.dirname(__file__), "fonts")
 _cache = {}
 
-def glyph(font, ch, size=100, x=0, y=0):
-    """Outline of one character, `size` px per em, baseline at y, y pointing down."""
+def glyph(font, ch, size=100, x=0, y=0, sx=1.0):
+    """Outline of one character, `size` px per em, baseline at y, y pointing down.
+    sx widens or narrows the letter."""
     if font not in _cache:
         _cache[font] = TTFont(os.path.join(FONTS, font + ".ttf"))
     f = _cache[font]
@@ -18,7 +19,7 @@ def glyph(font, ch, size=100, x=0, y=0):
     name = f.getBestCmap()[ord(ch)]
     s = size / f["head"].unitsPerEm
     p = pathops.Path()
-    gs[name].draw(TransformPen(p.getPen(), (s, 0, 0, -s, x, y)))
+    gs[name].draw(TransformPen(p.getPen(), (s * sx, 0, 0, -s, x, y)))
     return simplify(p)
 
 def simplify(p):
@@ -60,8 +61,17 @@ def front(top, under, gap):
     """`top` sits in front of `under`, with a clean gap where they cross."""
     return union(top, minus(under, grow(top, gap)))
 
+def clean(p, min_area=20.0):
+    """Drop slivers and specks left over from boolean cuts (too small to print)."""
+    out = pathops.Path()
+    for c in p.contours:
+        if abs(c.area) >= min_area:
+            c.draw(out.getPen())
+    return union(out)
+
 def svg_d(p, box=150, center=100):
     """Fit p's ink bounds into a box x box square centred in a 200 x 200 viewBox."""
+    p = clean(p)
     x0, y0, x1, y1 = p.bounds
     s = box / max(x1 - x0, y1 - y0)
     tx = center - (x0 + x1) / 2 * s
