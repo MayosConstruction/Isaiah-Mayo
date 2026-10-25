@@ -10,7 +10,7 @@ const ROOT = path.resolve(__dirname, '..');
 const RAW = path.join(ROOT, 'raw-footage');
 const TMP = path.join(ROOT, '.tmp', 'invite-reel');
 const OUT = path.join(ROOT, 'finished', 'invite-reel.mp4');
-const W = 1080, H = 1920, FPS = 30, END = 2.4;
+const W = 1080, H = 1920, FPS = 30, END = 3.2;
 
 const ff = (args) => execFileSync('ffmpeg', ['-v', 'error', '-y', ...args], { stdio: 'inherit' });
 const FRAME = `scale=${W}:${H}:force_original_aspect_ratio=increase,crop=${W}:${H},setsar=1`;
@@ -28,7 +28,7 @@ const shots = [
 ];
 // Captions on the output timeline (seconds).
 const captions = [
-  { from: 0, to: 1.7, lines: ['Your new favorite', 'night of the week'] },
+  { from: 0, to: 1.7, lines: ['Your new favorite', 'Wednesday'] },
   { from: 1.7, to: 5.5, lines: ['Kickball night'] },
   { from: 8.25, to: 10.75, lines: ['Good people.', 'Good times.'] },
 ];
@@ -46,13 +46,17 @@ font:400 118px/1.0 Anton,sans-serif;letter-spacing:.01em;text-shadow:0 4px 24px 
 </style></head><body><div class="c">${lines.join('<br>')}</div></body></html>`;
 const endHtml = () => `<!doctype html><html><head>${FONTS}<style>
 html,body{margin:0;width:${W}px;height:${H}px;background:#0d0d0d;color:#fff}
-.w{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;padding-bottom:140px;text-align:center}
+.w{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;padding-bottom:160px;text-align:center}
 .k{font:600 40px Inter,sans-serif;letter-spacing:.34em;text-transform:uppercase;color:#f2b33d;margin-bottom:36px}
 .l{font:400 250px/0.9 Anton,sans-serif;letter-spacing:.04em;text-transform:uppercase}
 .y{font:600 46px Inter,sans-serif;letter-spacing:.62em;text-transform:uppercase;margin-top:30px;padding-left:.62em}
-.r{width:120px;height:6px;background:#f2b33d;margin:56px auto 0}
+.r{width:120px;height:6px;background:#f2b33d;margin:56px auto 50px}
+.d{font:400 92px/1.05 Anton,sans-serif;text-transform:uppercase;letter-spacing:.02em}
+.p{font:600 40px Inter,sans-serif;letter-spacing:.2em;text-transform:uppercase;color:#cfcfcf;margin-top:22px}
+.a{display:inline-block;margin-top:40px;border:3px solid #f2b33d;color:#f2b33d;font:600 34px Inter,sans-serif;letter-spacing:.24em;padding:14px 28px 14px 36px;text-transform:uppercase}
 </style></head><body><div class="w"><div class="k">Come hang with us</div><div class="l">Legacy</div>
-<div class="y">Young Adults</div><div class="r"></div></div></body></html>`;
+<div class="y">Young Adults</div><div class="r"></div>
+<div class="d">Every Wednesday<br>6:30 PM</div><div class="p">Legacy Church</div><div class="a">Ages 18–25</div></div></body></html>`;
 
 (async () => {
   fs.mkdirSync(TMP, { recursive: true });
