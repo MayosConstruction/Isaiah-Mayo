@@ -1,0 +1,90 @@
+<!doctype html>
+<html><head><meta charset="utf-8">
+<style>
+  body { margin: 0; background: #fafafa; font-family: Inter, sans-serif; color: #151515; }
+  .head { width: 1170px; padding: 36px 0 0; }
+  h1 { font-size: 34px; margin: 0 60px 6px; }
+  p { font-size: 19px; margin: 0 60px; color: #555; }
+  .draft { display: inline-block; margin: 14px 60px 0; background: #fff4d6; border: 2px solid #e0b33a; border-radius: 8px; padding: 8px 14px; font: 600 18px Inter, sans-serif; color: #6b4e00; }
+  .piece { fill: #f5e3da; }
+  .stripe { stroke: #d9875a; stroke-width: 4; }
+  .outline { fill: none; stroke: #151515; stroke-width: 3; stroke-linejoin: round; }
+  .seam { stroke: #a42f28; stroke-width: 6; stroke-linecap: round; }
+  .tag rect { fill: #a42f28; }
+  .tag text { fill: #fff; font: 700 22px Inter, sans-serif; text-anchor: middle; dominant-baseline: central; }
+  .open { fill: #fff; stroke: #151515; stroke-width: 2.5; stroke-dasharray: 10 7; }
+  .sink { fill: #fff; stroke: #151515; stroke-width: 3; }
+  .under { fill: none; stroke: #555; stroke-width: 2.5; stroke-dasharray: 8 6; }
+  .fridge { fill: #e4e4e4; stroke: #151515; stroke-width: 2.5; }
+  .lbl { font: 700 20px Inter, sans-serif; fill: #151515; text-anchor: middle; dominant-baseline: central; }
+  .sm { font: 500 17px Inter, sans-serif; fill: #555; text-anchor: middle; dominant-baseline: central; }
+  .wall { stroke: #151515; stroke-width: 10; }
+</style></head>
+<body>
+<div class="head">
+  <h1>Countertop layout: 45° seam at every turn</h1>
+  <p>The stripes follow each run and change direction at the 45° seams. Not to scale.</p>
+  <div class="draft">DRAFT from the walkthrough video. Confirm sink, stove and dishwasher spots and measure before cutting.</div>
+</div>
+<svg width="1170" height="1080" viewBox="0 90 1170 1080">
+  <defs>
+    <pattern id="h" width="40" height="30" patternUnits="userSpaceOnUse" y="150"><line x1="0" y1="8" x2="40" y2="8" class="stripe"/></pattern>
+    <pattern id="vL" width="30" height="40" patternUnits="userSpaceOnUse" x="110"><line x1="8" y1="0" x2="8" y2="40" class="stripe"/></pattern>
+    <pattern id="vR" width="30" height="40" patternUnits="userSpaceOnUse" x="910"><line x1="8" y1="0" x2="8" y2="40" class="stripe"/></pattern>
+  </defs>
+
+  <!-- Walls -->
+  <line class="wall" x1="105" y1="145" x2="1065" y2="145"/>
+  <line class="wall" x1="105" y1="145" x2="105" y2="870"/>
+  <line class="wall" x1="1065" y1="145" x2="1065" y2="1130"/>
+  <text class="sm" x="585" y="118">window wall</text>
+
+  <!-- Top run (window wall) -->
+  <polygon class="piece" points="110,150 1060,150 865,345 820,300 350,300 305,345"/>
+  <polygon fill="url(#h)" points="110,150 1060,150 865,345 820,300 350,300 305,345"/>
+  <!-- Left run, corner to stove -->
+  <polygon class="piece" points="110,150 305,345 260,390 260,560 110,560"/>
+  <polygon fill="url(#vL)" points="110,150 305,345 260,390 260,560 110,560"/>
+  <!-- Right run, dishwasher side -->
+  <polygon class="piece" points="1060,150 1060,960 910,960 910,390 865,345"/>
+  <polygon fill="url(#vR)" points="1060,150 1060,960 910,960 910,390 865,345"/>
+  <!-- Drawer base past the stove: its own top -->
+  <rect class="piece" x="110" y="710" width="150" height="150"/>
+  <rect fill="url(#vL)" x="110" y="710" width="150" height="150"/>
+
+  <!-- 45° seams -->
+  <line class="seam" x1="110" y1="150" x2="305" y2="345"/>
+  <line class="seam" x1="1060" y1="150" x2="865" y2="345"/>
+
+  <!-- Outlines -->
+  <polygon class="outline" points="110,150 1060,150 1060,960 910,960 910,390 820,300 350,300 260,390 260,560 110,560"/>
+  <rect class="outline" x="110" y="710" width="150" height="150"/>
+
+  <!-- Sink cutout near the right corner -->
+  <rect class="sink" x="600" y="178" width="96" height="96" rx="12"/>
+  <rect class="sink" x="704" y="178" width="96" height="96" rx="12"/>
+    <text class="lbl" x="700" y="226">SINK</text>
+  <text class="sm" x="700" y="290">double-bowl cutout</text>
+
+  <!-- Stove opening -->
+  <rect class="open" x="110" y="560" width="150" height="150"/>
+  <text class="lbl" x="185" y="625">STOVE</text>
+  <text class="sm" x="185" y="652">opening</text>
+  <text class="sm" x="330" y="785" style="text-anchor:start">drawer base</text>
+  <text class="sm" x="330" y="808" style="text-anchor:start">(separate top)</text>
+
+  <!-- Dishwasher below the right run -->
+  <rect class="under" x="918" y="620" width="134" height="150"/>
+  <text class="lbl" x="985" y="684" style="paint-order:stroke;stroke:#f5e3da;stroke-width:8">DW</text>
+  <text class="sm" x="985" y="710" style="paint-order:stroke;stroke:#f5e3da;stroke-width:8">below</text>
+
+  <!-- Fridge -->
+  <rect class="fridge" x="910" y="970" width="150" height="150"/>
+  <text class="lbl" x="985" y="1045">FRIDGE</text>
+
+  <!-- Seam tags -->
+  <g class="tag" transform="translate(195,245)"><rect x="-50" y="-20" width="100" height="40" rx="6"/><text>45°</text></g>
+  <g class="tag" transform="translate(975,245)"><rect x="-50" y="-20" width="100" height="40" rx="6"/><text>45°</text></g>
+  <text class="sm" x="585" y="372">angled front at both inside corners</text>
+</svg>
+</body></html>
