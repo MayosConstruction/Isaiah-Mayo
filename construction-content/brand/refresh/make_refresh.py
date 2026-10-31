@@ -14,7 +14,7 @@ from fontTools.ttLib import TTFont  # noqa: E402
 RED, CREAM, NAVY = "#C4553B", "#F3EBDD", "#1E2A3A"
 MASCOT_LINES = open(os.path.join(HERE, "mascot-lines.d")).read()
 MASCOT_FILL = open(os.path.join(HERE, "mascot-fill.d")).read()
-MASCOT_BOX = (58, 12, 168, 168)   # x, y, w, h of the traced mascot in its own coordinates
+MASCOT_BOX = tuple(float(v) for v in open(os.path.join(HERE, "mascot-box.txt")).read().split())  # x, y, w, h
 
 
 def xform(p, a, b, c, d, e, f):
