@@ -11,7 +11,7 @@ const SRC = path.join(ROOT, 'raw-footage', 'B700A7F7.mov');
 const TMP = path.join(__dirname, '.tmp', 'follow-card');
 const OUT = path.join(ROOT, 'finished', 'follow-card.mp4');
 const W = 1080, H = 1920, FPS = 30;
-const HANDLE = '@MAYOSCONSTRUCTION';
+const HANDLE = '@ITS_MAYOS_CONSTRUCTION';
 const CAPTION = 'Just a delusional contractor that thinks people will follow him because he can carry insulation…';
 const CLIP = { from: 0.0, to: 6.1 };
 const CARD = 4.0; // seconds of end card
