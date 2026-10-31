@@ -1,4 +1,4 @@
-# Mayo's merch tee: MC monogram on the left chest, and a back print of the mascot
+# Mayo's merch tee: script MC monogram on the left chest, and a back print of the mascot
 # with the "Mayo★s" script crossing his chest. Two colorways (cream tee, navy tee),
 # two ink colors each. Writes print-ready SVGs (all outlines, knockouts cut in, so
 # each color is its own clean shape) and a mockup page.
@@ -66,9 +66,19 @@ def back_svg(tee):
     return f'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 {W} {H:.0f}" width="12in" height="{H / 100:.2f}in">{body}</svg>'
 
 
+# Left-chest MC in the brand script: the M sits high, the C hooks in front of its
+# last stroke, and the wordmark's Texas star sits off the M's shoulder. One ink.
+_M = glyph("Yellowtail", "M")
+_mx0, _my0, _mx1, _ = _M.bounds
+MC = union(hook("Yellowtail", 0.30, 0.40, gap=4), R.star(_mx1 + 4, _my0 + 4, 7))
+
+
 def chest_svg(color):
-    src = open(os.path.join(os.path.dirname(HERE), "final", "svg", "mc-monogram-print-white.svg")).read()
-    return src.replace('fill="#ffffff"', f'fill="{color}"')
+    x0, y0, x1, y1 = MC.bounds
+    pad = 2
+    w, h = x1 - x0 + 2 * pad, y1 - y0 + 2 * pad
+    return (f'<svg xmlns="http://www.w3.org/2000/svg" viewBox="{x0 - pad:.2f} {y0 - pad:.2f} {w:.2f} {h:.2f}" '
+            f'width="2in" height="{2 * h / w:.3f}in"><path fill="{color}" d="{R.d(MC)}"/></svg>')
 
 
 os.makedirs(os.path.join(HERE, "svg"), exist_ok=True)
