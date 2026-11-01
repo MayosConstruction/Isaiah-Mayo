@@ -14,6 +14,33 @@ const FRAME = `scale=${W}:${H}:force_original_aspect_ratio=increase,crop=${W}:${
 
 // The first shot of each reel is the flash-forward to the best moment.
 const REELS = {
+  'big-slide': {
+    title: 'Dad vs. 2 year old:<br>the big slide',
+    shots: [
+      { file: 'IMG_2248.mov', from: 7.0, to: 8.0, text: '' },
+      { file: 'IMG_2248.mov', from: 0.0, to: 3.0, text: 'He said it was too scary' },
+      { file: 'IMG_2248.mov', from: 3.0, to: 6.3, text: 'so I took him down myself' },
+      { file: 'IMG_2248.mov', from: 6.3, to: 8.7, text: 'We’ve done it 37 times since', low: true },
+    ],
+  },
+  'slide-rules': {
+    title: 'Dad vs. 2 year old:<br>how slides work',
+    shots: [
+      { file: 'IMG_0068.mov', from: 18.0, to: 19.0, text: '' },
+      { file: 'IMG_0068.mov', from: 5.5, to: 10.5, text: 'He loved the slide', low: true },
+      { file: 'IMG_0068.mov', from: 12.5, to: 15.0, text: 'Me: buddy, the stairs are over there', low: true },
+      { file: 'IMG_0068.mov', from: 15.0, to: 21.2, text: 'Him:' },
+    ],
+  },
+  'sleeping-in': {
+    title: 'Dad vs. 2 year old:<br>sleeping in on Saturday',
+    shots: [
+      { file: 'IMG_8266.mov', from: 6.0, to: 7.0, text: '' },
+      { file: 'IMG_8266.mov', from: 0.0, to: 3.6, text: 'Me: 5 more minutes', low: true },
+      { file: 'IMG_8266.mov', from: 4.4, to: 8.4, text: 'Him:', low: true },
+      { file: 'IMG_8266.mov', from: 8.4, to: 10.2, text: 'He won. He always wins.', low: true },
+    ],
+  },
   'milk-contest': {
     title: 'Dad vs. 2 year old:<br>milk chugging contest',
     shots: [
