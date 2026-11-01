@@ -17,6 +17,10 @@ Claude Code reads CLAUDE.md, which points here).
   in `.claude/skills/` and `.agents/skills/` (same files). Read `/hyperframes` first.
 - Animation library: use the local `gsap.min.js` (copy from `Setup/node_modules/gsap/dist/`),
   not the CDN link the templates use.
+- Captions: the TikTok-style "Highlight" caption block (`hyperframes add caption-highlight`), already made
+  offline-ready in `Setup/blocks/caption-highlight.html`: copy it to `compositions/components/` in a project
+  and copy `gsap.min.js` and `Signature Style/fonts/Montserrat-ExtraBold.ttf` into that project's `assets/`.
+  Its words and timings are the `WORDS` list at the top of its script.
 - Sound effects: `Setup/sound-effects/` (Pixabay license, credits in CREDITS.md).
 - Transcripts: WhisperX in its own environment, `Setup/whisper-env/bin/whisperx`, CPU mode:
   `--device cpu --compute_type int8`.
