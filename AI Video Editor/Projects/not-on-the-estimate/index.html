@@ -1,0 +1,125 @@
+<!doctype html>
+<html lang="en" data-resolution="portrait">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=1080, height=1920" />
+    <script src="assets/gsap.min.js"></script>
+    <style>
+      @font-face { font-family: "Inter Display"; src: url("assets/fonts/InterDisplay-SemiBold.ttf"); font-weight: 600; }
+      @font-face { font-family: "Crimson Pro"; src: url("assets/fonts/CrimsonPro-SemiBold.ttf"); font-weight: 600; }
+      :root { --red: #c4553b; }
+      * { margin: 0; padding: 0; box-sizing: border-box; }
+      html, body { width: 1080px; height: 1920px; overflow: hidden; background: #000; }
+      #root { position: relative; width: 1080px; height: 1920px; overflow: hidden; }
+      .shot { position: absolute; inset: 0; width: 1080px; height: 1920px; object-fit: cover; }
+
+      /* Serif look: title and the closing line. */
+      .serif {
+        position: absolute; left: 70px; right: 70px; text-align: center; z-index: 10; color: #fff;
+        font: 600 84px/1.05 "Crimson Pro", serif;
+        text-shadow: 0 0 2px #000, 0 0 6px rgba(0, 0, 0, 0.8), 0 2px 8px rgba(0, 0, 0, 0.5);
+      }
+      #title { top: 230px; text-wrap: balance; }
+      #title .in { display: inline-block; transform-origin: 50% 50%; }
+      #closer { top: 760px; font-size: 104px; }
+
+      /* Clean sans look: the checklist rows and the comment prompt. */
+      .row {
+        position: absolute; left: 120px; right: 80px; height: 80px; z-index: 11; display: flex; align-items: center; gap: 26px;
+        color: #fff; font: 600 58px/1 "Inter Display", sans-serif; letter-spacing: -0.045em;
+        text-shadow: 0 2px 8px rgba(0, 0, 0, 0.55), 0 0 18px rgba(0, 0, 0, 0.35);
+      }
+      .row .box {
+        flex: none; width: 58px; height: 58px; border: 5px solid #fff; border-radius: 12px;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.45), inset 0 0 8px rgba(0, 0, 0, 0.25); position: relative;
+      }
+      .row svg { position: absolute; left: -6px; top: -14px; width: 74px; height: 74px; overflow: visible; }
+      .row path { fill: none; stroke: var(--red); stroke-width: 12; stroke-linecap: round; stroke-linejoin: round;
+        stroke-dasharray: 100; stroke-dashoffset: 100; filter: drop-shadow(0 2px 3px rgba(0, 0, 0, 0.5)); }
+      #ask {
+        position: absolute; top: 1180px; left: 80px; right: 80px; text-align: center; z-index: 11; color: #fff;
+        font: 600 60px/1.15 "Inter Display", sans-serif; letter-spacing: -0.045em;
+        text-shadow: 0 2px 8px rgba(0, 0, 0, 0.55), 0 0 18px rgba(0, 0, 0, 0.35);
+      }
+    </style>
+  </head>
+  <body>
+    <div id="root" data-composition-id="main" data-start="0" data-duration="14.28" data-width="1080" data-height="1920">
+      <!-- Footage: hook on the wildest moment, then one job surprise per shot, ending on the tool toss. -->
+      <video id="v-hook" class="clip shot" src="assets/bats.mp4" playsinline data-has-audio="true" data-volume="0.9"
+        data-start="0" data-duration="2" data-media-start="27.25" data-track-index="0"></video>
+      <video id="v-bats" class="clip shot" src="assets/bats.mp4" playsinline data-has-audio="true" data-volume="0.9"
+        data-start="2" data-duration="2.3" data-media-start="30" data-track-index="0"></video>
+      <video id="v-breaker" class="clip shot" src="assets/breaker.mp4" playsinline data-has-audio="true" data-volume="0.8"
+        data-start="4.3" data-duration="2.3" data-media-start="0.5" data-track-index="0"></video>
+      <video id="v-vent" class="clip shot" src="assets/vent.mp4" playsinline data-has-audio="true" data-volume="0.8"
+        data-start="6.6" data-duration="2.3" data-media-start="0.3" data-track-index="0"></video>
+      <video id="v-deck" class="clip shot" src="assets/deck.mp4" playsinline data-has-audio="true" data-volume="0.8"
+        data-start="8.9" data-duration="2.3" data-media-start="6.5" data-track-index="0"></video>
+      <video id="v-toss" class="clip shot" src="assets/toss.mp4" muted playsinline
+        data-start="11.2" data-duration="3.08" data-media-start="0" data-playback-rate="0.5" data-track-index="0"></video>
+
+      <div id="title" class="clip serif" data-start="0" data-duration="11.2" data-track-index="1">
+        <span class="in">Things that weren’t on the estimate:</span>
+      </div>
+
+      <div id="row1" class="clip row" data-start="2.1" data-duration="9.1" data-track-index="2" style="top: 480px">
+        <div class="box"><svg viewBox="0 0 74 74"><path pathLength="100" d="M12 40 L30 58 L66 10" /></svg></div><span>bats</span>
+      </div>
+      <div id="row2" class="clip row" data-start="4.4" data-duration="6.8" data-track-index="3" style="top: 580px">
+        <div class="box"><svg viewBox="0 0 74 74"><path pathLength="100" d="M12 40 L30 58 L66 10" /></svg></div><span>a breaker panel with no labels</span>
+      </div>
+      <div id="row3" class="clip row" data-start="6.7" data-duration="4.5" data-track-index="4" style="top: 680px">
+        <div class="box"><svg viewBox="0 0 74 74"><path pathLength="100" d="M12 40 L30 58 L66 10" /></svg></div><span>a vent cover that fights back</span>
+      </div>
+      <div id="row4" class="clip row" data-start="9" data-duration="2.2" data-track-index="5" style="top: 780px">
+        <div class="box"><svg viewBox="0 0 74 74"><path pathLength="100" d="M12 40 L30 58 L66 10" /></svg></div><span>“just one more board”</span>
+      </div>
+
+      <div id="closer" class="clip serif" data-start="11.6" data-duration="2.68" data-track-index="6">Every. Single. Job.</div>
+      <div id="ask" class="clip" data-start="12.3" data-duration="1.98" data-track-index="7">what wasn’t on yours?</div>
+
+      <!-- Sound: a whoosh on every cut, a pop as each box gets checked, a low hit on the ending. -->
+      <audio id="sfx-w1" src="assets/sfx/whoosh-short.mp3" data-start="1.85" data-volume="0.8" data-track-index="8"></audio>
+      <audio id="sfx-w2" src="assets/sfx/whoosh-short.mp3" data-start="4.15" data-volume="0.8" data-track-index="9"></audio>
+      <audio id="sfx-w3" src="assets/sfx/whoosh-short.mp3" data-start="6.45" data-volume="0.8" data-track-index="10"></audio>
+      <audio id="sfx-w4" src="assets/sfx/whoosh-short.mp3" data-start="8.75" data-volume="0.8" data-track-index="11"></audio>
+      <audio id="sfx-w5" src="assets/sfx/whoosh-short.mp3" data-start="11.05" data-volume="0.8" data-track-index="12"></audio>
+      <audio id="sfx-p1" src="assets/sfx/pop.mp3" data-start="2.35" data-volume="0.7" data-track-index="13"></audio>
+      <audio id="sfx-p2" src="assets/sfx/pop.mp3" data-start="4.65" data-volume="0.7" data-track-index="14"></audio>
+      <audio id="sfx-p3" src="assets/sfx/pop.mp3" data-start="6.95" data-volume="0.7" data-track-index="15"></audio>
+      <audio id="sfx-p4" src="assets/sfx/pop.mp3" data-start="9.25" data-volume="0.7" data-track-index="16"></audio>
+      <audio id="sfx-end" src="assets/sfx/impact-bass-2.mp3" data-start="11.6" data-volume="0.9" data-track-index="17"></audio>
+    </div>
+    <script>
+      const tl = gsap.timeline({ paused: true });
+
+      // Hook: slow push-in on the swing, title settles in.
+      tl.fromTo("#v-hook", { scale: 1.15 }, { scale: 1, duration: 2, ease: "power2.out" }, 0);
+      tl.fromTo("#title .in", { scale: 1.12, opacity: 0 }, { scale: 1, opacity: 1, duration: 0.35, ease: "power3.out" }, 0.05);
+
+      // Zoom-through cuts: the outgoing shot rushes in, the next one lands from zoomed-in.
+      const cuts = [["#v-hook", "#v-bats", 2], ["#v-bats", "#v-breaker", 4.3], ["#v-breaker", "#v-vent", 6.6],
+                    ["#v-vent", "#v-deck", 8.9], ["#v-deck", "#v-toss", 11.2]];
+      for (const [out, inn, t] of cuts) {
+        tl.fromTo(out, { scale: 1 }, { scale: 1.4, duration: 0.18, ease: "power2.in" }, t - 0.18);
+        tl.fromTo(inn, { scale: 1.4 }, { scale: 1, duration: 0.24, ease: "power3.out" }, t);
+      }
+
+      // Checklist rows slide in, then the check draws itself (with the pop).
+      [["#row1", 2.1], ["#row2", 4.4], ["#row3", 6.7], ["#row4", 9]].forEach(([id, t]) => {
+        tl.fromTo(`${id} .box`, { scale: 0.6, opacity: 0 }, { scale: 1, opacity: 1, duration: 0.18, ease: "back.out(2)" }, t);
+        tl.fromTo(`${id} span`, { x: -30, opacity: 0 }, { x: 0, opacity: 1, duration: 0.22, ease: "power3.out" }, t + 0.04);
+        tl.fromTo(`${id} path`, { strokeDashoffset: 100 }, { strokeDashoffset: 0, duration: 0.22, ease: "power2.out" }, t + 0.25);
+      });
+
+      // Ending: the line drops in on the slow-motion toss, then the comment prompt.
+      tl.fromTo("#v-toss", { scale: 1.4 }, { scale: 1.08, duration: 3.08, ease: "power2.out" }, 11.2);
+      tl.fromTo("#closer", { y: -40, opacity: 0 }, { y: 0, opacity: 1, duration: 0.2, ease: "power4.in" }, 11.6);
+      tl.fromTo("#ask", { y: 20, opacity: 0 }, { y: 0, opacity: 1, duration: 0.25, ease: "power2.out" }, 12.3);
+
+      window.__timelines["main"] = tl;
+      tl.seek(0);
+    </script>
+  </body>
+</html>
