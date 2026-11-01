@@ -10,16 +10,27 @@ Voice: funny, self-aware, down to earth. Never salesy or corporate.
 - Vertical 1080x1920. 6-15 seconds, cut so it loops.
 - No @handle or Instagram logo in the video. Instagram adds its own.
 
-## Text on screen (the owner's two chosen caption looks; use only these)
-1. **Clean sans (default)**: `fonts/InterDisplay-SemiBold.ttf`, weight 600, lowercase as spoken,
-   letter-spacing -0.045em, white, ~64px, soft shadow `0 2px 8px rgba(0,0,0,.45)`, no box.
-   Centered in the lower-middle of the safe band (~1150-1300px from the top). A few words at a time.
-   Reference: talking-head reel, "sitting on your".
-2. **Serif (emphasis / title moments)**: `fonts/CrimsonPro-SemiBold.ttf`, weight 600, sentence case,
-   white with a tight dark halo `0 0 2px #000, 0 0 6px rgba(0,0,0,.8), 0 2px 8px rgba(0,0,0,.5)`,
-   ~84px, set a little narrow (`transform: scaleX(.92)`). Sits over the chest/middle, left or centered.
-   Reference: "Claude video".
-Both are free, close matches to the fonts in the reference reels (the originals are app fonts).
+## Text on screen: ONLY these fonts (owner's list, `examples/fonts-reference.mov`)
+Files in `fonts/viral/`. Pick by video type; never mix more than two in one video.
+
+| Video type | Fonts (free files we have in **bold**) |
+|---|---|
+| Hooks & titles | **Anton**, **Bebas Neue**, Impact, Balboa, Vanguard |
+| Talking head | **Anton**, Switzer, Tempting, **Shadows Into Light** |
+| Daily vlogs | **Montserrat**, **Poppins**, Clash Display, Tahoma |
+| Storytelling | **Playfair Display**, **Inter**, Coolvetica |
+| Educational | Helvetica, IvyPresto, Sequel |
+| Cinematic | **Pinyon Script**, **Archivo**, Futura (use **Jost**), Trajan (use **Cinzel**) |
+
+NEVER: Courier, Arial, Lucida, Agency FB. Old fonts (TikTok Sans, Inter Display, Crimson Pro,
+Montserrat ExtraBold) are retired for captions.
+
+Default for this page (construction humor):
+- Hook / title / punchline: **Anton**, ALL CAPS, white, 80-96px, tight shadow, upper band (~230-420px).
+- Captions / lists / prompts: **Montserrat Bold**, sentence case, white, 54-60px, soft shadow.
+- Emotional or story reels: **Playfair Display** title + **Inter** captions.
+Free but downloaded on the Mac only (blocked here): Clash Display, Switzer (fontshare.com), Coolvetica.
+Paid/system: Helvetica, IvyPresto, Sequel, Tempting, Futura, Trajan, Balboa, Vanguard, Impact, Tahoma.
 - Title box (hook-stacking format): white rounded box, black bold text, upper third.
 - Brand graphics only (covers, merch, signs): `Yellowtail.ttf` script and `ArchivoBlack.ttf` caps.
 - Safe zone: nothing in the bottom 25% or along the right edge (Instagram's buttons).

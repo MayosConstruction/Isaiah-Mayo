@@ -5,28 +5,28 @@
     <meta name="viewport" content="width=1080, height=1920" />
     <script src="assets/gsap.min.js"></script>
     <style>
-      @font-face { font-family: "Inter Display"; src: url("assets/fonts/InterDisplay-SemiBold.ttf"); font-weight: 600; }
-      @font-face { font-family: "Crimson Pro"; src: url("assets/fonts/CrimsonPro-SemiBold.ttf"); font-weight: 600; }
+      @font-face { font-family: "Montserrat"; src: url("assets/fonts/Montserrat-Bold.ttf"); font-weight: 700; }
+      @font-face { font-family: "Anton"; src: url("assets/fonts/Anton-Regular.ttf"); font-weight: 400; }
       :root { --red: #c4553b; }
       * { margin: 0; padding: 0; box-sizing: border-box; }
       html, body { width: 1080px; height: 1920px; overflow: hidden; background: #000; }
       #root { position: relative; width: 1080px; height: 1920px; overflow: hidden; }
       .shot { position: absolute; inset: 0; width: 1080px; height: 1920px; object-fit: cover; }
 
-      /* Serif look: title and the closing line. */
+      /* Hooks and titles: Anton, all caps. */
       .serif {
         position: absolute; left: 70px; right: 70px; text-align: center; z-index: 10; color: #fff;
-        font: 600 84px/1.05 "Crimson Pro", serif;
-        text-shadow: 0 0 2px #000, 0 0 6px rgba(0, 0, 0, 0.8), 0 2px 8px rgba(0, 0, 0, 0.5);
+        font: 400 92px/1.02 "Anton", sans-serif; text-transform: uppercase; letter-spacing: 0.005em;
+        text-shadow: 0 2px 4px rgba(0, 0, 0, 0.7), 0 0 18px rgba(0, 0, 0, 0.45);
       }
-      #title { top: 230px; text-wrap: balance; }
+      #title { top: 220px; text-wrap: balance; }
       #title .in { display: inline-block; transform-origin: 50% 50%; }
-      #closer { top: 760px; font-size: 104px; }
+      #closer { top: 760px; font-size: 120px; }
 
-      /* Clean sans look: the checklist rows and the comment prompt. */
+      /* Captions: Montserrat Bold for the checklist rows and the comment prompt. */
       .row {
         position: absolute; left: 120px; right: 80px; height: 80px; z-index: 11; display: flex; align-items: center; gap: 26px;
-        color: #fff; font: 600 58px/1 "Inter Display", sans-serif; letter-spacing: -0.045em;
+        color: #fff; font: 700 52px/1 "Montserrat", sans-serif; letter-spacing: -0.01em;
         text-shadow: 0 2px 8px rgba(0, 0, 0, 0.55), 0 0 18px rgba(0, 0, 0, 0.35);
       }
       .row .box {
@@ -38,7 +38,7 @@
         stroke-dasharray: 100; stroke-dashoffset: 100; filter: drop-shadow(0 2px 3px rgba(0, 0, 0, 0.5)); }
       #ask {
         position: absolute; top: 1180px; left: 80px; right: 80px; text-align: center; z-index: 11; color: #fff;
-        font: 600 60px/1.15 "Inter Display", sans-serif; letter-spacing: -0.045em;
+        font: 700 56px/1.15 "Montserrat", sans-serif; letter-spacing: -0.01em;
         text-shadow: 0 2px 8px rgba(0, 0, 0, 0.55), 0 0 18px rgba(0, 0, 0, 0.35);
       }
     </style>
@@ -63,16 +63,16 @@
         <span class="in">Things that weren’t on the estimate:</span>
       </div>
 
-      <div id="row1" class="clip row" data-start="2.1" data-duration="9.1" data-track-index="2" style="top: 480px">
+      <div id="row1" class="clip row" data-start="2.1" data-duration="9.1" data-track-index="2" style="top: 500px">
         <div class="box"><svg viewBox="0 0 74 74"><path pathLength="100" d="M12 40 L30 58 L66 10" /></svg></div><span>bats</span>
       </div>
-      <div id="row2" class="clip row" data-start="4.4" data-duration="6.8" data-track-index="3" style="top: 580px">
-        <div class="box"><svg viewBox="0 0 74 74"><path pathLength="100" d="M12 40 L30 58 L66 10" /></svg></div><span>a breaker panel with no labels</span>
+      <div id="row2" class="clip row" data-start="4.4" data-duration="6.8" data-track-index="3" style="top: 598px">
+        <div class="box"><svg viewBox="0 0 74 74"><path pathLength="100" d="M12 40 L30 58 L66 10" /></svg></div><span>an unlabeled breaker panel</span>
       </div>
-      <div id="row3" class="clip row" data-start="6.7" data-duration="4.5" data-track-index="4" style="top: 680px">
+      <div id="row3" class="clip row" data-start="6.7" data-duration="4.5" data-track-index="4" style="top: 696px">
         <div class="box"><svg viewBox="0 0 74 74"><path pathLength="100" d="M12 40 L30 58 L66 10" /></svg></div><span>a vent cover that fights back</span>
       </div>
-      <div id="row4" class="clip row" data-start="9" data-duration="2.2" data-track-index="5" style="top: 780px">
+      <div id="row4" class="clip row" data-start="9" data-duration="2.2" data-track-index="5" style="top: 794px">
         <div class="box"><svg viewBox="0 0 74 74"><path pathLength="100" d="M12 40 L30 58 L66 10" /></svg></div><span>“just one more board”</span>
       </div>
 
