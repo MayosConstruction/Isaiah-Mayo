@@ -9,3 +9,5 @@ Projects/*/.hyperframes/
 Projects/*/node_modules/
 Setup/headroom-env/
 Setup/whisperx-install.log
+Projects/*/assets/*.mp4
+Projects/*/assets/*.mov

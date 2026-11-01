@@ -1,0 +1,68 @@
+<!doctype html>
+<html lang="en" data-resolution="portrait">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=1080, height=1920" />
+    <script src="assets/gsap.min.js"></script>
+    <style>
+      @font-face { font-family: "TikTok Sans"; src: url("assets/fonts/TikTokSans.ttf"); font-weight: 300 900; }
+      * { margin: 0; padding: 0; box-sizing: border-box; }
+      html, body { width: 1080px; height: 1920px; overflow: hidden; background: #000; }
+      #root { position: relative; width: 1080px; height: 1920px; overflow: hidden; }
+      .shot { position: absolute; inset: 0; width: 1080px; height: 1920px; object-fit: cover; }
+
+      /* Hook: white title box, on for the whole video. */
+      #title { position: absolute; top: 250px; left: 0; right: 0; text-align: center; z-index: 10; }
+      #title span {
+        display: inline; background: #fff; color: #000; font: 700 58px/1.42 "TikTok Sans", sans-serif;
+        padding: 6px 20px; border-radius: 14px; -webkit-box-decoration-break: clone; box-decoration-break: clone;
+      }
+      /* Story captions: Instagram-style white text under the title. */
+      .cap {
+        position: absolute; top: 470px; left: 110px; right: 110px; text-align: center; z-index: 11; color: #fff;
+        font: 600 54px/1.25 "TikTok Sans", sans-serif;
+        text-shadow: 0 1px 3px rgba(0, 0, 0, 0.85), 0 0 10px rgba(0, 0, 0, 0.6), 0 0 24px rgba(0, 0, 0, 0.4);
+      }
+    </style>
+  </head>
+  <body>
+    <div id="root" data-composition-id="main" data-start="0" data-duration="17" data-width="1080" data-height="1920">
+      <!-- Footage, real sound kept. The biggest swing first, then the story in order. -->
+      <video id="flash" class="clip shot" src="assets/bats.mp4" playsinline data-has-audio="true" data-volume="1"
+        data-start="0" data-duration="1" data-media-start="27.25" data-track-index="0"></video>
+      <video id="garage" class="clip shot" src="assets/bats.mp4" playsinline data-has-audio="true" data-volume="1"
+        data-start="1" data-duration="3" data-media-start="0" data-track-index="0"></video>
+      <video id="outside" class="clip shot" src="assets/bats.mp4" playsinline data-has-audio="true" data-volume="1"
+        data-start="4" data-duration="3" data-media-start="12.5" data-track-index="0"></video>
+      <video id="swinging" class="clip shot" src="assets/bats.mp4" playsinline data-has-audio="true" data-volume="1"
+        data-start="7" data-duration="3" data-media-start="30" data-track-index="0"></video>
+      <video id="truck" class="clip shot" src="assets/bats.mp4" playsinline data-has-audio="true" data-volume="1"
+        data-start="10" data-duration="3" data-media-start="40" data-track-index="0"></video>
+      <video id="ending" class="clip shot" src="assets/bats.mp4" playsinline data-has-audio="true" data-volume="1"
+        data-start="13" data-duration="4" data-media-start="43.5" data-track-index="0"></video>
+
+      <div id="title" class="clip" data-start="0" data-duration="17" data-track-index="1">
+        <span>Contractor vs. a house full of bats</span>
+      </div>
+
+      <div id="cap1" class="clip cap" data-start="1" data-duration="3" data-track-index="2">Customer: “there might be a bat in the garage”</div>
+      <div id="cap2" class="clip cap" data-start="4" data-duration="3" data-track-index="2">There was not “a bat.”</div>
+      <div id="cap3" class="clip cap" data-start="7" data-duration="3" data-track-index="2">The estimate did not include bats.</div>
+      <div id="cap4" class="clip cap" data-start="10" data-duration="3" data-track-index="2">Supervisor’s view (from the truck)</div>
+      <div id="cap5" class="clip cap" data-start="13" data-duration="4" data-track-index="2">Now offering bat removal</div>
+      <div id="cap6" class="clip cap" data-start="14.4" data-duration="2.6" data-track-index="3" style="top: 620px">(we are not)</div>
+
+      <!-- One quick whoosh as the flash-forward cuts back to the start. -->
+      <audio id="sfx-cut" src="assets/sfx/whoosh-short.mp3" data-start="0.9" data-volume="0.7" data-track-index="4"></audio>
+    </div>
+    <script>
+      const tl = gsap.timeline({ paused: true });
+      // Slow push-in on the big swings so they feel bigger.
+      tl.fromTo("#swinging", { scale: 1 }, { scale: 1.1, duration: 3, ease: "none" }, 7);
+      tl.fromTo("#flash", { scale: 1.12 }, { scale: 1, duration: 1, ease: "power2.out" }, 0);
+      tl.fromTo("#cap6", { opacity: 0, y: 16 }, { opacity: 1, y: 0, duration: 0.18, ease: "power2.out" }, 14.4);
+      window.__timelines["main"] = tl;
+      tl.seek(0);
+    </script>
+  </body>
+</html>
