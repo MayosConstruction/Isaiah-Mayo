@@ -1,0 +1,44 @@
+<!doctype html>
+<html lang="en" data-resolution="portrait">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=1080, height=1920" />
+    <script src="assets/gsap.min.js"></script>
+    <style>
+      @font-face { font-family: "Montserrat"; src: url("assets/fonts/Montserrat-Bold.ttf"); font-weight: 700; }
+      * { margin: 0; padding: 0; box-sizing: border-box; }
+      html, body { width: 1080px; height: 1920px; overflow: hidden; background: #000; }
+      #root { position: relative; width: 1080px; height: 1920px; overflow: hidden; }
+      .shot { position: absolute; inset: 0; width: 1080px; height: 1920px; object-fit: cover; }
+      /* One native-looking caption: Montserrat Bold, white, soft shadow, no box. */
+      .cap {
+        position: absolute; left: 90px; right: 90px; text-align: center; z-index: 10; color: #fff;
+        font: 700 54px/1.22 "Montserrat", sans-serif; letter-spacing: -0.01em; text-wrap: balance;
+        text-shadow: 0 1px 3px rgba(0, 0, 0, 0.9), 0 0 10px rgba(0, 0, 0, 0.65), 0 0 26px rgba(0, 0, 0, 0.45);
+      }
+      #cap { top: 250px; }
+      #replay { top: 1260px; font-size: 50px; }
+    </style>
+  </head>
+  <body>
+    <div id="root" data-composition-id="main" data-start="0" data-duration="6.35" data-width="1080" data-height="1920">
+      <!-- Raw: mid-fight swings straight into the flinch and the camera jerking away. Real audio. -->
+      <video id="live" class="clip shot" src="assets/bats.mp4" playsinline data-has-audio="true" data-volume="1"
+        data-start="0" data-duration="4.6" data-media-start="32.4" data-track-index="0"></video>
+      <!-- Instant replay of the flinch at 0.4x, slowly pushing in on him. -->
+      <video id="replay-v" class="clip shot" src="assets/bats.mp4" playsinline data-has-audio="true" data-volume="0.6"
+        data-start="4.6" data-duration="1.75" data-media-start="36.05" data-playback-rate="0.4" data-track-index="0"></video>
+
+      <div id="cap" class="clip cap" data-start="0" data-duration="4.6" data-track-index="1">
+        the only one brave enough to get out of the truck for the bats
+      </div>
+      <div id="replay" class="clip cap" data-start="4.6" data-duration="1.75" data-track-index="2">again. slower.</div>
+    </div>
+    <script>
+      const tl = gsap.timeline({ paused: true });
+      tl.fromTo("#replay-v", { scale: 1.15, transformOrigin: "52% 42%" }, { scale: 1.4, duration: 1.75, ease: "none" }, 4.6);
+      window.__timelines["main"] = tl;
+      tl.seek(0);
+    </script>
+  </body>
+</html>
