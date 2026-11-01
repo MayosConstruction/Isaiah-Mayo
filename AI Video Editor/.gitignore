@@ -7,3 +7,5 @@ Projects/*/exports/
 Projects/*/renders/
 Projects/*/.hyperframes/
 Projects/*/node_modules/
+Setup/headroom-env/
+Setup/whisperx-install.log
