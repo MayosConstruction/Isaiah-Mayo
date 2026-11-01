@@ -21,6 +21,8 @@ Claude Code reads CLAUDE.md, which points here).
   offline-ready in `Setup/blocks/caption-highlight.html`: copy it to `compositions/components/` in a project
   and copy `gsap.min.js` and `Signature Style/fonts/Montserrat-ExtraBold.ttf` into that project's `assets/`.
   Its words and timings are the `WORDS` list at the top of its script.
+- Effects: 17 motion effects (orbit, zoom-through, vertigo, paper cut, doodle boil, checklist,
+  phone mockup and more) installed in `Setup/effects-library/`; the table is in its `EFFECTS.md`.
 - Sound effects: `Setup/sound-effects/` (Pixabay license, credits in CREDITS.md).
 - Transcripts: WhisperX in its own environment, `Setup/whisper-env/bin/whisperx`, CPU mode:
   `--device cpu --compute_type int8`.

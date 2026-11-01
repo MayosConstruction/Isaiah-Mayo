@@ -1,0 +1,99 @@
+{
+  "$schema": "https://hyperframes.heygen.com/schema/hyperframes.json",
+  "registry": "https://raw.githubusercontent.com/heygen-com/hyperframes/main/registry",
+  "paths": {
+    "blocks": "compositions",
+    "components": "compositions/components",
+    "assets": "assets"
+  },
+  "media": {
+    "autoProxy": true
+  },
+  "registryItems": [
+    {
+      "name": "radial-surround",
+      "type": "hyperframes:component",
+      "target": "compositions/components/radial-surround.html"
+    },
+    {
+      "name": "mk-clone-wall-transition",
+      "type": "hyperframes:block",
+      "target": "compositions/mk-clone-wall-transition.html"
+    },
+    {
+      "name": "app-showcase",
+      "type": "hyperframes:block",
+      "target": "compositions/app-showcase.html"
+    },
+    {
+      "name": "freeze-frame-dressing",
+      "type": "hyperframes:block",
+      "target": "compositions/freeze-frame-dressing.html"
+    },
+    {
+      "name": "cinematic-zoom",
+      "type": "hyperframes:block",
+      "target": "compositions/cinematic-zoom.html"
+    },
+    {
+      "name": "vfx-iphone-device",
+      "type": "hyperframes:block",
+      "target": "compositions/vfx-iphone-device.html"
+    },
+    {
+      "name": "marker-checklist-card",
+      "type": "hyperframes:component",
+      "target": "compositions/components/marker-checklist-card.html"
+    },
+    {
+      "name": "canopy-part-title",
+      "type": "hyperframes:block",
+      "target": "compositions/canopy-part-title/canopy-part-title.html"
+    },
+    {
+      "name": "zoom-through-transition",
+      "type": "hyperframes:component",
+      "target": "compositions/components/zoom-through-transition.html"
+    },
+    {
+      "name": "data-chart",
+      "type": "hyperframes:block",
+      "target": "compositions/data-chart.html"
+    },
+    {
+      "name": "parallax-unzoom",
+      "type": "hyperframes:component",
+      "target": "compositions/components/parallax-unzoom.html"
+    },
+    {
+      "name": "paper-collage-reveal",
+      "type": "hyperframes:component",
+      "target": "compositions/components/paper-collage-reveal.html"
+    },
+    {
+      "name": "hw-boil",
+      "type": "hyperframes:component",
+      "target": "compositions/components/hw-boil.html"
+    },
+    {
+      "name": "hw-frame",
+      "type": "hyperframes:block",
+      "target": "compositions/hw-frame.html"
+    },
+    {
+      "name": "camera-dolly-zoom",
+      "type": "hyperframes:block",
+      "target": "compositions/camera-dolly-zoom.html"
+    },
+    {
+      "name": "transitions-cover",
+      "type": "hyperframes:block",
+      "target": "compositions/transitions-cover.html"
+    },
+    {
+      "name": "glass-hero",
+      "type": "hyperframes:block",
+      "target": "compositions/glass-hero.html"
+    }
+  ]
+}
