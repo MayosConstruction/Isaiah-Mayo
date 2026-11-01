@@ -1,0 +1,9 @@
+Setup/node_modules/
+Setup/whisper-env/
+Setup/tools-env/
+Raw/*
+!Raw/.gitkeep
+Projects/*/exports/
+Projects/*/renders/
+Projects/*/.hyperframes/
+Projects/*/node_modules/
