@@ -1,0 +1,63 @@
+<!doctype html>
+<html lang="en" data-resolution="portrait">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=1080, height=1920" />
+    <script src="assets/gsap.min.js"></script>
+    <style>
+      @font-face { font-family: "Bebas"; src: url("assets/fonts/BebasNeue.ttf"); }
+      @font-face { font-family: "Montserrat"; src: url("assets/fonts/Montserrat-ExtraBold.ttf"); font-weight: 800; }
+      * { margin: 0; padding: 0; box-sizing: border-box; }
+      html, body { width: 1080px; height: 1920px; overflow: hidden; background: #000; }
+      #root { position: relative; width: 1080px; height: 1920px; overflow: hidden; }
+      .shot { position: absolute; inset: 0; width: 1080px; height: 1920px; object-fit: cover; }
+      /* Hook: Bebas Neue, black on white boxes, one word in Mayo's red. */
+      .hook { position: absolute; top: 250px; left: 60px; right: 60px; text-align: center; z-index: 20; font: 400 122px/1.22 "Bebas", sans-serif; }
+      .hook span.b { background: #fff; color: #111; padding: 4px 26px 0; border-radius: 16px; -webkit-box-decoration-break: clone; box-decoration-break: clone; }
+      .red { color: #c4553b; }
+      .label { position: absolute; top: 1240px; z-index: 18; font: 400 70px/1 "Bebas", sans-serif; color: #fff; background: rgba(0,0,0,.6); padding: 12px 26px 6px; border-radius: 12px; letter-spacing: .04em; }
+      .line { position: absolute; top: 0; bottom: 0; left: 0; width: 10px; margin-left: -5px; background: #fff; z-index: 12; box-shadow: 0 0 24px rgba(0,0,0,.5); }
+      .sub { position: absolute; top: 300px; left: 70px; right: 70px; text-align: center; z-index: 20; color: #fff; font: 800 72px/1.2 "Montserrat", sans-serif; text-transform: uppercase;
+        -webkit-text-stroke: 8px #000; paint-order: stroke fill; text-shadow: 0 6px 16px rgba(0,0,0,.5); }
+      .sub .y { color: #ffd23f; }
+    </style>
+  </head>
+  <body>
+    <div id="root" data-composition-id="main" data-start="0" data-duration="11" data-width="1080" data-height="1920">
+      <img id="before" class="clip shot" src="assets/before.jpg" data-start="0" data-duration="3.6" data-track-index="0" />
+      <!-- After photo is revealed by a slider wipe over the before photo. -->
+      <img id="after" class="clip shot" src="assets/after.jpg" data-start="2.2" data-duration="4.4" data-track-index="1" />
+      <div id="wipe" class="clip line" data-start="2.2" data-duration="1.25" data-track-index="2"></div>
+      <img id="close" class="clip shot" src="assets/closeup.jpg" data-start="6.6" data-duration="2.2" data-track-index="0" />
+      <img id="after2" class="clip shot" src="assets/after.jpg" data-start="8.8" data-duration="2.2" data-track-index="0" />
+
+      <div id="hook" class="clip hook" data-start="0" data-duration="3.6" data-track-index="5"><span class="b">Imagine never <span class="red">staining</span><br>your deck again</span></div>
+      <div id="lb" class="clip label" data-start="0" data-duration="2.3" data-track-index="6" style="left:60px">BEFORE</div>
+      <div id="la" class="clip label" data-start="3.4" data-duration="3.2" data-track-index="6" style="right:60px">AFTER</div>
+      <div id="s1" class="clip sub" data-start="3.6" data-duration="3.0" data-track-index="5">Same lake house.<br><span class="y">New composite deck.</span></div>
+      <div id="s2" class="clip sub" data-start="6.6" data-duration="2.2" data-track-index="5">No stain. No sanding.<br><span class="y">No splinters.</span></div>
+      <div id="s3" class="clip sub" data-start="8.8" data-duration="2.2" data-track-index="5">Just coffee<br><span class="y">and the lake ☕</span></div>
+
+      <audio id="a1" class="clip" src="assets/whoosh-cinematic.mp3" data-start="2.1" data-duration="1.6" data-volume="0.7" data-track-index="8"></audio>
+      <audio id="a2" class="clip" src="assets/sparkle.mp3" data-start="3.4" data-duration="1.2" data-volume="0.45" data-track-index="9"></audio>
+      <audio id="a3" class="clip" src="assets/whoosh-short.mp3" data-start="6.5" data-duration="0.8" data-volume="0.5" data-track-index="8"></audio>
+      <audio id="a4" class="clip" src="assets/whoosh-short.mp3" data-start="8.7" data-duration="0.8" data-volume="0.5" data-track-index="8"></audio>
+    </div>
+    <script>
+      window.__timelines = window.__timelines || {};
+      const tl = gsap.timeline({ paused: true });
+      tl.fromTo("#before", { scale: 1.0 }, { scale: 1.08, duration: 3.6, ease: "none" }, 0);
+      // Slider wipe: after photo uncovered left to right, white line rides the edge.
+      tl.fromTo("#after", { clipPath: "inset(0 100% 0 0)" }, { clipPath: "inset(0 0% 0 0)", duration: 1.2, ease: "power2.inOut" }, 2.2);
+      tl.fromTo("#wipe", { x: 0 }, { x: 1080, duration: 1.2, ease: "power2.inOut" }, 2.2);
+      tl.fromTo("#after", { scale: 1.08 }, { scale: 1.0, duration: 4.4, ease: "power1.out" }, 2.2);
+      tl.fromTo("#close", { scale: 1.15 }, { scale: 1.0, duration: 2.2, ease: "power2.out" }, 6.6);
+      tl.fromTo("#after2", { scale: 1.0 }, { scale: 1.1, duration: 2.2, ease: "none" }, 8.8);
+      [["#s1", 3.6], ["#s2", 6.6], ["#s3", 8.8], ["#la", 3.4]].forEach(([id, t]) => {
+        tl.fromTo(id, { scale: 0.7, opacity: 0 }, { scale: 1, opacity: 1, duration: 0.2, ease: "back.out(2)" }, t);
+      });
+      window.__timelines["main"] = tl;
+      tl.seek(0);
+    </script>
+  </body>
+</html>

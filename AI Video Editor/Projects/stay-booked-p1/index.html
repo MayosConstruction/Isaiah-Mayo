@@ -1,0 +1,92 @@
+<!doctype html>
+<html lang="en" data-resolution="portrait">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=1080, height=1920" />
+    <script src="assets/gsap.min.js"></script>
+    <style>
+      @font-face { font-family: "Montserrat"; src: url("assets/fonts/Montserrat-ExtraBold.ttf"); font-weight: 800; }
+      @font-face { font-family: "Bebas"; src: url("assets/fonts/BebasNeue.ttf"); }
+      * { margin: 0; padding: 0; box-sizing: border-box; }
+      html, body { width: 1080px; height: 1920px; overflow: hidden; background: #000; }
+      #root { position: relative; width: 1080px; height: 1920px; overflow: hidden; }
+      .shot { position: absolute; inset: 0; width: 1080px; height: 1920px; object-fit: cover; }
+      /* Hook: Bebas Neue, black on white boxes, only BOOKED in Mayo's red. */
+      .hook { position: absolute; top: 250px; left: 60px; right: 60px; text-align: center; z-index: 20; font: 400 118px/1.22 "Bebas", sans-serif; }
+      .hook span.b { background: #fff; color: #111; padding: 4px 26px 0; border-radius: 16px; -webkit-box-decoration-break: clone; box-decoration-break: clone; }
+      .hook .red { color: #c4553b; }
+      /* Captions: Montserrat ExtraBold, white, active word gold. */
+      .cap { position: absolute; top: 1330px; left: 70px; right: 70px; text-align: center; z-index: 15; color: #fff;
+        font: 800 76px/1.15 "Montserrat", sans-serif; text-transform: uppercase; text-wrap: balance;
+        -webkit-text-stroke: 8px #000; paint-order: stroke fill; text-shadow: 0 6px 16px rgba(0,0,0,.5); }
+      .cap span { display: inline-block; margin: 0 0.13em; }
+      .tag { position: absolute; top: 300px; left: 0; right: 0; text-align: center; z-index: 20; }
+      .tag span { background: #fff; color: #111; font: 400 92px/1.2 "Bebas", sans-serif; padding: 6px 30px 0; border-radius: 16px; }
+      .tag .red { color: #c4553b; }
+      .tag span span { background: none; padding: 0; border-radius: 0; }
+    </style>
+  </head>
+  <body>
+    <div id="root" data-composition-id="main" data-start="0" data-duration="21.09" data-width="1080" data-height="1920">
+      <video id="talk" class="clip shot" src="assets/cut.mp4" data-has-audio="true" playsinline data-start="0" data-duration="21.09" data-media-start="0" data-track-index="0"></video>
+      <!-- B-roll while he talks about posting every job and the finished room. -->
+      <img id="b1" class="clip shot" src="assets/deck-after.jpg" data-start="14.59" data-duration="2.33" data-track-index="1" />
+      <video id="b2" class="clip shot" src="assets/floor.mp4" muted playsinline data-start="16.92" data-duration="2.5" data-media-start="0" data-playback-rate="0.6" data-track-index="1"></video>
+
+      <div id="hook" class="clip hook" data-start="0" data-duration="4.1" data-track-index="4"><span class="b">How I'd stay <span class="red">booked</span><br>as a contractor</span></div>
+      <div id="t3" class="clip tag" data-start="8.98" data-duration="3.4" data-track-index="4"><span><span class="red">3</span> fixes</span></div>
+      <div id="t1" class="clip tag" data-start="12.46" data-duration="2.1" data-track-index="4"><span>#1: Google profile</span></div>
+      <div id="t9" class="clip tag" data-start="19.46" data-duration="1.63" data-track-index="4"><span>Fix #2 + #3 in <span class="red">part 2</span></span></div>
+      <div id="g0" class="clip cap" data-start="0.060" data-duration="0.465" data-track-index="5"><span id="w0">If</span> <span id="w1">I</span> <span id="w2">lost</span></div>
+      <div id="g1" class="clip cap" data-start="0.525" data-duration="1.163" data-track-index="5"><span id="w3">every</span> <span id="w4">customer</span> <span id="w5">tomorrow,</span></div>
+      <div id="g2" class="clip cap" data-start="1.688" data-duration="0.977" data-track-index="5"><span id="w6">here's</span> <span id="w7">exactly</span> <span id="w8">where</span></div>
+      <div id="g3" class="clip cap" data-start="2.665" data-duration="0.604" data-track-index="5"><span id="w9">my</span> <span id="w10">next</span> <span id="w11">jobs</span></div>
+      <div id="g4" class="clip cap" data-start="3.269" data-duration="0.911" data-track-index="5"><span id="w12">would</span> <span id="w13">come</span> <span id="w14">from.</span></div>
+      <div id="g5" class="clip cap" data-start="4.180" data-duration="0.887" data-track-index="5"><span id="w15">Cause</span> <span id="w16">every</span> <span id="w17">contractor</span></div>
+      <div id="g6" class="clip cap" data-start="5.067" data-duration="0.853" data-track-index="5"><span id="w18">knows</span> <span id="w19">the</span> <span id="w20">feeling.</span></div>
+      <div id="g7" class="clip cap" data-start="5.920" data-duration="0.700" data-track-index="5"><span id="w21">You</span> <span id="w22">finish</span> <span id="w23">your job</span></div>
+      <div id="g8" class="clip cap" data-start="6.620" data-duration="0.450" data-track-index="5"><span id="w24">Friday,</span></div>
+      <div id="g9" class="clip cap" data-start="7.070" data-duration="0.773" data-track-index="5"><span id="w25">and</span> <span id="w26">Monday</span> <span id="w27">there's</span></div>
+      <div id="g10" class="clip cap" data-start="7.843" data-duration="0.610" data-track-index="5"><span id="w28">nothing</span> <span id="w29">on</span> <span id="w30">the</span></div>
+      <div id="g11" class="clip cap" data-start="8.453" data-duration="0.527" data-track-index="5"><span id="w31">calendar.</span></div>
+      <div id="g12" class="clip cap" data-start="8.980" data-duration="0.900" data-track-index="5"><span id="w32">3</span> <span id="w33">fixes.</span></div>
+      <div id="g13" class="clip cap" data-start="9.880" data-duration="0.561" data-track-index="5"><span id="w34">The</span> <span id="w35">last</span> <span id="w36">one</span></div>
+      <div id="g14" class="clip cap" data-start="10.441" data-duration="0.734" data-track-index="5"><span id="w37">takes</span> <span id="w38">10</span> <span id="w39">minutes</span></div>
+      <div id="g15" class="clip cap" data-start="11.175" data-duration="0.777" data-track-index="5"><span id="w40">and</span> <span id="w41">almost</span> <span id="w42">nobody</span></div>
+      <div id="g16" class="clip cap" data-start="11.952" data-duration="0.508" data-track-index="5"><span id="w43">does</span> <span id="w44">it.</span></div>
+      <div id="g17" class="clip cap" data-start="12.460" data-duration="0.690" data-track-index="5"><span id="w45">#1:</span></div>
+      <div id="g18" class="clip cap" data-start="13.150" data-duration="0.863" data-track-index="5"><span id="w46">your</span> <span id="w47">free</span> <span id="w48">Google</span></div>
+      <div id="g19" class="clip cap" data-start="14.013" data-duration="0.577" data-track-index="5"><span id="w49">profile.</span></div>
+      <div id="g20" class="clip cap" data-start="14.590" data-duration="0.699" data-track-index="5"><span id="w50">Post</span> <span id="w51">every</span> <span id="w52">job</span></div>
+      <div id="g21" class="clip cap" data-start="15.289" data-duration="0.651" data-track-index="5"><span id="w53">with</span> <span id="w54">the</span> <span id="w55">town</span></div>
+      <div id="g22" class="clip cap" data-start="15.940" data-duration="0.606" data-track-index="5"><span id="w56">name</span> <span id="w57">and</span> <span id="w58">ask</span></div>
+      <div id="g23" class="clip cap" data-start="16.546" data-duration="0.698" data-track-index="5"><span id="w59">for</span> <span id="w60">the</span> <span id="w61">review</span></div>
+      <div id="g24" class="clip cap" data-start="17.244" data-duration="1.071" data-track-index="5"><span id="w62">while</span> <span id="w63">they're</span> <span id="w64">standing</span></div>
+      <div id="g25" class="clip cap" data-start="18.315" data-duration="0.746" data-track-index="5"><span id="w65">in</span> <span id="w66">the</span> <span id="w67">finished</span></div>
+      <div id="g26" class="clip cap" data-start="19.061" data-duration="0.399" data-track-index="5"><span id="w68">room.</span></div>
+      <div id="g27" class="clip cap" data-start="19.460" data-duration="0.658" data-track-index="5"><span id="w69">Text</span> <span id="w70">them</span> <span id="w71">the</span></div>
+      <div id="g28" class="clip cap" data-start="20.118" data-duration="0.972" data-track-index="5"><span id="w72">link</span> <span id="w73">right</span> <span id="w74">there.</span></div>
+
+      <audio id="s1" class="clip" src="assets/pop.mp3" data-start="8.98" data-duration="0.5" data-volume="0.6" data-track-index="7"></audio>
+      <audio id="s2" class="clip" src="assets/pop.mp3" data-start="12.46" data-duration="0.5" data-volume="0.6" data-track-index="7"></audio>
+      <audio id="s3" class="clip" src="assets/whoosh-short.mp3" data-start="14.45" data-duration="0.8" data-volume="0.5" data-track-index="8"></audio>
+      <audio id="s4" class="clip" src="assets/whoosh-short.mp3" data-start="16.8" data-duration="0.8" data-volume="0.5" data-track-index="8"></audio>
+      <audio id="s5" class="clip" src="assets/pop.mp3" data-start="19.46" data-duration="0.5" data-volume="0.6" data-track-index="7"></audio>
+    </div>
+    <script>
+      window.__timelines = window.__timelines || {};
+      const tl = gsap.timeline({ paused: true });
+      // Active word turns gold and pops.
+      [["#w0",0.060],["#w1",0.200],["#w2",0.293],["#w3",0.525],["#w4",0.804],["#w5",1.223],["#w6",1.688],["#w7",2.013],["#w8",2.386],["#w9",2.665],["#w10",2.804],["#w11",3.037],["#w12",3.269],["#w13",3.548],["#w14",3.781],["#w15",4.180],["#w16",4.411],["#w17",4.643],["#w18",5.067],["#w19",5.299],["#w20",5.453],["#w21",5.920],["#w22",6.085],["#w23",6.456],["#w24",6.620],["#w25",7.070],["#w26",7.233],["#w27",7.517],["#w28",7.843],["#w29",8.168],["#w30",8.290],["#w31",8.453],["#w32",8.980],["#w33",9.175],["#w34",9.880],["#w35",10.053],["#w36",10.268],["#w37",10.441],["#w38",10.700],["#w39",10.829],["#w40",11.175],["#w41",11.347],["#w42",11.649],["#w43",11.952],["#w44",12.167],["#w45",12.460],["#w46",13.150],["#w47",13.404],["#w48",13.658],["#w49",14.013],["#w50",14.590],["#w51",14.823],["#w52",15.102],["#w53",15.289],["#w54",15.521],["#w55",15.708],["#w56",15.940],["#w57",16.173],["#w58",16.360],["#w59",16.546],["#w60",16.732],["#w61",16.918],["#w62",17.244],["#w63",17.524],["#w64",17.896],["#w65",18.315],["#w66",18.455],["#w67",18.641],["#w68",19.061],["#w69",19.460],["#w70",19.713],["#w71",19.916],["#w72",20.118],["#w73",20.372],["#w74",20.675]].forEach(([id, t]) => {
+        tl.fromTo(id, { color: "#ffd23f", scale: 1.12 }, { scale: 1, duration: 0.15, ease: "power2.out" }, t);
+        tl.to(id, { color: "#ffffff", duration: 0.01 }, t + 0.28);
+      });
+      tl.fromTo("#b1", { scale: 1.0 }, { scale: 1.12, duration: 2.33, ease: "none" }, 14.59);
+      [["#t3", 8.98], ["#t1", 12.46], ["#t9", 19.46]].forEach(([id, t]) => {
+        tl.fromTo(id, { scale: 0.6, opacity: 0 }, { scale: 1, opacity: 1, duration: 0.18, ease: "back.out(2)" }, t);
+      });
+      window.__timelines["main"] = tl;
+      tl.seek(0);
+    </script>
+  </body>
+</html>
