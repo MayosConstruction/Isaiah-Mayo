@@ -1,0 +1,52 @@
+<!doctype html>
+<html lang="en" data-resolution="portrait">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=1080, height=1920" />
+    <script src="assets/gsap.min.js"></script>
+    <style>
+      @font-face { font-family: "Inter"; src: url("assets/fonts/Inter-Bold.ttf"); font-weight: 700; }
+      @font-face { font-family: "Playfair Display"; src: url("assets/fonts/PlayfairDisplay-Bold.ttf"); font-weight: 700; }
+      * { margin: 0; padding: 0; box-sizing: border-box; }
+      html, body { width: 1080px; height: 1920px; overflow: hidden; background: #000; }
+      #root { position: relative; width: 1080px; height: 1920px; overflow: hidden; }
+      .shot { position: absolute; inset: 0; width: 1080px; height: 1920px; object-fit: cover; }
+      /* Storytelling: Playfair Display for the share lines, Inter for the story. */
+      .line {
+        position: absolute; top: 430px; left: 110px; right: 110px; text-align: center; z-index: 10; color: #fff;
+        font: 700 56px/1.25 "Inter", sans-serif; letter-spacing: -0.02em; text-wrap: balance;
+        text-shadow: 0 1px 3px rgba(0, 0, 0, 0.85), 0 0 12px rgba(0, 0, 0, 0.55), 0 0 26px rgba(0, 0, 0, 0.35);
+      }
+      .serif { font: 700 74px/1.15 "Playfair Display", serif; letter-spacing: 0; }
+    </style>
+  </head>
+  <body>
+    <div id="root" data-composition-id="main" data-start="0" data-duration="18.4" data-width="1080" data-height="1920">
+      <!-- Footage only (silent). Soft music goes on in the app. -->
+      <video id="v1" class="clip shot" src="assets/drive.mp4" muted playsinline data-start="0" data-duration="3" data-media-start="1" data-track-index="0"></video>
+      <video id="v2" class="clip shot" src="assets/ladder.mp4" muted playsinline data-start="3" data-duration="2.8" data-media-start="0.8" data-track-index="0"></video>
+      <video id="v3" class="clip shot" src="assets/deck.mp4" muted playsinline data-start="5.8" data-duration="2.8" data-media-start="0.5" data-track-index="0"></video>
+      <video id="v4" class="clip shot" src="assets/plugs.mp4" muted playsinline data-start="8.6" data-duration="3.2" data-media-start="3.8" data-playback-rate="0.8" data-track-index="0"></video>
+      <video id="v5" class="clip shot" src="assets/slide.mp4" muted playsinline data-start="11.8" data-duration="3.4" data-media-start="5.2" data-playback-rate="0.9" data-track-index="0"></video>
+      <video id="v6" class="clip shot" src="assets/tunnel.mp4" muted playsinline data-start="15.2" data-duration="3.2" data-media-start="7" data-playback-rate="0.9" data-track-index="0"></video>
+
+      <div id="l1" class="clip line serif" data-start="0.15" data-duration="2.85" data-track-index="1">Send this to the man who taught you how to work.</div>
+      <div id="l2" class="clip line" data-start="3" data-duration="2.8" data-track-index="1">Some dads don’t say much.</div>
+      <div id="l3" class="clip line" data-start="5.8" data-duration="2.8" data-track-index="1">They just show up early and stay late.</div>
+      <div id="l4" class="clip line" data-start="8.6" data-duration="3.2" data-track-index="1">And teach you to do it right, even when nobody’s checking.</div>
+      <div id="l5" class="clip line" data-start="11.8" data-duration="3.4" data-track-index="1">Then one day you’re doing the same thing for yours.</div>
+      <div id="l6" class="clip line serif" data-start="15.2" data-duration="3.2" data-track-index="1">Thanks, Dad.<br><span style="font: 700 50px/1.4 Inter, sans-serif">Send this to yours.</span></div>
+    </div>
+    <script>
+      const tl = gsap.timeline({ paused: true });
+      [["#v1", 0, 3], ["#v2", 3, 2.8], ["#v3", 5.8, 2.8], ["#v4", 8.6, 3.2], ["#v5", 11.8, 3.4], ["#v6", 15.2, 3.2]].forEach(([id, t, d]) => {
+        tl.fromTo(id, { scale: 1 }, { scale: 1.06, duration: d, ease: "none" }, t);
+      });
+      [["#l1", 0.15], ["#l2", 3], ["#l3", 5.8], ["#l4", 8.6], ["#l5", 11.8], ["#l6", 15.2]].forEach(([id, t]) => {
+        tl.fromTo(id, { opacity: 0, y: 14 }, { opacity: 1, y: 0, duration: 0.45, ease: "power2.out" }, t + 0.05);
+      });
+      window.__timelines["main"] = tl;
+      tl.seek(0);
+    </script>
+  </body>
+</html>
