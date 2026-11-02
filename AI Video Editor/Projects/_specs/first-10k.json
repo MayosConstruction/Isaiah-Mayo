@@ -1,0 +1,243 @@
+{
+ "name": "first-10k",
+ "hook": {
+  "text": "Your paycheck is\nkeeping you broke",
+  "red": "keeping you broke",
+  "dur": 2.4,
+  "size": 128
+ },
+ "shots": [
+  {
+   "src": "/home/user/Isaiah-Mayo/construction-content/raw-footage/IMG_2454.mov",
+   "in": 0.0,
+   "dur": 2.4,
+   "rate": 0.6,
+   "vol": 0
+  },
+  {
+   "src": "/home/user/Isaiah-Mayo/construction-content/raw-footage/IMG_3101.mov",
+   "in": 2.0,
+   "dur": 1.6,
+   "vol": 0.5
+  },
+  {
+   "src": "/root/.claude/uploads/03d2cb76-e365-5423-89b9-e3b9838ff4f7/ee8a389e-IMG_4699.mov",
+   "in": 0.3,
+   "dur": 1.6,
+   "vol": 0
+  },
+  {
+   "src": "/home/user/Isaiah-Mayo/construction-content/raw-footage/IMG_3101.mov",
+   "in": 6.0,
+   "dur": 1.4,
+   "vol": 0.5
+  },
+  {
+   "src": "/home/user/Isaiah-Mayo/construction-content/raw-footage/IMG_2148.mov",
+   "in": 0.5,
+   "dur": 1.8,
+   "vol": 0
+  },
+  {
+   "src": "/home/user/Isaiah-Mayo/construction-content/raw-footage/IMG_4458.mov",
+   "in": 0.3,
+   "dur": 2.0,
+   "vol": 0.3
+  },
+  {
+   "src": "/home/user/Isaiah-Mayo/construction-content/raw-footage/IMG_2235.mov",
+   "in": 0.3,
+   "dur": 1.5,
+   "vol": 0.5
+  },
+  {
+   "src": "/home/user/Isaiah-Mayo/construction-content/raw-footage/IMG_2417.mov",
+   "in": 1.0,
+   "dur": 1.5,
+   "vol": 0
+  },
+  {
+   "src": "/home/user/Isaiah-Mayo/construction-content/raw-footage/IMG_4467.mov",
+   "in": 4.0,
+   "dur": 1.5,
+   "vol": 0.6
+  },
+  {
+   "src": "/home/user/Isaiah-Mayo/construction-content/raw-footage/IMG_4462.mov",
+   "in": 0.6,
+   "dur": 1.5,
+   "vol": 0.6
+  },
+  {
+   "src": "/home/user/Isaiah-Mayo/construction-content/raw-footage/IMG_2548.mov",
+   "in": 0.0,
+   "dur": 1.2,
+   "vol": 0.5
+  },
+  {
+   "slider": {
+    "before": "/root/.claude/uploads/03d2cb76-e365-5423-89b9-e3b9838ff4f7/8da61488-image.jpg",
+    "after": "/root/.claude/uploads/03d2cb76-e365-5423-89b9-e3b9838ff4f7/42910d69-image.jpg"
+   },
+   "dur": 3.6
+  },
+  {
+   "src": "/home/user/Isaiah-Mayo/construction-content/raw-footage/IMG_2248.mov",
+   "in": 3.5,
+   "dur": 4.0,
+   "vol": 0
+  }
+ ],
+ "lines": [
+  {
+   "t": 0.0,
+   "dur": 2.4,
+   "text": "I made my first $10,000\nin under a month \ud83d\udc47",
+   "gold": [
+    "$10,000"
+   ],
+   "y": 640,
+   "sfx": null
+  },
+  {
+   "t": 2.4,
+   "dur": 1.6,
+   "text": "I was a cop.",
+   "gold": [
+    "cop."
+   ]
+  },
+  {
+   "t": 4.0,
+   "dur": 1.6,
+   "text": "Then a banker.",
+   "gold": [
+    "banker."
+   ]
+  },
+  {
+   "t": 5.6,
+   "dur": 1.4,
+   "text": "Then a cop again.",
+   "gold": [
+    "again."
+   ],
+   "shake": true
+  },
+  {
+   "t": 7.0,
+   "dur": 1.8,
+   "text": "Same stress.\nSame paycheck.",
+   "gold": [
+    "Same paycheck."
+   ],
+   "sfx": "buzzer",
+   "shake": true
+  },
+  {
+   "t": 8.8,
+   "dur": 2.0,
+   "text": "So I quit\nthe paycheck.",
+   "gold": [
+    "quit"
+   ],
+   "box": true,
+   "sfx": "boom",
+   "shake": true,
+   "flash": true
+  },
+  {
+   "t": 10.8,
+   "dur": 1.5,
+   "text": "1. Took every\nsmall job",
+   "gold": [
+    "every"
+   ],
+   "sfx": "key-press",
+   "shake": true
+  },
+  {
+   "t": 12.3,
+   "dur": 1.5,
+   "text": "2. Knocked doors.\nHanded out flyers.",
+   "gold": [
+    "Knocked doors."
+   ],
+   "sfx": "key-press",
+   "shake": true
+  },
+  {
+   "t": 13.8,
+   "dur": 1.5,
+   "text": "3. Posted every job\non Facebook",
+   "gold": [
+    "every job"
+   ],
+   "sfx": "shutter",
+   "shake": true
+  },
+  {
+   "t": 15.3,
+   "dur": 1.2,
+   "text": "4. Said yes to decks\n+ kitchens",
+   "gold": [
+    "yes"
+   ],
+   "sfx": "key-press",
+   "shake": true
+  },
+  {
+   "t": 16.8,
+   "dur": 1.2,
+   "text": "...and figured\nit out as I went",
+   "gold": [
+    "figured"
+   ],
+   "sfx": "pop"
+  },
+  {
+   "t": 19.7,
+   "dur": 1.9,
+   "text": "in under a month.",
+   "gold": [
+    "under a month."
+   ],
+   "y": 900,
+   "sfx": null
+  },
+  {
+   "t": 21.6,
+   "dur": 2.0,
+   "text": "Now I work with my dad.\nAnd I'm home for my son.",
+   "gold": [
+    "my dad.",
+    "my son."
+   ],
+   "y": 1150
+  },
+  {
+   "t": 23.6,
+   "dur": 2.0,
+   "text": "Your paycheck\nwon't give you that.",
+   "gold": [
+    "won't"
+   ],
+   "box": true,
+   "sfx": "boom",
+   "shake": true,
+   "y": 200
+  }
+ ],
+ "events": [
+  {
+   "t": 17.2,
+   "sfx": "sweep",
+   "vol": 0.55
+  },
+  {
+   "t": 19.6,
+   "sfx": "ching",
+   "vol": 0.8
+  }
+ ]
+}
