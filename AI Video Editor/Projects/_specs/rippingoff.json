@@ -1,0 +1,10 @@
+{"name":"ripping-you-off",
+ "shots":[{"src":"/home/user/Isaiah-Mayo/construction-content/raw-footage/IMG_2454.mov","in":0.0,"dur":1.5,"rate":0.6},{"src":"/home/user/Isaiah-Mayo/construction-content/raw-footage/IMG_4467.mov","in":3.6,"dur":2.4},{"src":"/home/user/Isaiah-Mayo/construction-content/raw-footage/IMG_2624.mov","in":0.5,"dur":2.4},{"src":"/home/user/Isaiah-Mayo/construction-content/raw-footage/IMG_2240.mov","in":0.0,"dur":2.4},{"src":"/home/user/Isaiah-Mayo/construction-content/raw-footage/IMG_3094.mov","in":30.0,"dur":2.4},{"src":"/home/user/Isaiah-Mayo/construction-content/raw-footage/IMG_4462.mov","in":0.6,"dur":2.4},{"src":"/root/.claude/uploads/03d2cb76-e365-5423-89b9-e3b9838ff4f7/42910d69-image.jpg","dur":2.6}],
+ "hook":{"text":"Is your contractor\nripping you off?","red":"ripping you off?","dur":1.5},
+ "lines":[{"t":0.0,"dur":1.5,"text":"5 red flags 🚩","gold":["5"],"y":700},
+          {"t":1.5,"dur":2.4,"text":"🚩 1. They want half\nthe money up front","gold":["half"]},
+          {"t":3.9,"dur":2.4,"text":"🚩 2. The estimate\nis one line","gold":["one line"]},
+          {"t":6.3,"dur":2.4,"text":"🚩 3. No license.\nNo insurance.","gold":["license.","insurance."]},
+          {"t":8.7,"dur":2.4,"text":"🚩 4. A new \"surprise\"\nevery week","gold":["\"surprise\""]},
+          {"t":11.1,"dur":2.4,"text":"🚩 5. \"This price is\nonly good today\"","gold":["only good today\""]},
+          {"t":13.5,"dur":2.6,"text":"Save this before\nyou hire anybody","gold":["Save this"],"box":true}]}

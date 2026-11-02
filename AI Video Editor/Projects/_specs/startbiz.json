@@ -1,0 +1,10 @@
+{"name":"start-contractor-business",
+ "shots":[{"src":"/home/user/Isaiah-Mayo/construction-content/raw-footage/IMG_2148.mov","in":1.0,"dur":2.6},{"src":"/home/user/Isaiah-Mayo/construction-content/raw-footage/IMG_2548.mov","in":0.0,"dur":2.0},{"src":"/home/user/Isaiah-Mayo/construction-content/raw-footage/IMG_2236.mov","in":0.5,"dur":2.0},{"src":"/home/user/Isaiah-Mayo/construction-content/raw-footage/IMG_4460.mov","in":0.0,"dur":2.0},{"src":"/home/user/Isaiah-Mayo/construction-content/raw-footage/IMG_2340.mov","in":1.0,"dur":2.0},{"src":"/home/user/Isaiah-Mayo/construction-content/raw-footage/IMG_2417.mov","in":1.0,"dur":2.0},{"src":"/root/.claude/uploads/03d2cb76-e365-5423-89b9-e3b9838ff4f7/42910d69-image.jpg","dur":2.2},{"src":"/home/user/Isaiah-Mayo/construction-content/raw-footage/IMG_2454.mov","in":0.0,"dur":2.2,"rate":0.6}],
+ "hook":{"text":"How I'd start a contractor\nbusiness with no experience","red":"no experience","dur":2.6,"size":104},
+ "lines":[{"t":2.6,"dur":2.0,"text":"1. File an LLC","gold":["LLC"]},
+          {"t":4.6,"dur":2.0,"text":"2. Get your\ncontractor license","gold":["license"]},
+          {"t":6.6,"dur":2.0,"text":"3. Get insured","gold":["insured"]},
+          {"t":8.6,"dur":2.0,"text":"4. Find subs you trust","gold":["subs"]},
+          {"t":10.6,"dur":2.0,"text":"5. Knock doors.\nSeriously.","gold":["Knock doors."]},
+          {"t":12.6,"dur":2.2,"text":"6. Post every\nsingle job","gold":["every"]},
+          {"t":14.8,"dur":2.2,"text":"No experience.\nJust start.","gold":["Just start."],"box":true}]}

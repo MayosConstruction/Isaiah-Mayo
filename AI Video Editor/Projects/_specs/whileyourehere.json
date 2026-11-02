@@ -1,0 +1,10 @@
+{"name":"while-youre-here",
+ "shots":[{"src":"/home/user/Isaiah-Mayo/construction-content/raw-footage/IMG_2239.mov","in":0.0,"dur":2.6},{"src":"/home/user/Isaiah-Mayo/construction-content/raw-footage/IMG_2235.mov","in":0.3,"dur":1.8},{"src":"/home/user/Isaiah-Mayo/construction-content/raw-footage/IMG_2624.mov","in":1.0,"dur":1.7},{"src":"/home/user/Isaiah-Mayo/construction-content/raw-footage/IMG_2340.mov","in":1.0,"dur":1.8},{"src":"/home/user/Isaiah-Mayo/construction-content/raw-footage/IMG_3094.mov","in":20.0,"dur":1.8},{"src":"/home/user/Isaiah-Mayo/construction-content/raw-footage/286CBA62-05B5-407D-BB65-7426E54C714D.mov","in":0.0,"dur":1.6},{"src":"/home/user/Isaiah-Mayo/construction-content/raw-footage/IMG_2241.mov","in":4.6,"dur":2.0}],
+ "hook":{"text":"\"While you're here\"\nis ruining my life","red":"ruining","dur":2.6,"size":112},
+ "lines":[{"t":0.0,"dur":2.6,"text":"Came to fix ONE vent cover.","gold":["ONE"],"y":1180},
+          {"t":2.6,"dur":1.8,"text":"\"While you're here...\ncan you look at the light?\"","gold":["the light?\""]},
+          {"t":4.4,"dur":1.7,"text":"\"...and the breaker\nkeeps tripping\"","gold":["breaker"]},
+          {"t":6.1,"dur":1.8,"text":"\"...and the ceiling?\"","gold":["ceiling?\""]},
+          {"t":7.9,"dur":1.8,"text":"\"...oh, and the\nkitchen counters\"","gold":["kitchen counters\""]},
+          {"t":9.7,"dur":1.6,"text":"\"...and the floors.\"","gold":["floors.\""]},
+          {"t":11.3,"dur":2.0,"text":"Day 3 of fixing\none vent cover","gold":["Day 3"],"box":true}]}
