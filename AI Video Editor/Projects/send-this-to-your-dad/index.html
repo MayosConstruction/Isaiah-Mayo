@@ -5,19 +5,19 @@
     <meta name="viewport" content="width=1080, height=1920" />
     <script src="assets/gsap.min.js"></script>
     <style>
-      @font-face { font-family: "Montserrat"; src: url("assets/fonts/Montserrat-Bold.ttf"); font-weight: 700; }
-      @font-face { font-family: "Instrument Serif"; src: url("assets/fonts/InstrumentSerif-Italic.ttf"); font-style: italic; }
+      @font-face { font-family: "TikTok Sans"; src: url("assets/fonts/TikTokSans-600.ttf"); font-weight: 600; }
+      @font-face { font-family: "TikTok Sans"; src: url("assets/fonts/TikTokSans-700.ttf"); font-weight: 700; }
       * { margin: 0; padding: 0; box-sizing: border-box; }
       html, body { width: 1080px; height: 1920px; overflow: hidden; background: #000; }
       #root { position: relative; width: 1080px; height: 1920px; overflow: hidden; }
       .shot { position: absolute; inset: 0; width: 1080px; height: 1920px; object-fit: cover; }
-      /* Storytelling: Montserrat Bold, with the key words in Instrument Serif italic. */
+      /* Native Instagram/TikTok "Classic" text look: TikTok Sans, white, light shadow. */
       .line {
         position: absolute; top: 430px; left: 110px; right: 110px; text-align: center; z-index: 10; color: #fff;
-        font: 700 60px/1.2 "Montserrat", sans-serif; letter-spacing: -0.01em; text-wrap: balance;
-        text-shadow: 0 1px 3px rgba(0, 0, 0, 0.85), 0 0 12px rgba(0, 0, 0, 0.55), 0 0 26px rgba(0, 0, 0, 0.35);
+        font: 600 62px/1.22 "TikTok Sans", sans-serif; letter-spacing: 0; text-wrap: balance;
+        text-shadow: 0 2px 6px rgba(0, 0, 0, 0.5), 0 0 2px rgba(0, 0, 0, 0.35);
       }
-      i { font: italic 400 1.45em/1 "Instrument Serif", serif; letter-spacing: -0.01em; }
+      i { font-style: normal; }
     </style>
   </head>
   <body>
@@ -35,7 +35,7 @@
       <div id="l3" class="clip line" data-start="5.8" data-duration="2.8" data-track-index="1">They just show up early and <i>stay late.</i></div>
       <div id="l4" class="clip line" data-start="8.6" data-duration="3.2" data-track-index="1">And teach you to do it right, even when <i>nobody’s checking.</i></div>
       <div id="l5" class="clip line" data-start="11.8" data-duration="3.4" data-track-index="1">Then one day you’re doing the same thing <i>for yours.</i></div>
-      <div id="l6" class="clip line" style="top:250px" data-start="15.2" data-duration="3.2" data-track-index="1"><i style="font-size:1.9em">Thanks, Dad.</i><br>Send this to yours.</div>
+      <div id="l6" class="clip line" style="top:250px" data-start="15.2" data-duration="3.2" data-track-index="1"><span style="font-weight:700;font-size:1.6em">Thanks, Dad.</span><br>Send this to yours.</div>
     </div>
     <script>
       const tl = gsap.timeline({ paused: true });

@@ -53,9 +53,12 @@ Paid/system: Helvetica, IvyPresto, Sequel, Tempting, Futura, Trajan, Balboa, Van
 - Montages of work with no person reacting. Captions doing all the comedy.
 - Big branded end cards. Anything that looks like an ad or obviously AI-written.
 
-## Current defaults (Nov 2026, replaces Anton/Inter as the default)
-The owner said the Anton-with-outline and Inter/Playfair looks were "so bad". Use these instead:
-- **Punchy hooks / engagement reels:** Bricolage Grotesque ExtraBold (`fonts/viral/BricolageGrotesque-ExtraBold.ttf`), sentence case, ~110px, letter-spacing -0.035em, soft shadow, no outline. Accent word in yellow #FFD23F.
-- **Heartfelt / story reels:** Montserrat Bold ~60px with the last few words in Instrument Serif Italic (`fonts/viral/InstrumentSerif-Italic.ttf`) at 1.45em. Big closing line all in Instrument Serif Italic.
-- Do not use Anton or thick black text outlines unless the owner asks.
-- Option sheet the owner reviewed: `construction-content/reference/font-options.png`.
+## Current defaults (Nov 2026): the native Instagram/TikTok text look
+The owner rejected Anton-with-outline, Inter/Playfair, and Bricolage/Instrument Serif as "not viral".
+Viral Reels mostly use the app's own text, so match that:
+- Font: **TikTok Sans** (`fonts/viral/TikTokSans-600/700/800.ttf`), the closest public match to Instagram's "Classic" text.
+- Hooks / engagement: TikTok Sans Bold ~76px, **black text on white rounded boxes** (Instagram's background-text style). Secondary line: white on black box, ~46px.
+- Story / heartfelt: TikTok Sans SemiBold ~62px, white, light shadow only. Big closing line in Bold.
+- No outlines, no fancy display fonts, no colored accent words unless the owner asks.
+- Render with `--sdr` when the source footage is iPhone HDR, or white turns gray.
+- Font option sheet: `construction-content/reference/font-options.png`.

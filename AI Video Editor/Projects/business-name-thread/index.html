@@ -5,24 +5,27 @@
     <meta name="viewport" content="width=1080, height=1920" />
     <script src="assets/gsap.min.js"></script>
     <style>
-      @font-face { font-family: "Bricolage"; src: url("assets/fonts/BricolageGrotesque-ExtraBold.ttf"); font-weight: 800; }
+      @font-face { font-family: "TikTok Sans"; src: url("assets/fonts/TikTokSans-700.ttf"); font-weight: 700; }
+      @font-face { font-family: "TikTok Sans"; src: url("assets/fonts/TikTokSans-600.ttf"); font-weight: 600; }
       @font-face { font-family: "Montserrat"; src: url("assets/fonts/Montserrat-Bold.ttf"); font-weight: 700; }
       * { margin: 0; padding: 0; box-sizing: border-box; }
       html, body { width: 1080px; height: 1920px; overflow: hidden; background: #000; }
       #root { position: relative; width: 1080px; height: 1920px; overflow: hidden; }
       .shot { position: absolute; inset: 0; width: 1080px; height: 1920px; object-fit: cover; }
-      /* Hooks: Bricolage Grotesque ExtraBold, sentence case, tight, soft shadow; one word in yellow. */
+      /* Hooks: the native Instagram/TikTok text look. TikTok Sans Bold, black on white rounded boxes. */
       .hook {
-        position: absolute; top: 300px; left: 80px; right: 80px; text-align: center; z-index: 10; color: #fff;
-        font: 800 112px/1.0 "Bricolage", sans-serif; letter-spacing: -0.035em; text-wrap: balance;
-        text-shadow: 0 4px 24px rgba(0, 0, 0, 0.55), 0 1px 4px rgba(0, 0, 0, 0.5);
+        position: absolute; top: 300px; left: 70px; right: 70px; text-align: center; z-index: 10;
+        font: 700 76px/1.42 "TikTok Sans", sans-serif; text-wrap: balance;
       }
-      .hook .red { color: #ffd23f; }
+      .hook .box {
+        background: #fff; color: #000; padding: 6px 26px; border-radius: 22px;
+        -webkit-box-decoration-break: clone; box-decoration-break: clone;
+      }
       .sub {
-        position: absolute; top: 560px; left: 90px; right: 90px; text-align: center; z-index: 11; color: #fff;
-        font: 700 50px/1.25 "Montserrat", sans-serif; text-wrap: balance;
-        text-shadow: 0 1px 3px rgba(0, 0, 0, 0.9), 0 0 12px rgba(0, 0, 0, 0.6), 0 0 26px rgba(0, 0, 0, 0.4);
+        position: absolute; top: 420px; left: 90px; right: 90px; text-align: center; z-index: 11;
+        font: 600 46px/1.5 "TikTok Sans", sans-serif; text-wrap: balance;
       }
+      .sub span { background: #000; color: #fff; padding: 5px 20px; border-radius: 18px; -webkit-box-decoration-break: clone; box-decoration-break: clone; }
     </style>
   </head>
   <body>
@@ -36,11 +39,11 @@
       <video id="v6" class="clip shot" src="assets/drive.mp4" muted playsinline data-start="5.8" data-duration="1.2" data-media-start="2" data-track-index="0"></video>
       <video id="v7" class="clip shot" src="assets/toss.mp4" muted playsinline data-start="7" data-duration="3" data-media-start="0" data-playback-rate="0.5" data-track-index="0"></video>
 
-      <div id="h1" class="clip hook" data-start="0" data-duration="2.4" data-track-index="1">Small business <span class="red">owners</span></div>
-      <div id="h2" class="clip hook" data-start="2.4" data-duration="2.4" data-track-index="1">Drop your business name <span class="red">below</span></div>
-      <div id="h3" class="clip hook" data-start="4.8" data-duration="2.6" data-track-index="1">Follow 3 people in the <span class="red">comments</span></div>
-      <div id="h4" class="clip hook" data-start="7.4" data-duration="2.6" data-track-index="1">We grow <span class="red">together</span></div>
-      <div id="s1" class="clip sub" data-start="7.9" data-duration="2.1" data-track-index="2">I’ll go first: Mayo’s Construction, Hot Springs, AR</div>
+      <div id="h1" class="clip hook" data-start="0" data-duration="2.4" data-track-index="1"><span class="box">Small business owners</span></div>
+      <div id="h2" class="clip hook" data-start="2.4" data-duration="2.4" data-track-index="1"><span class="box">Drop your business name below</span></div>
+      <div id="h3" class="clip hook" data-start="4.8" data-duration="2.6" data-track-index="1"><span class="box">Follow 3 people in the comments</span></div>
+      <div id="h4" class="clip hook" data-start="7.4" data-duration="2.6" data-track-index="1"><span class="box">We grow together</span></div>
+      <div id="s1" class="clip sub" data-start="7.9" data-duration="2.1" data-track-index="2"><span>I’ll go first:<br>Mayo’s Construction, Hot Springs AR</span></div>
     </div>
     <script>
       const tl = gsap.timeline({ paused: true });
