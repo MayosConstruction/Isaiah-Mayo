@@ -22,8 +22,7 @@ Pinned comment: "Tag the man who taught you how to work."
 REEL 2: "Drop your business name" (engagement, attention-grabbing, about 10 seconds)
 Fast cuts, about 1 second each, through my best job footage (bat fight swing, deck drilling, breaker panel, my dad on the ladder, screw plugs, driving), ending on a slow-motion clip of me walking toward the camera.
 Instagram Classic text, bold, black on white rounded background boxes, sentence case, each line popping in:
-0-2.4s "SMALL BUSINESS OWNERS"
-2.4-4.8s "DROP YOUR BUSINESS NAME BELOW"
+0-4.8s "Small business owners, drop your business name below 👇" (on screen from the very first frame, no fade-in)
 4.8-7.4s "FOLLOW 3 PEOPLE IN THE COMMENTS"
 7.4-10s "WE GROW TOGETHER", with a smaller white-on-black box under it: "I'll go first: Mayo's Construction, Hot Springs, AR"
 Upbeat trending audio.
