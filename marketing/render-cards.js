@@ -8,12 +8,9 @@ const dir = process.argv[2];
   await p.evaluate(() => document.fonts.ready);
   await p.waitForTimeout(800);
   const cards = await p.$$('.card');
-  const names = ['FRONT', 'BACK-Isaiah', 'BACK-Moss'];
-  for (let i = 0; i < cards.length; i++) await cards[i].screenshot({ path: `${dir}/Mayos-business-card-${names[i]}.png` });
-  // One print-ready PDF per person: page 1 front, page 2 back.
-  for (const [who, idx] of [['Isaiah', 1], ['Moss', 2]]) {
-    await p.evaluate((keep) => document.querySelectorAll('.card').forEach((c, i) => (c.style.display = i === 0 || i === keep ? '' : 'none')), idx);
-    await p.pdf({ path: `${dir}/Mayos-business-card-${who}-print.pdf`, width: '3.75in', height: '2.25in', printBackground: true });
-  }
+  await cards[0].screenshot({ path: `${dir}/Mayos-business-card-FRONT.png` });
+  await cards[1].screenshot({ path: `${dir}/Mayos-business-card-BACK.png` });
+  // Print-ready PDF: page 1 front, page 2 back.
+  await p.pdf({ path: `${dir}/Mayos-business-card-print.pdf`, width: '3.75in', height: '2.25in', printBackground: true });
   await b.close();
 })();

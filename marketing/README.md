@@ -8,6 +8,6 @@ The back has the EDDM Retail postage indicia and "Local Postal Customer". Ask yo
 
 # Business cards
 
-- `Mayos-business-card-Isaiah-print.pdf` and `Mayos-business-card-Moss-print.pdf`: print-ready, 2 pages (front and back), 3.5" × 2" with 0.125" bleed (file size 3.75" × 2.25").
-- `Mayos-business-card-FRONT.png`, `-BACK-Isaiah.png`, `-BACK-Moss.png`: the same at 300 DPI.
+- `Mayos-business-card-print.pdf`: print-ready, 2 pages (front and back), 3.5" × 2" with 0.125" bleed (file size 3.75" × 2.25").
+- `Mayos-business-card-FRONT.png` and `Mayos-business-card-BACK.png`: the same at 300 DPI.
 - `business-card.html`: the design. Edit the text, then run `node marketing/render-cards.js "$PWD/marketing"` to regenerate the files.
