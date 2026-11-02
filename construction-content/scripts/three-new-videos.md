@@ -17,14 +17,14 @@ This one can become a series: "How to know when to replace your floors", "...you
 
 **Say:**
 1. "Here's how to know if your contractor is ripping you off. I'm a contractor, so I'd know."
-2. "**Number one.** They want half or more up front before a single board is cut. A small deposit for materials is normal. Fifty percent and then they disappear? That's a **red flag**."
+2. "**Number one.** There's no contract, just a handshake. If it's not in writing, it didn't happen." *(Owner collects 50% up front, so never use "half up front" as a red flag.)*
 3. "**Number two.** The estimate is one line. 'Kitchen remodel, eight thousand dollars.' A **reliable** contractor breaks it down: materials, labor, what's included, what's not."
 4. "**Number three.** They can't show you a license or insurance. If they get hurt on your property and they're not insured, guess who's paying."
 5. "**Number four.** Every week there's a new 'surprise.' Some surprises are real. But if the price keeps climbing and nothing's in writing, that's not a surprise, that's the plan."
 6. "**Number five.** They pressure you. 'This price is only good today.' A good contractor doesn't need to rush you."
 7. "Save this before you hire anybody. And if you're in Hot Springs, you know who to call."
 
-**On-screen steps (one per point):** `1. HALF UP FRONT` / `2. ONE-LINE ESTIMATE` / `3. NO LICENSE OR INSURANCE` / `4. ENDLESS "SURPRISES"` / `5. "TODAY ONLY" PRESSURE`
+**On-screen steps (one per point):** `1. NO CONTRACT` / `2. ONE-LINE ESTIMATE` / `3. NO LICENSE OR INSURANCE` / `4. ENDLESS "SURPRISES"` / `5. "TODAY ONLY" PRESSURE`
 **Caption:** Save this before you hire anybody 🔨 Which one have you seen? 👇
 **Hashtags:** #contractor #homeimprovement #homeowner #hotspringsarkansas #renovation
 

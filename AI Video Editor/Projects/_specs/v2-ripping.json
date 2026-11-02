@@ -84,9 +84,9 @@
   {
    "t": 1.4,
    "dur": 1.9,
-   "text": "\ud83d\udea9 Half the money\nup front",
+   "text": "\ud83d\udea9 No contract.\nJust a handshake.",
    "gold": [
-    "Half"
+    "No contract."
    ],
    "sfx": "buzzer",
    "shake": true
