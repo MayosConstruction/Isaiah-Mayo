@@ -35,7 +35,7 @@ Caption: No experience. No connections. Just these 6 steps 👊 Save this if you
 Hashtags: #entrepreneur #contractor #smallbusiness #startabusiness #hotspringsarkansas
 
 ---
-## Your paycheck is keeping you broke (first $10K), first-10k.mp4, 26s
+## If you're working hard and still broke... (first $10K), first-10k.mp4, 56s
 Caption: I was a cop. Then a banker. Then a cop again. Same stress, same paycheck. So I quit, bet on myself, and made my first $10,000 in under a month doing small repairs, decks and kitchens. No investors. No connections. Just knocking doors and posting every job. If you're stuck in a job that's wearing you down, this is your sign 👇
 Pinned comment: "What's stopping you from betting on yourself? 👇"
 Hashtags: #entrepreneur #quityourjob #smallbusiness #contractor #hotspringsarkansas
