@@ -94,3 +94,35 @@ Body: the screw-plug / deck finishing footage you already have.
 3. One thing: `THIS ONE THING MAKES A DECK LOOK CUSTOM`
 4. Sorry: `I'M SORRY TO EVERYONE WITH VISIBLE DECK SCREWS`
 5. Whisper: "Don't tell my dad..."
+
+---
+
+## SPICY HOOKS (owner wants borderline-offensive, scroll-stopping)
+Rules: polarizing hot takes are fine. Never name or show a real competitor, customer or person in a bad light, no slurs, and no claims we can't back up (no fake numbers).
+
+**Calling out contractors**
+- SEE THE SCREWS? YOUR CONTRACTOR WAS LAZY.
+- YOUR CONTRACTOR IS PROBABLY LYING TO YOU
+- 90% OF DECKS IN HOT SPRINGS ARE BUILT WRONG *(only if we can show why)*
+- MOST CONTRACTORS WOULD NEVER SHOW YOU THIS
+- I'D BE EMBARRASSED TO CHARGE FOR THIS *(over a bad old repair we're fixing)*
+- CHEAP CONTRACTORS ARE THE MOST EXPENSIVE ONES
+
+**Calling out homeowners (playful)**
+- "WHILE YOU'RE HERE" NOW COSTS EXTRA
+- STOP ASKING YOUR CONTRACTOR FOR A DISCOUNT
+- YOUR YOUTUBE RESEARCH ISN'T A LICENSE
+- YOU DIDN'T SAVE MONEY. YOU HIRED YOUR COUSIN.
+- IF YOU DIY'D THIS, WE NEED TO TALK
+
+**Calling out jobs / the 9-5**
+- YOUR BOSS IS GETTING RICH OFF YOU
+- I QUIT A "SAFE" JOB. BEST DECISION I EVER MADE.
+- COLLEGE DIDN'T TEACH ME THIS. MY DAD DID.
+- THE TRADES PAY MORE THAN YOUR DEGREE *(say "can pay", don't promise)*
+- NOBODY WANTS TO WORK? I DO. WITH MY DAD.
+
+**Dad / family (edgy-funny)**
+- MY DAD IS A BETTER CONTRACTOR THAN YOURS
+- WORKING WITH YOUR DAD IS A TERRIBLE IDEA (here's why I do it)
+- MY DAD DOESN'T BELIEVE IN TAPE MEASURES

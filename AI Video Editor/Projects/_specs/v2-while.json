@@ -1,10 +1,125 @@
-{"name":"while-youre-here",
- "hook":{"text":"\"While you're here\"\nis ruining my life","red":"ruining","dur":2.2,"size":116},
- "shots":[{"src":"/home/user/Isaiah-Mayo/construction-content/raw-footage/IMG_2239.mov","in":0.0,"dur":2.2,"vol":0.4},{"src":"/home/user/Isaiah-Mayo/construction-content/raw-footage/IMG_2235.mov","in":0.3,"dur":1.5,"vol":0.4},{"src":"/home/user/Isaiah-Mayo/construction-content/raw-footage/IMG_2624.mov","in":1.0,"dur":1.5,"vol":0.6},{"src":"/home/user/Isaiah-Mayo/construction-content/raw-footage/IMG_2340.mov","in":1.0,"dur":1.5,"vol":0.3},{"src":"/home/user/Isaiah-Mayo/construction-content/raw-footage/IMG_3094.mov","in":20.0,"dur":1.5,"vol":0.2},{"src":"/home/user/Isaiah-Mayo/construction-content/raw-footage/286CBA62-05B5-407D-BB65-7426E54C714D.mov","in":0.0,"dur":1.4,"vol":0.3},{"src":"/home/user/Isaiah-Mayo/construction-content/raw-footage/IMG_2241.mov","in":4.6,"dur":2.6,"vol":0.8}],
- "lines":[{"t":0.0,"dur":2.2,"text":"Came to fix ONE vent cover","gold":["ONE"],"y":1180,"sfx":null},
-          {"t":2.2,"dur":1.5,"text":"\"While you're here...\nthe light?\"","gold":["the light?\""],"sfx":"notification"},
-          {"t":3.7,"dur":1.5,"text":"\"...and the breaker\nkeeps tripping\"","gold":["breaker"],"sfx":"notification"},
-          {"t":5.2,"dur":1.5,"text":"\"...the ceiling?\"","gold":["ceiling?\""],"sfx":"notification","shake":true},
-          {"t":6.7,"dur":1.5,"text":"\"...the kitchen\ncounters?\"","gold":["counters?\""],"sfx":"notification","shake":true},
-          {"t":8.2,"dur":1.4,"text":"\"...oh, and\nthe floors\" 💀","gold":["floors\""],"sfx":"error","shake":true},
-          {"t":9.6,"dur":2.6,"text":"Day 3 of fixing\none vent cover","gold":["Day 3"],"box":true,"sfx":"boom","shake":true,"flash":true}]}
+{
+ "name": "while-youre-here",
+ "hook": {
+  "text": "\"While you're here\"\nnow costs extra",
+  "red": "costs extra",
+  "dur": 2.2,
+  "size": 124
+ },
+ "shots": [
+  {
+   "src": "/home/user/Isaiah-Mayo/construction-content/raw-footage/IMG_2239.mov",
+   "in": 0.0,
+   "dur": 2.2,
+   "vol": 0.4
+  },
+  {
+   "src": "/home/user/Isaiah-Mayo/construction-content/raw-footage/IMG_2235.mov",
+   "in": 0.3,
+   "dur": 1.5,
+   "vol": 0.4
+  },
+  {
+   "src": "/home/user/Isaiah-Mayo/construction-content/raw-footage/IMG_2624.mov",
+   "in": 1.0,
+   "dur": 1.5,
+   "vol": 0.6
+  },
+  {
+   "src": "/home/user/Isaiah-Mayo/construction-content/raw-footage/IMG_2340.mov",
+   "in": 1.0,
+   "dur": 1.5,
+   "vol": 0.3
+  },
+  {
+   "src": "/home/user/Isaiah-Mayo/construction-content/raw-footage/IMG_3094.mov",
+   "in": 20.0,
+   "dur": 1.5,
+   "vol": 0.2
+  },
+  {
+   "src": "/home/user/Isaiah-Mayo/construction-content/raw-footage/286CBA62-05B5-407D-BB65-7426E54C714D.mov",
+   "in": 0.0,
+   "dur": 1.4,
+   "vol": 0.3
+  },
+  {
+   "src": "/home/user/Isaiah-Mayo/construction-content/raw-footage/IMG_2241.mov",
+   "in": 4.6,
+   "dur": 2.6,
+   "vol": 0.8
+  }
+ ],
+ "lines": [
+  {
+   "t": 0.0,
+   "dur": 2.2,
+   "text": "Came to fix ONE vent cover",
+   "gold": [
+    "ONE"
+   ],
+   "y": 1180,
+   "sfx": null
+  },
+  {
+   "t": 2.2,
+   "dur": 1.5,
+   "text": "\"While you're here...\nthe light?\"",
+   "gold": [
+    "the light?\""
+   ],
+   "sfx": "notification"
+  },
+  {
+   "t": 3.7,
+   "dur": 1.5,
+   "text": "\"...and the breaker\nkeeps tripping\"",
+   "gold": [
+    "breaker"
+   ],
+   "sfx": "notification"
+  },
+  {
+   "t": 5.2,
+   "dur": 1.5,
+   "text": "\"...the ceiling?\"",
+   "gold": [
+    "ceiling?\""
+   ],
+   "sfx": "notification",
+   "shake": true
+  },
+  {
+   "t": 6.7,
+   "dur": 1.5,
+   "text": "\"...the kitchen\ncounters?\"",
+   "gold": [
+    "counters?\""
+   ],
+   "sfx": "notification",
+   "shake": true
+  },
+  {
+   "t": 8.2,
+   "dur": 1.4,
+   "text": "\"...oh, and\nthe floors\" \ud83d\udc80",
+   "gold": [
+    "floors\""
+   ],
+   "sfx": "error",
+   "shake": true
+  },
+  {
+   "t": 9.6,
+   "dur": 2.6,
+   "text": "Day 3 of fixing\none vent cover",
+   "gold": [
+    "Day 3"
+   ],
+   "box": true,
+   "sfx": "boom",
+   "shake": true,
+   "flash": true
+  }
+ ]
+}

@@ -13,7 +13,7 @@
       #cam { position: absolute; inset: 0; }
       .shot { position: absolute; inset: 0; width: 1080px; height: 1920px; object-fit: cover; }
       /* Hook: Bebas Neue, black on white boxes, trigger word in Mayo's red. */
-      .hook { position: absolute; top: 240px; left: 50px; right: 50px; text-align: center; z-index: 20; font: 400 106px/1.22 "Bebas", sans-serif; }
+      .hook { position: absolute; top: 240px; left: 50px; right: 50px; text-align: center; z-index: 20; font: 400 128px/1.22 "Bebas", sans-serif; }
       .hook span.b, .box span.b { background: #fff; color: #111; padding: 4px 26px 0; border-radius: 16px; -webkit-box-decoration-break: clone; box-decoration-break: clone; }
       .red { color: #c4553b; }
       /* Lines: Montserrat ExtraBold, white with black outline, key words gold. */
@@ -45,16 +45,17 @@
       <video id="v8" class="clip shot" src="assets/shot8.mp4" muted playsinline data-start="14.40" data-duration="1.8" data-media-start="0" data-track-index="0"></video>
       </div>
       <div id="fx" class="clip flash" data-start="0" data-duration="16.2" data-track-index="3"></div>
-      <div id="hook" class="clip hook" data-start="0" data-duration="2.2" data-track-index="3"><span class="b">How I&#x27;d start a contractor<br>business with <span class="red">no experience</span></span></div>
-      <div id="l0" class="clip line" style="top:640px" data-start="2.2" data-duration="1.5" data-track-index="4">1. File an <span class="y">LLC</span></div>
-      <div id="l1" class="clip line" style="top:640px" data-start="3.7" data-duration="1.5" data-track-index="5">2. Get <span class="y">licensed</span></div>
-      <div id="l2" class="clip line" style="top:640px" data-start="5.2" data-duration="1.5" data-track-index="4">3. Get <span class="y">insured</span></div>
-      <div id="l3" class="clip line" style="top:640px" data-start="6.7" data-duration="1.5" data-track-index="5">4. Find <span class="y">subs</span><br>you trust</div>
-      <div id="l4" class="clip line" style="top:640px" data-start="8.2" data-duration="1.5" data-track-index="4">5. <span class="y">Knock doors.</span><br>Seriously.</div>
-      <div id="l5" class="clip line" style="top:640px" data-start="9.7" data-duration="1.5" data-track-index="5">6. Post <span class="y">every</span><br>single job</div>
-      <div id="l6" class="clip line" style="top:640px" data-start="11.2" data-duration="1.0" data-track-index="4">Then <span class="y">this</span> happens 👇</div>
-      <div id="l7" class="clip box" style="top:640px" data-start="12.4" data-duration="2.0" data-track-index="5"><span class="b">From zero to<br><span class="y">this.</span></span></div>
-      <div id="l8" class="clip box" style="top:640px" data-start="14.4" data-duration="1.8" data-track-index="4"><span class="b">No experience.<br><span class="y">Just start.</span></span></div>
+      <div id="hook" class="clip hook" data-start="0" data-duration="2.2" data-track-index="3"><span class="b">Your boss is getting<br><span class="red">rich off you</span></span></div>
+      <div id="l0" class="clip line" style="top:620px" data-start="0.0" data-duration="2.2" data-track-index="4">Here&#x27;s how I&#x27;d <span class="y">fire</span> mine 👇</div>
+      <div id="l1" class="clip line" style="top:640px" data-start="2.2" data-duration="1.5" data-track-index="5">1. File an <span class="y">LLC</span></div>
+      <div id="l2" class="clip line" style="top:640px" data-start="3.7" data-duration="1.5" data-track-index="4">2. Get <span class="y">licensed</span></div>
+      <div id="l3" class="clip line" style="top:640px" data-start="5.2" data-duration="1.5" data-track-index="5">3. Get <span class="y">insured</span></div>
+      <div id="l4" class="clip line" style="top:640px" data-start="6.7" data-duration="1.5" data-track-index="4">4. Find <span class="y">subs</span><br>you trust</div>
+      <div id="l5" class="clip line" style="top:640px" data-start="8.2" data-duration="1.5" data-track-index="5">5. <span class="y">Knock doors.</span><br>Seriously.</div>
+      <div id="l6" class="clip line" style="top:640px" data-start="9.7" data-duration="1.5" data-track-index="4">6. Post <span class="y">every</span><br>single job</div>
+      <div id="l7" class="clip line" style="top:640px" data-start="11.2" data-duration="1.0" data-track-index="5">Then <span class="y">this</span> happens 👇</div>
+      <div id="l8" class="clip box" style="top:640px" data-start="12.4" data-duration="2.0" data-track-index="4"><span class="b">From zero to<br><span class="y">this.</span></span></div>
+      <div id="l9" class="clip box" style="top:640px" data-start="14.4" data-duration="1.8" data-track-index="5"><span class="b">No experience.<br><span class="y">Just start.</span></span></div>
       <audio id="a0" class="clip" src="assets/nat1.m4a" data-start="2.20" data-duration="1.50" data-volume="0.5" data-track-index="8"></audio>
       <audio id="a1" class="clip" src="assets/whoosh-short.mp3" data-start="2.10" data-duration="1.60" data-volume="0.35" data-track-index="9"></audio>
       <audio id="a2" class="clip" src="assets/nat2.m4a" data-start="3.70" data-duration="1.50" data-volume="0.5" data-track-index="10"></audio>
@@ -88,7 +89,7 @@
       });
       // Hook is readable on frame 0, then punches with the boom.
       tl.fromTo("#hook", { scale: 1 }, { keyframes: [{ scale: 1.12, duration: 0.06 }, { scale: 1, duration: 0.22, ease: "back.out(3)" }], immediateRender: false }, 0.02);
-      [["#l0",2.2],["#l1",3.7],["#l2",5.2],["#l3",6.7],["#l4",8.2],["#l5",9.7],["#l6",11.2],["#l7",12.4],["#l8",14.4]].forEach(([id, t]) => {
+      [["#l1",2.2],["#l2",3.7],["#l3",5.2],["#l4",6.7],["#l5",8.2],["#l6",9.7],["#l7",11.2],["#l8",12.4],["#l9",14.4]].forEach(([id, t]) => {
         tl.fromTo(id, { scale: 1.6, opacity: 0 }, { scale: 1, opacity: 1, duration: 0.16, ease: "power4.out", immediateRender: false }, t);
       });
       // Camera shake on punches.
