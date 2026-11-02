@@ -5,19 +5,19 @@
     <meta name="viewport" content="width=1080, height=1920" />
     <script src="assets/gsap.min.js"></script>
     <style>
-      @font-face { font-family: "Inter"; src: url("assets/fonts/Inter-Bold.ttf"); font-weight: 700; }
-      @font-face { font-family: "Playfair Display"; src: url("assets/fonts/PlayfairDisplay-Bold.ttf"); font-weight: 700; }
+      @font-face { font-family: "Montserrat"; src: url("assets/fonts/Montserrat-Bold.ttf"); font-weight: 700; }
+      @font-face { font-family: "Instrument Serif"; src: url("assets/fonts/InstrumentSerif-Italic.ttf"); font-style: italic; }
       * { margin: 0; padding: 0; box-sizing: border-box; }
       html, body { width: 1080px; height: 1920px; overflow: hidden; background: #000; }
       #root { position: relative; width: 1080px; height: 1920px; overflow: hidden; }
       .shot { position: absolute; inset: 0; width: 1080px; height: 1920px; object-fit: cover; }
-      /* Storytelling: Playfair Display for the share lines, Inter for the story. */
+      /* Storytelling: Montserrat Bold, with the key words in Instrument Serif italic. */
       .line {
         position: absolute; top: 430px; left: 110px; right: 110px; text-align: center; z-index: 10; color: #fff;
-        font: 700 56px/1.25 "Inter", sans-serif; letter-spacing: -0.02em; text-wrap: balance;
+        font: 700 60px/1.2 "Montserrat", sans-serif; letter-spacing: -0.01em; text-wrap: balance;
         text-shadow: 0 1px 3px rgba(0, 0, 0, 0.85), 0 0 12px rgba(0, 0, 0, 0.55), 0 0 26px rgba(0, 0, 0, 0.35);
       }
-      .serif { font: 700 74px/1.15 "Playfair Display", serif; letter-spacing: 0; }
+      i { font: italic 400 1.45em/1 "Instrument Serif", serif; letter-spacing: -0.01em; }
     </style>
   </head>
   <body>
@@ -30,12 +30,12 @@
       <video id="v5" class="clip shot" src="assets/slide.mp4" muted playsinline data-start="11.8" data-duration="3.4" data-media-start="5.2" data-playback-rate="0.9" data-track-index="0"></video>
       <video id="v6" class="clip shot" src="assets/tunnel.mp4" muted playsinline data-start="15.2" data-duration="3.2" data-media-start="7" data-playback-rate="0.9" data-track-index="0"></video>
 
-      <div id="l1" class="clip line serif" data-start="0.15" data-duration="2.85" data-track-index="1">Send this to the man who taught you how to work.</div>
-      <div id="l2" class="clip line" data-start="3" data-duration="2.8" data-track-index="1">Some dads don’t say much.</div>
-      <div id="l3" class="clip line" data-start="5.8" data-duration="2.8" data-track-index="1">They just show up early and stay late.</div>
-      <div id="l4" class="clip line" data-start="8.6" data-duration="3.2" data-track-index="1">And teach you to do it right, even when nobody’s checking.</div>
-      <div id="l5" class="clip line" data-start="11.8" data-duration="3.4" data-track-index="1">Then one day you’re doing the same thing for yours.</div>
-      <div id="l6" class="clip line serif" data-start="15.2" data-duration="3.2" data-track-index="1">Thanks, Dad.<br><span style="font: 700 50px/1.4 Inter, sans-serif">Send this to yours.</span></div>
+      <div id="l1" class="clip line" data-start="0.15" data-duration="2.85" data-track-index="1">Send this to the man who taught you <i>how to work.</i></div>
+      <div id="l2" class="clip line" data-start="3" data-duration="2.8" data-track-index="1">Some dads <i>don’t say much.</i></div>
+      <div id="l3" class="clip line" data-start="5.8" data-duration="2.8" data-track-index="1">They just show up early and <i>stay late.</i></div>
+      <div id="l4" class="clip line" data-start="8.6" data-duration="3.2" data-track-index="1">And teach you to do it right, even when <i>nobody’s checking.</i></div>
+      <div id="l5" class="clip line" data-start="11.8" data-duration="3.4" data-track-index="1">Then one day you’re doing the same thing <i>for yours.</i></div>
+      <div id="l6" class="clip line" style="top:250px" data-start="15.2" data-duration="3.2" data-track-index="1"><i style="font-size:1.9em">Thanks, Dad.</i><br>Send this to yours.</div>
     </div>
     <script>
       const tl = gsap.timeline({ paused: true });

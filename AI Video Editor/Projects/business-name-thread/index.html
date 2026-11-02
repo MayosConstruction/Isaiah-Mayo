@@ -5,22 +5,22 @@
     <meta name="viewport" content="width=1080, height=1920" />
     <script src="assets/gsap.min.js"></script>
     <style>
-      @font-face { font-family: "Anton"; src: url("assets/fonts/Anton-Regular.ttf"); }
+      @font-face { font-family: "Bricolage"; src: url("assets/fonts/BricolageGrotesque-ExtraBold.ttf"); font-weight: 800; }
       @font-face { font-family: "Montserrat"; src: url("assets/fonts/Montserrat-Bold.ttf"); font-weight: 700; }
       * { margin: 0; padding: 0; box-sizing: border-box; }
       html, body { width: 1080px; height: 1920px; overflow: hidden; background: #000; }
       #root { position: relative; width: 1080px; height: 1920px; overflow: hidden; }
       .shot { position: absolute; inset: 0; width: 1080px; height: 1920px; object-fit: cover; }
-      /* Hooks: Anton, all caps, white with a heavy black outline; one word in Mayo's red. */
+      /* Hooks: Bricolage Grotesque ExtraBold, sentence case, tight, soft shadow; one word in yellow. */
       .hook {
-        position: absolute; top: 330px; left: 70px; right: 70px; text-align: center; z-index: 10; color: #fff;
-        font: 400 112px/1.0 "Anton", sans-serif; text-transform: uppercase; text-wrap: balance;
-        -webkit-text-stroke: 12px #111; paint-order: stroke fill; text-shadow: 0 8px 18px rgba(0, 0, 0, 0.45);
+        position: absolute; top: 300px; left: 80px; right: 80px; text-align: center; z-index: 10; color: #fff;
+        font: 800 112px/1.0 "Bricolage", sans-serif; letter-spacing: -0.035em; text-wrap: balance;
+        text-shadow: 0 4px 24px rgba(0, 0, 0, 0.55), 0 1px 4px rgba(0, 0, 0, 0.5);
       }
-      .hook .red { color: #c4553b; }
+      .hook .red { color: #ffd23f; }
       .sub {
-        position: absolute; top: 520px; left: 90px; right: 90px; text-align: center; z-index: 11; color: #fff;
-        font: 700 54px/1.25 "Montserrat", sans-serif; text-wrap: balance;
+        position: absolute; top: 560px; left: 90px; right: 90px; text-align: center; z-index: 11; color: #fff;
+        font: 700 50px/1.25 "Montserrat", sans-serif; text-wrap: balance;
         text-shadow: 0 1px 3px rgba(0, 0, 0, 0.9), 0 0 12px rgba(0, 0, 0, 0.6), 0 0 26px rgba(0, 0, 0, 0.4);
       }
     </style>
