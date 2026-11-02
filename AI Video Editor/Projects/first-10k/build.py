@@ -26,21 +26,20 @@ def probe(src, sel):
 OV = 0.22  # crossfade overlap
 # (src, in, dur, opts)  opts: rate, vol, gray, crop, cut(hard cut, no blend)
 STORY = [
-    (f'{R}/IMG_2454.mov', 0.0, 2.4, dict(rate=0.6)),                      # hook walk
-    (f'{R}/IMG_3101.mov', 2.0, 1.6, dict(gray=1, vol=0.35)),              # cop
-    (f'{U}/ee8a389e-IMG_4699.mov', 0.3, 1.6, dict(gray=1)),               # banker
-    (f'{R}/IMG_3101.mov', 6.0, 1.4, dict(gray=1, vol=0.35)),              # cop again
-    (f'{R}/IMG_2148.mov', 0.5, 1.8, dict(gray=1)),                        # same paycheck
-    (f'{R}/IMG_4458.mov', 0.3, 2.0, dict(cut=1, vol=0.3)),                # QUIT (hard cut to color)
-    (f'{R}/IMG_2239.mov', 0.0, 0.8, dict(vol=0.4)),                       # 1 small jobs
-    (f'{R}/IMG_2235.mov', 0.3, 0.8, dict(vol=0.4)),
-    (f'{R}/IMG_2417.mov', 1.0, 0.8, {}),                                  # 2 doors
-    (f'{R}/IMG_2148.mov', 5.0, 0.8, {}),
-    (f'{R}/IMG_4467.mov', 4.0, 0.8, dict(vol=0.6)),                       # 3 posted
-    (f'{R}/IMG_4464.mov', 6.8, 0.8, dict(vol=0.7)),
-    (f'{R}/IMG_4462.mov', 0.6, 0.8, dict(vol=0.6)),                       # 4 decks + kitchens
-    (f'{U}/18e009f9-IMG_2547.mov', 0.5, 0.8, dict(vol=0.4)),
-    (f'{R}/IMG_2548.mov', 0.0, 1.0, dict(vol=0.5)),                       # figured it out
+    (f'{R}/IMG_2454.mov', 0.0, 3.0, dict(rate=0.48)),                     # hook walk
+    (f'{R}/IMG_3101.mov', 2.0, 1.4, dict(gray=1, vol=0.35)),              # I was a cop
+    (f'{R}/IMG_2148.mov', 0.5, 2.2, dict(gray=1)),                        # anxiety, resigned
+    (f'{U}/ee8a389e-IMG_4699.mov', 0.3, 1.4, dict(gray=1)),               # banker
+    (f'{U}/ee8a389e-IMG_4699.mov', 1.8, 2.0, dict(gray=1)),               # not me
+    (f'{R}/IMG_3101.mov', 6.0, 1.7, dict(gray=1, vol=0.35)),              # back to cop
+    (f'{R}/IMG_2148.mov', 3.0, 1.8, dict(gray=1)),                        # same paycheck
+    (f'{R}/IMG_4458.mov', 0.3, 2.0, dict(cut=1, vol=0.3)),                # bet on myself (color)
+    (f'{R}/IMG_2236.mov', 0.5, 1.8, dict(vol=0.4)),                       # day 1 $0
+    (f'{R}/IMG_2239.mov', 0.0, 0.7, dict(vol=0.4)), (f'{R}/IMG_2235.mov', 0.3, 0.7, dict(vol=0.4)),
+    (f'{R}/IMG_2417.mov', 1.0, 0.8, {}), (f'{R}/IMG_2148.mov', 6.0, 0.8, {}),
+    (f'{R}/IMG_4467.mov', 4.0, 0.7, dict(vol=0.6)), (f'{R}/IMG_4464.mov', 6.8, 0.7, dict(vol=0.7)),
+    (f'{R}/IMG_4462.mov', 0.6, 0.7, dict(vol=0.6)), (f'{U}/18e009f9-IMG_2547.mov', 0.5, 0.7, dict(vol=0.4)),
+    (f'{R}/IMG_2548.mov', 0.0, 0.9, dict(vol=0.5)),                       # and then...
 ]
 MONTAGE = [
     (f'{R}/IMG_4460.mov', 0.5), (f'{U}/f811d03a-image.jpg', 0), (f'{R}/IMG_2236.mov', 1.5), (f'{U}/08bebf6e-image.jpg', 0),
@@ -49,10 +48,10 @@ MONTAGE = [
     (f'{MM}/fan-b.jpg', 0), (f'{U}/18e009f9-IMG_2547.mov', 3.0), (f'{U}/ba9abc44-image.jpg', 0),
 ]
 END = [
-    (f'{R}/IMG_4464.mov', 1.0, 2.0, dict(vol=0.5)),                       # work with my dad
-    (f'{R}/IMG_2248.mov', 3.5, 1.3, {}),                                  # home for my boys
+    (f'{R}/IMG_4464.mov', 1.0, 2.0, dict(vol=0.5)),                       # build with my dad
+    (f'{R}/IMG_2248.mov', 3.5, 1.2, {}),                                  # home for my boys
     (f'{R}/IMG_0068.mov', 8.0, 1.2, {}),
-    (f'{R}/IMG_2248.mov', 6.0, 2.2, {}),                                  # paycheck won't
+    (f'{R}/IMG_2248.mov', 4.4, 4.2, {}),                                  # paycheck won't + follow
 ]
 
 def prep(src, t_in, dur, name, rate=1.0, vol=0, **_):
@@ -105,7 +104,7 @@ for k, ((src, tin), d) in enumerate(zip(MONTAGE, durs)):
     t += d
 # Deck before -> after wipe, counter lands on the reveal
 shutil.copy(f'{U}/8da61488-image.jpg', os.path.join(A, 'deck-b.jpg')); shutil.copy(f'{U}/42910d69-image.jpg', os.path.join(A, 'deck-a.jpg'))
-W0 = t; LAND = W0 + 0.8; HOLD = 2.2
+W0 = t; LAND = W0 + 0.8; HOLD = 2.0
 els.append(media_el('db', 'assets/deck-b.jpg', W0, 0.8 + HOLD))
 els.append(media_el('da', 'assets/deck-a.jpg', W0, 0.8 + HOLD))
 els.append(f'      <div id="wl" class="clip wipe" data-start="{W0:.3f}" data-duration="0.8" data-track-index="2"></div>')
@@ -134,23 +133,40 @@ def line(id, start, dur, text, gold=(), y=640, box=False, sfx_name='pop', shake=
     if sfx_name: audio(start, sfx(sfx_name), vol)
     if shake: js.append(f'      tl.fromTo("#cam", {{ x: 0, y: 0 }}, {{ keyframes: [{{ x: -18, y: 10, duration: 0.04 }}, {{ x: 16, y: -12, duration: 0.04 }}, {{ x: -10, y: 6, duration: 0.04 }}, {{ x: 0, y: 0, duration: 0.05 }}], immediateRender: false }}, {start + 0.02:.3f});')
     if flash: js.append(f'      tl.fromTo("#fx", {{ opacity: 0.8 }}, {{ opacity: 0, duration: 0.3, ease: "power2.out", immediateRender: false }}, {start:.3f});')
+KIN = []
+def kin(id, start, dur, text, gold=(), y=660, sfx_name='click', vol=0.3, shake=False, flash=False, first=0.0):
+    words = text.split(' ')
+    spans = []
+    for k, w in enumerate(words):
+        g = any(w.strip('.,:!?') == x.strip('.,:!?') or w == x for x in gold)
+        spans.append(f'<span id="{id}w{k}" class="w{" g" if g else ""}">{html.escape(w)}</span>')
+        js.append(f'      tl.fromTo("#{id}w{k}", {{ opacity: 0, scale: 1.6, y: 18 }}, {{ opacity: 1, scale: 1, y: 0, duration: 0.14, ease: "power4.out", immediateRender: false }}, {start + first + k * 0.11:.3f});')
+        if g: audio(start + first + k * 0.11, sfx('pop'), 0.45, 0.4)
+    T.append((id, start, dur, ' '.join(spans), 'kin', y))
+    if sfx_name: audio(start, sfx(sfx_name), vol)
+    if shake: js.append(f'      tl.fromTo("#cam", {{ x: 0, y: 0 }}, {{ keyframes: [{{ x: -18, y: 10, duration: 0.04 }}, {{ x: 16, y: -12, duration: 0.04 }}, {{ x: -10, y: 6, duration: 0.04 }}, {{ x: 0, y: 0, duration: 0.05 }}], immediateRender: false }}, {start + 0.02:.3f});')
+    if flash: js.append(f'      tl.fromTo("#fx", {{ opacity: 0.8 }}, {{ opacity: 0, duration: 0.3, ease: "power2.out", immediateRender: false }}, {start:.3f});')
 st = [0]
-for s in STORY: st.append(st[-1] + s[2])
-line('l0', 0, 2.4, "I made my first $10,000\nin under a month 👇", ['$10,000'], sfx_name=None)
-line('l1', st[1], 1.6, "I was a cop.", ['cop.'], sfx_name='click')
-line('l2', st[2], 1.6, "Then a banker.", ['banker.'], sfx_name='click')
-line('l3', st[3], 1.4, "Then a cop again.", ['again.'], sfx_name='click', shake=True)
-line('l4', st[4], 1.8, "Same stress.\nSame paycheck.", ['Same paycheck.'], sfx_name='buzzer', shake=True)
-line('l5', st[5], 2.0, "So I quit\nthe paycheck.", ['quit'], box=True, sfx_name='boom', shake=True, flash=True, vol=0.8)
-line('l6', st[6], 1.6, "1. Took every\nsmall job", ['every'], sfx_name='key-press', shake=True)
-line('l7', st[8], 1.6, "2. Knocked doors.\nHanded out flyers.", ['Knocked doors.'], sfx_name='key-press', shake=True)
-line('l8', st[10], 1.6, "3. Posted every job\non Facebook", ['every job'], sfx_name='shutter', shake=True)
-line('l9', st[12], 1.6, "4. Said yes to decks\n+ kitchens", ['yes'], sfx_name='key-press', shake=True)
-line('l10', st[14], 1.0, "...and figured it\nout as I went", ['figured'])
-line('l11', LAND, HOLD, "in under a month.", ['under a month.'], y=900, sfx_name=None)
-line('l12', E0, 2.0, "Now I work\nwith my dad.", ['my dad.'], y=1150)
-line('l13', E0 + 2.0, 2.5, "And I'm home\nfor my boys.", ['my boys.'], y=1150)
-line('l14', E0 + 4.5, total - E0 - 4.5, "Your paycheck\nwon't give you that.", ["won't"], y=200, box=True, sfx_name='boom', shake=True, vol=0.8)
+for s_ in STORY: st.append(round(st[-1] + s_[2], 3))
+kin('k0', 0, 3.0, "I made $10,000 my first month. Here's how 👇", ['$10,000'], y=640, sfx_name=None, first=0.35)
+kin('k1', st[1], 1.4, "I was a cop.", ['cop.'])
+kin('k2', st[2], 2.2, "The anxiety got so bad I resigned.", ['anxiety', 'resigned.'], sfx_name='error', vol=0.35)
+kin('k3', st[3], 1.4, "So I became a banker.", ['banker.'])
+kin('k4', st[4], 2.0, "Nice office. Steady check. Not me.", ['Not', 'me.'])
+kin('k5', st[5], 1.7, "So I went back to being a cop.", ['back'])
+kin('k6', st[6], 1.8, "Same stress. Same paycheck.", ['stress.', 'paycheck.'], sfx_name='buzzer', vol=0.5, shake=True)
+line('l7', st[7], 2.0, "So I bet\non myself.", ['on myself.'], box=True, sfx_name='boom', shake=True, flash=True, vol=0.8)
+kin('k8', st[8], 1.8, "Day 1: $0. Zero customers.", ['$0.', 'Zero'], sfx_name='click')
+kin('k9', st[9], 1.4, "I took every small job.", ['every'], sfx_name='key-press', vol=0.5, shake=True)
+kin('k10', st[11], 1.6, "Knocked doors. Handed out flyers.", ['doors.', 'flyers.'], sfx_name='key-press', vol=0.5, shake=True)
+kin('k11', st[13], 1.4, "Posted every job on Facebook.", ['Facebook.'], sfx_name='shutter', vol=0.5, shake=True)
+kin('k12', st[15], 1.4, "Said yes to decks and kitchens.", ['yes'], sfx_name='key-press', vol=0.5, shake=True)
+kin('k13', st[17], 0.9, "And then...", ['then...'], sfx_name=None)
+kin('k14', LAND, HOLD, "in under a month.", ['month.'], y=900, sfx_name=None)
+kin('k15', E0, 2.0, "Now I build with my dad.", ['dad.'], y=1150)
+kin('k16', E0 + 2.0, 2.4, "And I'm home for my boys.", ['boys.'], y=1150)
+line('l17', E0 + 4.4, 2.2, "Your paycheck\nwon't give you that.", ["won't"], y=200, box=True, sfx_name='boom', shake=True, vol=0.8)
+kin('k18', E0 + 6.6, total - E0 - 6.6, "Follow if you're ready to bet on yourself.", ['bet', 'on', 'yourself.'], y=1250, sfx_name='pop', vol=0.4)
 # Counter
 js.append(f'''      const m = {{ v: 0 }};
       tl.fromTo(m, {{ v: 0 }}, {{ v: 10000, duration: {LAND - M0:.3f}, ease: "power2.in", immediateRender: false,
@@ -188,6 +204,10 @@ doc = f'''<!doctype html>
         -webkit-text-stroke: 10px #000; paint-order: stroke fill; text-shadow: 0 6px 18px rgba(0,0,0,.55); }}
       .box {{ position: absolute; left: 50px; right: 50px; text-align: center; z-index: 18; font: 400 116px/1.22 "Bebas", sans-serif; }}
       .y {{ color: #ffd23f; }}
+      .kin {{ position: absolute; left: 60px; right: 60px; text-align: center; z-index: 18; color: #fff; font: 800 80px/1.2 "Montserrat", sans-serif; text-transform: uppercase; text-wrap: balance;
+        -webkit-text-stroke: 11px #000; paint-order: stroke fill; text-shadow: 0 6px 18px rgba(0,0,0,.55); }}
+      .kin .w {{ display: inline-block; }}
+      .kin .g {{ color: #ffd23f; font-size: 1.22em; }}
       .money {{ position: absolute; top: 560px; left: 0; right: 0; text-align: center; z-index: 22; font: 400 270px/1 "Bebas", sans-serif; color: #ffd23f;
         -webkit-text-stroke: 14px #000; paint-order: stroke fill; text-shadow: 0 10px 30px rgba(0,0,0,.6); font-variant-numeric: tabular-nums; }}
       .wipe {{ position: absolute; top: 0; bottom: 0; left: 0; width: 10px; margin-left: -5px; background: #fff; z-index: 12; box-shadow: 0 0 24px rgba(0,0,0,.5); }}
@@ -200,7 +220,7 @@ doc = f'''<!doctype html>
 {chr(10).join(els)}
       </div>
       <div id="fx" class="clip flash" data-start="0" data-duration="{total}" data-track-index="3"></div>
-      <div id="hook" class="clip hook" data-start="0" data-duration="2.4" data-track-index="3"><span class="b">Your paycheck is<br><span class="red">keeping you broke</span></span></div>
+      <div id="hook" class="clip hook" data-start="0" data-duration="3.0" data-track-index="3"><span class="b">Your paycheck is<br><span class="red">keeping you broke</span></span></div>
       <div id="money" class="clip money" data-start="{M0:.3f}" data-duration="{LAND + HOLD - M0:.3f}" data-track-index="6">$0</div>
 {texts}
 {auds}
