@@ -1,0 +1,13 @@
+{"name":"start-contractor-business",
+ "hook":{"text":"How I'd start a contractor\nbusiness with no experience","red":"no experience","dur":2.2,"size":106},
+ "shots":[{"src":"/home/user/Isaiah-Mayo/construction-content/raw-footage/IMG_2148.mov","in":1.0,"dur":2.2,"vol":0},{"src":"/home/user/Isaiah-Mayo/construction-content/raw-footage/IMG_2548.mov","in":0.0,"dur":1.5,"vol":0.5},{"src":"/home/user/Isaiah-Mayo/construction-content/raw-footage/IMG_2236.mov","in":0.5,"dur":1.5,"vol":0.5},{"src":"/home/user/Isaiah-Mayo/construction-content/raw-footage/IMG_4460.mov","in":0.0,"dur":1.5},{"src":"/home/user/Isaiah-Mayo/construction-content/raw-footage/IMG_2340.mov","in":1.0,"dur":1.5,"vol":0.3},{"src":"/home/user/Isaiah-Mayo/construction-content/raw-footage/IMG_2417.mov","in":1.0,"dur":1.5,"vol":0},{"src":"/home/user/Isaiah-Mayo/construction-content/raw-footage/IMG_4467.mov","in":4.0,"dur":1.5,"vol":0.6},{"slider":{"before":"/root/.claude/uploads/03d2cb76-e365-5423-89b9-e3b9838ff4f7/8da61488-image.jpg","after":"/root/.claude/uploads/03d2cb76-e365-5423-89b9-e3b9838ff4f7/42910d69-image.jpg"},"dur":3.2},{"src":"/home/user/Isaiah-Mayo/construction-content/raw-footage/IMG_2454.mov","in":0.0,"dur":1.8,"rate":0.6,"vol":0}],
+ "lines":[{"t":2.2,"dur":1.5,"text":"1. File an LLC","gold":["LLC"],"sfx":"key-press","shake":true},
+          {"t":3.7,"dur":1.5,"text":"2. Get licensed","gold":["licensed"],"sfx":"key-press","shake":true},
+          {"t":5.2,"dur":1.5,"text":"3. Get insured","gold":["insured"],"sfx":"key-press","shake":true},
+          {"t":6.7,"dur":1.5,"text":"4. Find subs\nyou trust","gold":["subs"],"sfx":"key-press","shake":true},
+          {"t":8.2,"dur":1.5,"text":"5. Knock doors.\nSeriously.","gold":["Knock doors."],"sfx":"key-press","shake":true},
+          {"t":9.7,"dur":1.5,"text":"6. Post every\nsingle job","gold":["every"],"sfx":"shutter","shake":true},
+          {"t":11.2,"dur":1.0,"text":"Then this happens 👇","gold":["this"],"sfx":null},
+          {"t":12.4,"dur":2.0,"text":"From zero to\nthis.","gold":["this."],"box":true,"sfx":"ching"},
+          {"t":14.4,"dur":1.8,"text":"No experience.\nJust start.","gold":["Just start."],"box":true,"sfx":"boom","shake":true,"flash":true}],
+ "events":[{"t":10.4,"sfx":"sweep","vol":0.5}]}

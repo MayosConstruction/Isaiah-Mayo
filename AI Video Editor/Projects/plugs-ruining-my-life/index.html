@@ -10,57 +10,93 @@
       * { margin: 0; padding: 0; box-sizing: border-box; }
       html, body { width: 1080px; height: 1920px; overflow: hidden; background: #000; }
       #root { position: relative; width: 1080px; height: 1920px; overflow: hidden; }
+      #cam { position: absolute; inset: 0; }
       .shot { position: absolute; inset: 0; width: 1080px; height: 1920px; object-fit: cover; }
       /* Hook: Bebas Neue, black on white boxes, trigger word in Mayo's red. */
-      .hook { position: absolute; top: 240px; left: 50px; right: 50px; text-align: center; z-index: 20; font: 400 124px/1.22 "Bebas", sans-serif; }
-      .hook span.b { background: #fff; color: #111; padding: 4px 26px 0; border-radius: 16px; -webkit-box-decoration-break: clone; box-decoration-break: clone; }
+      .hook { position: absolute; top: 240px; left: 50px; right: 50px; text-align: center; z-index: 20; font: 400 128px/1.22 "Bebas", sans-serif; }
+      .hook span.b, .box span.b { background: #fff; color: #111; padding: 4px 26px 0; border-radius: 16px; -webkit-box-decoration-break: clone; box-decoration-break: clone; }
       .red { color: #c4553b; }
-      /* Pain-point lines: Montserrat ExtraBold, white with black outline, key words gold. */
-      .line { position: absolute; left: 70px; right: 70px; text-align: center; z-index: 18; color: #fff; font: 800 70px/1.18 "Montserrat", sans-serif; text-transform: uppercase; text-wrap: balance;
-        -webkit-text-stroke: 9px #000; paint-order: stroke fill; text-shadow: 0 6px 18px rgba(0,0,0,.55); }
-      .box { position: absolute; left: 50px; right: 50px; text-align: center; z-index: 18; font: 400 104px/1.22 "Bebas", sans-serif; }
-      .box { color: #111; } .box::before { content: none; }
-      .box { background: none; }
+      /* Lines: Montserrat ExtraBold, white with black outline, key words gold. */
+      .line { position: absolute; left: 60px; right: 60px; text-align: center; z-index: 18; color: #fff; font: 800 76px/1.16 "Montserrat", sans-serif; text-transform: uppercase; text-wrap: balance;
+        -webkit-text-stroke: 10px #000; paint-order: stroke fill; text-shadow: 0 6px 18px rgba(0,0,0,.55); }
+      .box { position: absolute; left: 50px; right: 50px; text-align: center; z-index: 18; font: 400 116px/1.22 "Bebas", sans-serif; }
       .y { color: #ffd23f; }
       .box .y { color: #c4553b; }
+      .wipe { position: absolute; top: 0; bottom: 0; left: 0; width: 10px; margin-left: -5px; background: #fff; z-index: 12; box-shadow: 0 0 24px rgba(0,0,0,.5); }
+      .ba { position: absolute; top: 1250px; z-index: 16; font: 400 72px/1 "Bebas", sans-serif; color: #fff; background: rgba(0,0,0,.6); padding: 12px 26px 6px; border-radius: 12px; }
+      .flash { position: absolute; inset: 0; background: #fff; z-index: 30; opacity: 0; }
     </style>
   </head>
   <body>
-    <div id="root" data-composition-id="main" data-start="0" data-duration="12.2" data-width="1080" data-height="1920">
-      <video id="v0" class="clip shot" src="assets/shot0.mp4" muted playsinline data-start="0.00" data-duration="2.4" data-media-start="0" data-track-index="0"></video>
-      <video id="v1" class="clip shot" src="assets/shot1.mp4" muted playsinline data-start="2.40" data-duration="1.3" data-media-start="0" data-track-index="0"></video>
-      <video id="v2" class="clip shot" src="assets/shot2.mp4" muted playsinline data-start="3.70" data-duration="1.3" data-media-start="0" data-track-index="0"></video>
-      <video id="v3" class="clip shot" src="assets/shot3.mp4" muted playsinline data-start="5.00" data-duration="1.4" data-media-start="0" data-track-index="0"></video>
-      <video id="v4" class="clip shot" src="assets/shot4.mp4" muted playsinline data-start="6.40" data-duration="1.6" data-media-start="0" data-track-index="0"></video>
-      <video id="v5" class="clip shot" src="assets/shot5.mp4" muted playsinline data-start="8.00" data-duration="1.6" data-media-start="0" data-track-index="0"></video>
-      <img id="v6" class="clip shot" src="assets/shot6.jpg" data-start="9.60" data-duration="2.6" data-track-index="0" />
-      <div id="hook" class="clip hook" data-start="0" data-duration="2.4" data-track-index="3"><span class="b">Screw plugs are<br><span class="red">ruining</span> my life</span></div>
-      <div id="l0" class="clip line" style="top:640px" data-start="2.4" data-duration="1.3" data-track-index="4">Every. Single. <span class="y">Screw.</span></div>
-      <div id="l1" class="clip line" style="top:640px" data-start="3.7" data-duration="1.3" data-track-index="5">Gets a <span class="y">plug.</span></div>
-      <div id="l2" class="clip line" style="top:640px" data-start="5.0" data-duration="3.0" data-track-index="4">Glue. Plug. Tap. <span class="y">Trim.</span></div>
-      <div id="l3" class="clip line" style="top:640px" data-start="8.0" data-duration="1.6" data-track-index="5">By hand.<br>On <span class="y">every board.</span></div>
-      <div id="l4" class="clip box" style="top:640px" data-start="9.6" data-duration="2.6" data-track-index="4"><span class="b" style="background:#fff;padding:4px 26px 0;border-radius:16px;-webkit-box-decoration-break:clone;box-decoration-break:clone">...okay fine.<br>It&#x27;s <span class="y">worth it</span> 😮‍💨</span></div>
-      <audio id="p0" class="clip" src="assets/pop.mp3" data-start="2.4" data-duration="0.5" data-volume="0.45" data-track-index="8"></audio>
-      <audio id="p1" class="clip" src="assets/pop.mp3" data-start="3.7" data-duration="0.5" data-volume="0.45" data-track-index="9"></audio>
-      <audio id="p2" class="clip" src="assets/pop.mp3" data-start="5.0" data-duration="0.5" data-volume="0.45" data-track-index="8"></audio>
-      <audio id="p3" class="clip" src="assets/pop.mp3" data-start="8.0" data-duration="0.5" data-volume="0.45" data-track-index="9"></audio>
-      <audio id="p4" class="clip" src="assets/pop.mp3" data-start="9.6" data-duration="0.5" data-volume="0.45" data-track-index="8"></audio>
-      <audio id="w0" class="clip" src="assets/whoosh-short.mp3" data-start="2.32" data-duration="0.8" data-volume="0.3" data-track-index="10"></audio>
-      <audio id="w1" class="clip" src="assets/whoosh-short.mp3" data-start="3.62" data-duration="0.8" data-volume="0.3" data-track-index="11"></audio>
-      <audio id="w2" class="clip" src="assets/whoosh-short.mp3" data-start="4.92" data-duration="0.8" data-volume="0.3" data-track-index="10"></audio>
-      <audio id="w3" class="clip" src="assets/whoosh-short.mp3" data-start="6.32" data-duration="0.8" data-volume="0.3" data-track-index="11"></audio>
-      <audio id="w4" class="clip" src="assets/whoosh-short.mp3" data-start="7.92" data-duration="0.8" data-volume="0.3" data-track-index="10"></audio>
-      <audio id="w5" class="clip" src="assets/whoosh-short.mp3" data-start="9.52" data-duration="0.8" data-volume="0.3" data-track-index="11"></audio>
+    <div id="root" data-composition-id="main" data-start="0" data-duration="11.0" data-width="1080" data-height="1920">
+      <div id="cam">
+      <video id="v0" class="clip shot" src="assets/shot0.mp4" muted playsinline data-start="0.00" data-duration="1.6" data-media-start="0" data-track-index="0"></video>
+      <video id="v1" class="clip shot" src="assets/shot1.mp4" muted playsinline data-start="1.60" data-duration="1.0" data-media-start="0" data-track-index="0"></video>
+      <video id="v2" class="clip shot" src="assets/shot2.mp4" muted playsinline data-start="2.60" data-duration="1.0" data-media-start="0" data-track-index="0"></video>
+      <video id="v3" class="clip shot" src="assets/shot3.mp4" muted playsinline data-start="3.60" data-duration="1.0" data-media-start="0" data-track-index="0"></video>
+      <video id="v4" class="clip shot" src="assets/shot4.mp4" muted playsinline data-start="4.60" data-duration="1.4" data-media-start="0" data-track-index="0"></video>
+      <video id="v5" class="clip shot" src="assets/shot5.mp4" muted playsinline data-start="6.00" data-duration="1.4" data-media-start="0" data-track-index="0"></video>
+      <img id="v6" class="clip shot" src="assets/shot6b.jpg" data-start="7.40" data-duration="3.6" data-track-index="0" />
+      <img id="v6a" class="clip shot" src="assets/shot6a.jpg" data-start="7.40" data-duration="3.6" data-track-index="1" />
+      <div id="v6l" class="clip wipe" data-start="7.40" data-duration="1.40" data-track-index="2"></div>
+      <div id="v6tb" class="clip ba" style="left:50px" data-start="7.40" data-duration="0.5" data-track-index="2">BEFORE</div>
+      <div id="v6ta" class="clip ba" style="right:50px" data-start="8.40" data-duration="2.60" data-track-index="2">AFTER</div>
+      </div>
+      <div id="fx" class="clip flash" data-start="0" data-duration="11.0" data-track-index="3"></div>
+      <div id="hook" class="clip hook" data-start="0" data-duration="1.6" data-track-index="3"><span class="b">Screw plugs are<br><span class="red">ruining</span> my life</span></div>
+      <div id="l0" class="clip line" style="top:640px" data-start="1.6" data-duration="1.0" data-track-index="4">Every. Single. <span class="y">Screw.</span></div>
+      <div id="l1" class="clip line" style="top:640px" data-start="2.6" data-duration="1.0" data-track-index="5">Gets a <span class="y">plug.</span></div>
+      <div id="l2" class="clip line" style="top:700px" data-start="3.6" data-duration="0.3" data-track-index="4">Glue.</div>
+      <div id="l3" class="clip line" style="top:700px" data-start="3.9" data-duration="0.3" data-track-index="5">Plug.</div>
+      <div id="l4" class="clip line" style="top:700px" data-start="4.2" data-duration="0.4" data-track-index="4">Tap.</div>
+      <div id="l5" class="clip line" style="top:640px" data-start="4.6" data-duration="1.4" data-track-index="5">By <span class="y">hand.</span></div>
+      <div id="l6" class="clip line" style="top:640px" data-start="6.0" data-duration="1.4" data-track-index="4"><span class="y">Hundreds</span> of them 😐</div>
+      <div id="l7" class="clip box" style="top:640px" data-start="8.6" data-duration="2.4" data-track-index="5"><span class="b">...okay fine.<br>It&#x27;s <span class="y">worth it</span></span></div>
+      <audio id="a0" class="clip" src="assets/nat0.m4a" data-start="0.00" data-duration="1.60" data-volume="0.7" data-track-index="8"></audio>
+      <audio id="a1" class="clip" src="assets/nat1.m4a" data-start="1.60" data-duration="1.00" data-volume="0.55" data-track-index="9"></audio>
+      <audio id="a2" class="clip" src="assets/whoosh-short.mp3" data-start="1.50" data-duration="1.60" data-volume="0.35" data-track-index="10"></audio>
+      <audio id="a3" class="clip" src="assets/nat2.m4a" data-start="2.60" data-duration="1.00" data-volume="0.7" data-track-index="11"></audio>
+      <audio id="a4" class="clip" src="assets/whoosh-short.mp3" data-start="2.50" data-duration="1.60" data-volume="0.35" data-track-index="12"></audio>
+      <audio id="a5" class="clip" src="assets/nat3.m4a" data-start="3.60" data-duration="1.00" data-volume="0.7" data-track-index="13"></audio>
+      <audio id="a6" class="clip" src="assets/whoosh-short.mp3" data-start="3.50" data-duration="1.60" data-volume="0.35" data-track-index="8"></audio>
+      <audio id="a7" class="clip" src="assets/nat4.m4a" data-start="4.60" data-duration="1.40" data-volume="0.9" data-track-index="9"></audio>
+      <audio id="a8" class="clip" src="assets/whoosh-short.mp3" data-start="4.50" data-duration="1.60" data-volume="0.35" data-track-index="10"></audio>
+      <audio id="a9" class="clip" src="assets/nat5.m4a" data-start="6.00" data-duration="1.40" data-volume="0.7" data-track-index="11"></audio>
+      <audio id="a10" class="clip" src="assets/whoosh-short.mp3" data-start="5.90" data-duration="1.60" data-volume="0.35" data-track-index="12"></audio>
+      <audio id="a11" class="clip" src="assets/whoosh-cinematic.mp3" data-start="7.75" data-duration="1.60" data-volume="0.7" data-track-index="13"></audio>
+      <audio id="a12" class="clip" src="assets/sparkle.mp3" data-start="8.45" data-duration="1.60" data-volume="0.5" data-track-index="8"></audio>
+      <audio id="a13" class="clip" src="assets/boom.mp3" data-start="0.00" data-duration="1.60" data-volume="0.8" data-track-index="9"></audio>
+      <audio id="a14" class="clip" src="assets/pop.mp3" data-start="1.60" data-duration="1.60" data-volume="0.55" data-track-index="10"></audio>
+      <audio id="a15" class="clip" src="assets/pop.mp3" data-start="2.60" data-duration="1.60" data-volume="0.55" data-track-index="11"></audio>
+      <audio id="a16" class="clip" src="assets/click.mp3" data-start="3.60" data-duration="1.60" data-volume="0.55" data-track-index="12"></audio>
+      <audio id="a17" class="clip" src="assets/click.mp3" data-start="3.90" data-duration="1.60" data-volume="0.55" data-track-index="13"></audio>
+      <audio id="a18" class="clip" src="assets/click.mp3" data-start="4.20" data-duration="1.60" data-volume="0.55" data-track-index="8"></audio>
+      <audio id="a19" class="clip" src="assets/shutter.mp3" data-start="4.60" data-duration="1.60" data-volume="0.55" data-track-index="9"></audio>
+      <audio id="a20" class="clip" src="assets/boom.mp3" data-start="6.00" data-duration="1.60" data-volume="0.55" data-track-index="10"></audio>
+      <audio id="a21" class="clip" src="assets/boom.mp3" data-start="8.60" data-duration="1.60" data-volume="0.55" data-track-index="11"></audio>
+      <audio id="a22" class="clip" src="assets/sweep.mp3" data-start="6.40" data-duration="1.60" data-volume="0.5" data-track-index="12"></audio>
     </div>
     <script>
       window.__timelines = window.__timelines || {};
       const tl = gsap.timeline({ paused: true });
-      [["#v0",0.00,2.4],["#v1",2.40,1.3],["#v2",3.70,1.3],["#v3",5.00,1.4],["#v4",6.40,1.6],["#v5",8.00,1.6],["#v6",9.60,2.6]].forEach(([id, t, d]) => {
-        tl.fromTo(id, { scale: 1.1 }, { scale: 1, duration: Math.min(d, 0.6), ease: "power3.out" }, t);
+      [["#v0",0.00,1.6],["#v1",1.60,1.0],["#v2",2.60,1.0],["#v3",3.60,1.0],["#v4",4.60,1.4],["#v5",6.00,1.4],["#v6",7.40,3.6]].forEach(([id, t, d]) => {
+        tl.fromTo(id, { scale: 1.14 }, { scale: 1, duration: Math.min(d, 0.5), ease: "power3.out", immediateRender: false }, t);
       });
-      [["#l0",2.4],["#l1",3.7],["#l2",5.0],["#l3",8.0],["#l4",9.6]].forEach(([id, t]) => {
-        tl.fromTo(id, { scale: 0.7, opacity: 0 }, { scale: 1, opacity: 1, duration: 0.18, ease: "back.out(2)", immediateRender: false }, t);
+      // Hook is readable on frame 0, then punches with the boom.
+      tl.fromTo("#hook", { scale: 1 }, { keyframes: [{ scale: 1.12, duration: 0.06 }, { scale: 1, duration: 0.22, ease: "back.out(3)" }], immediateRender: false }, 0.02);
+      [["#l0",1.6],["#l1",2.6],["#l2",3.6],["#l3",3.9],["#l4",4.2],["#l5",4.6],["#l6",6.0],["#l7",8.6]].forEach(([id, t]) => {
+        tl.fromTo(id, { scale: 1.6, opacity: 0 }, { scale: 1, opacity: 1, duration: 0.16, ease: "power4.out", immediateRender: false }, t);
       });
+      // Camera shake on punches.
+      [0.00,1.60,4.60,6.00,8.60].forEach((t) => {
+        tl.fromTo("#cam", { x: 0, y: 0 }, { keyframes: [{ x: -18, y: 10, duration: 0.04 }, { x: 16, y: -12, duration: 0.04 }, { x: -10, y: 6, duration: 0.04 }, { x: 6, y: -4, duration: 0.04 }, { x: 0, y: 0, duration: 0.05 }], immediateRender: false }, t + 0.02);
+      });
+      [].forEach((t) => {
+        tl.fromTo("#fx", { opacity: 0.8 }, { opacity: 0, duration: 0.25, ease: "power2.out", immediateRender: false }, t);
+      });
+      tl.fromTo("#v6a", { clipPath: "inset(0 100% 0 0)" }, { clipPath: "inset(0 0% 0 0)", duration: 1.0, ease: "power2.inOut", immediateRender: true }, 7.75);
+      tl.fromTo("#v6l", { x: 0 }, { x: 1080, duration: 1.0, ease: "power2.inOut", immediateRender: true }, 7.75);
+      tl.fromTo("#v6a", { scale: 1.06 }, { scale: 1, duration: 2, ease: "power1.out", immediateRender: false }, 7.75);
       window.__timelines["main"] = tl;
       tl.seek(0);
     </script>
