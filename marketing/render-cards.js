@@ -7,13 +7,7 @@ const dir = process.argv[2];
   await p.goto('file://' + dir + '/business-card.html');
   await p.evaluate(() => document.fonts.ready);
   await p.waitForTimeout(800);
-  const cards = await p.$$('.card');
-  await cards[0].screenshot({ path: `${dir}/Mayos-business-card-FRONT.png` });
-  await cards[1].screenshot({ path: `${dir}/Mayos-business-card-BACK.png` });
-  // Print-ready PDFs: front and back as separate files.
-  for (const [side, idx] of [['FRONT', 0], ['BACK', 1]]) {
-    await p.evaluate((keep) => document.querySelectorAll('.card').forEach((c, i) => (c.style.display = i === keep ? '' : 'none')), idx);
-    await p.pdf({ path: `${dir}/Mayos-business-card-${side}-print.pdf`, width: '3.75in', height: '2.25in', printBackground: true });
-  }
+  await (await p.$('.card')).screenshot({ path: `${dir}/Mayos-business-card.png` });
+  await p.pdf({ path: `${dir}/Mayos-business-card-print.pdf`, width: '3.75in', height: '2.25in', printBackground: true });
   await b.close();
 })();

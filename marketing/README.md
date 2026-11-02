@@ -6,8 +6,8 @@
 
 The back has the EDDM Retail postage indicia and "Local Postal Customer". Ask your printer to confirm it matches the current USPS EDDM requirements before printing.
 
-# Business cards
+# Business card (single-sided)
 
-- `Mayos-business-card-FRONT-print.pdf` and `Mayos-business-card-BACK-print.pdf`: print-ready, one side each, 3.5" × 2" with 0.125" bleed (file size 3.75" × 2.25").
-- `Mayos-business-card-FRONT.png` and `Mayos-business-card-BACK.png`: the same at 300 DPI.
+- `Mayos-business-card-print.pdf`: print-ready, one side, 3.5" × 2" with 0.125" bleed (file size 3.75" × 2.25").
+- `Mayos-business-card.png`: the same at 300 DPI.
 - `business-card.html`: the design. Edit the text, then run `node marketing/render-cards.js "$PWD/marketing"` to regenerate the files.
