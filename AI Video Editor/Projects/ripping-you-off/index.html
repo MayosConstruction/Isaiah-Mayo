@@ -1,0 +1,72 @@
+<!doctype html>
+<html lang="en" data-resolution="portrait">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=1080, height=1920" />
+    <script src="assets/gsap.min.js"></script>
+    <style>
+      @font-face { font-family: "Bebas"; src: url("assets/fonts/BebasNeue.ttf"); }
+      @font-face { font-family: "Montserrat"; src: url("assets/fonts/Montserrat-ExtraBold.ttf"); font-weight: 800; }
+      * { margin: 0; padding: 0; box-sizing: border-box; }
+      html, body { width: 1080px; height: 1920px; overflow: hidden; background: #000; }
+      #root { position: relative; width: 1080px; height: 1920px; overflow: hidden; }
+      .shot { position: absolute; inset: 0; width: 1080px; height: 1920px; object-fit: cover; }
+      /* Hook: Bebas Neue, black on white boxes, trigger word in Mayo's red. */
+      .hook { position: absolute; top: 240px; left: 50px; right: 50px; text-align: center; z-index: 20; font: 400 124px/1.22 "Bebas", sans-serif; }
+      .hook span.b { background: #fff; color: #111; padding: 4px 26px 0; border-radius: 16px; -webkit-box-decoration-break: clone; box-decoration-break: clone; }
+      .red { color: #c4553b; }
+      /* Pain-point lines: Montserrat ExtraBold, white with black outline, key words gold. */
+      .line { position: absolute; left: 70px; right: 70px; text-align: center; z-index: 18; color: #fff; font: 800 70px/1.18 "Montserrat", sans-serif; text-transform: uppercase; text-wrap: balance;
+        -webkit-text-stroke: 9px #000; paint-order: stroke fill; text-shadow: 0 6px 18px rgba(0,0,0,.55); }
+      .box { position: absolute; left: 50px; right: 50px; text-align: center; z-index: 18; font: 400 104px/1.22 "Bebas", sans-serif; }
+      .box { color: #111; } .box::before { content: none; }
+      .box { background: none; }
+      .y { color: #ffd23f; }
+      .box .y { color: #c4553b; }
+    </style>
+  </head>
+  <body>
+    <div id="root" data-composition-id="main" data-start="0" data-duration="16.1" data-width="1080" data-height="1920">
+      <video id="v0" class="clip shot" src="assets/shot0.mp4" muted playsinline data-start="0.00" data-duration="1.5" data-media-start="0" data-track-index="0"></video>
+      <video id="v1" class="clip shot" src="assets/shot1.mp4" muted playsinline data-start="1.50" data-duration="2.4" data-media-start="0" data-track-index="0"></video>
+      <video id="v2" class="clip shot" src="assets/shot2.mp4" muted playsinline data-start="3.90" data-duration="2.4" data-media-start="0" data-track-index="0"></video>
+      <video id="v3" class="clip shot" src="assets/shot3.mp4" muted playsinline data-start="6.30" data-duration="2.4" data-media-start="0" data-track-index="0"></video>
+      <video id="v4" class="clip shot" src="assets/shot4.mp4" muted playsinline data-start="8.70" data-duration="2.4" data-media-start="0" data-track-index="0"></video>
+      <video id="v5" class="clip shot" src="assets/shot5.mp4" muted playsinline data-start="11.10" data-duration="2.4" data-media-start="0" data-track-index="0"></video>
+      <img id="v6" class="clip shot" src="assets/shot6.jpg" data-start="13.50" data-duration="2.6" data-track-index="0" />
+      <div id="hook" class="clip hook" data-start="0" data-duration="1.5" data-track-index="3"><span class="b">Is your contractor<br><span class="red">ripping you off?</span></span></div>
+      <div id="l0" class="clip line" style="top:700px" data-start="0.0" data-duration="1.5" data-track-index="4"><span class="y">5</span> red flags 🚩</div>
+      <div id="l1" class="clip line" style="top:640px" data-start="1.5" data-duration="2.4" data-track-index="5">🚩 1. They want <span class="y">half</span><br>the money up front</div>
+      <div id="l2" class="clip line" style="top:640px" data-start="3.9" data-duration="2.4" data-track-index="4">🚩 2. The estimate<br>is <span class="y">one line</span></div>
+      <div id="l3" class="clip line" style="top:640px" data-start="6.3" data-duration="2.4" data-track-index="5">🚩 3. No <span class="y">license.</span><br>No <span class="y">insurance.</span></div>
+      <div id="l4" class="clip line" style="top:640px" data-start="8.7" data-duration="2.4" data-track-index="4">🚩 4. A new <span class="y">&quot;surprise&quot;</span><br>every week</div>
+      <div id="l5" class="clip line" style="top:640px" data-start="11.1" data-duration="2.4" data-track-index="5">🚩 5. &quot;This price is<br><span class="y">only good today&quot;</span></div>
+      <div id="l6" class="clip box" style="top:640px" data-start="13.5" data-duration="2.6" data-track-index="4"><span class="b" style="background:#fff;padding:4px 26px 0;border-radius:16px;-webkit-box-decoration-break:clone;box-decoration-break:clone"><span class="y">Save this</span> before<br>you hire anybody</span></div>
+      <audio id="p0" class="clip" src="assets/pop.mp3" data-start="0.0" data-duration="0.5" data-volume="0.45" data-track-index="8"></audio>
+      <audio id="p1" class="clip" src="assets/pop.mp3" data-start="1.5" data-duration="0.5" data-volume="0.45" data-track-index="9"></audio>
+      <audio id="p2" class="clip" src="assets/pop.mp3" data-start="3.9" data-duration="0.5" data-volume="0.45" data-track-index="8"></audio>
+      <audio id="p3" class="clip" src="assets/pop.mp3" data-start="6.3" data-duration="0.5" data-volume="0.45" data-track-index="9"></audio>
+      <audio id="p4" class="clip" src="assets/pop.mp3" data-start="8.7" data-duration="0.5" data-volume="0.45" data-track-index="8"></audio>
+      <audio id="p5" class="clip" src="assets/pop.mp3" data-start="11.1" data-duration="0.5" data-volume="0.45" data-track-index="9"></audio>
+      <audio id="p6" class="clip" src="assets/pop.mp3" data-start="13.5" data-duration="0.5" data-volume="0.45" data-track-index="8"></audio>
+      <audio id="w0" class="clip" src="assets/whoosh-short.mp3" data-start="1.42" data-duration="0.8" data-volume="0.3" data-track-index="10"></audio>
+      <audio id="w1" class="clip" src="assets/whoosh-short.mp3" data-start="3.82" data-duration="0.8" data-volume="0.3" data-track-index="11"></audio>
+      <audio id="w2" class="clip" src="assets/whoosh-short.mp3" data-start="6.22" data-duration="0.8" data-volume="0.3" data-track-index="10"></audio>
+      <audio id="w3" class="clip" src="assets/whoosh-short.mp3" data-start="8.62" data-duration="0.8" data-volume="0.3" data-track-index="11"></audio>
+      <audio id="w4" class="clip" src="assets/whoosh-short.mp3" data-start="11.02" data-duration="0.8" data-volume="0.3" data-track-index="10"></audio>
+      <audio id="w5" class="clip" src="assets/whoosh-short.mp3" data-start="13.42" data-duration="0.8" data-volume="0.3" data-track-index="11"></audio>
+    </div>
+    <script>
+      window.__timelines = window.__timelines || {};
+      const tl = gsap.timeline({ paused: true });
+      [["#v0",0.00,1.5],["#v1",1.50,2.4],["#v2",3.90,2.4],["#v3",6.30,2.4],["#v4",8.70,2.4],["#v5",11.10,2.4],["#v6",13.50,2.6]].forEach(([id, t, d]) => {
+        tl.fromTo(id, { scale: 1.1 }, { scale: 1, duration: Math.min(d, 0.6), ease: "power3.out" }, t);
+      });
+      [["#l1",1.5],["#l2",3.9],["#l3",6.3],["#l4",8.7],["#l5",11.1],["#l6",13.5]].forEach(([id, t]) => {
+        tl.fromTo(id, { scale: 0.7, opacity: 0 }, { scale: 1, opacity: 1, duration: 0.18, ease: "back.out(2)", immediateRender: false }, t);
+      });
+      window.__timelines["main"] = tl;
+      tl.seek(0);
+    </script>
+  </body>
+</html>
