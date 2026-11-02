@@ -18,18 +18,18 @@ Music: upbeat trending sound with a strong beat (add in Instagram); the cuts alr
 ---
 # Pain-point reels
 
-## Screw plugs are ruining my life, plugs-ruining-my-life.mp4, 12s
-Caption: Every screw. Every board. By hand. Is it worth it? Look at the last shot 😮‍💨 Would you plug every screw? 👇
+## See the screws? Your contractor was lazy., plugs-ruining-my-life.mp4, 11s
+Caption: Every screw gets a plug. By hand. On every board. Would you notice the difference? 👇
 Hashtags: #deck #compositedecking #contractorlife #construction #hotspringsarkansas
 
-## "While you're here" is ruining my life, while-youre-here.mp4, 13s
+## "While you're here" now costs extra, while-youre-here.mp4, 12s
 Caption: Came to fix ONE vent cover. Contractors, how many "while you're here"s did you get this week? 😂👇
 Hashtags: #contractorlife #constructionhumor #handyman #construction #hotspringsarkansas
 
-## Is your contractor ripping you off?, ripping-you-off.mp4, 16s
+## Your contractor is probably lying to you, ripping-you-off.mp4, 18s
 Caption: 5 red flags before you hire anybody 🚩 Which one have you seen? 👇 Save this for later.
 Hashtags: #contractor #homeowner #homeimprovement #renovation #hotspringsarkansas
 
-## How I'd start a contractor business with no experience, start-contractor-business.mp4, 17s
+## Your boss is getting rich off you, start-contractor-business.mp4, 16s
 Caption: No experience. No connections. Just these 6 steps 👊 Save this if you're thinking about starting.
 Hashtags: #entrepreneur #contractor #smallbusiness #startabusiness #hotspringsarkansas
