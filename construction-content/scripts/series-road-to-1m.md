@@ -45,6 +45,25 @@ On screen: `DAY 2: PROPERTY MANAGERS →`
 Day 1 of scaling Mayo's Construction to $1,000,000 🔨 Realtors sell houses, houses need work. Donuts are my marketing budget. Follow along, I'm posting every day.
 **Hashtags:** #day1 #smallbusiness #contractor #entrepreneur #hotspringsarkansas
 
+---
+
+## DAY 1, PUNCHY CUT (~20 sec, layoffs angle) ← film this one
+He wasn't laid off (he resigned), so the layoff line talks about the viewer, never claims it happened to him.
+
+| Time | Say (fast, no pauses) | On screen | Shot |
+|---|---|---|---|
+| 0-2s | "Companies are laying people off every week." | `DAY 1 · $0 → $1,000,000` + **LAYOFFS AREN'T STOPPING** | Truck, face close |
+| 2-5s | "Your job is not safe. Mine wasn't either. Cop, banker, cop. I quit." | **YOUR JOB ISN'T SAFE** | Truck |
+| 5-8s | "So I'm building my construction company to a million dollars. Day 1." | **DAY 1** | Truck |
+| 8-12s | "Step one. Business cards." | **STEP 1: CARDS ✅** | Opening the box |
+| 12-17s | "Donuts for every realtor in Hot Springs. Every house they sell needs work." | **REALTORS VISITED: 1, 2, 3** | Donuts → walking in |
+| 17-20s | "Nobody's laying me off. Follow for Day 2." | **NOBODY'S LAYING ME OFF** | Truck, walking away |
+
+Alternate first lines (pick one):
+- "If you got laid off this year, watch this."
+- "Your boss can fire you tomorrow. Here's my backup plan."
+- "Layoffs everywhere. So I'm building my own company. Day 1."
+
 ### What to film for Day 1 (shot list)
 - [ ] 3 truck takes: opening line, back story, ending (talk fast, no pauses).
 - [ ] Opening the box of business cards (close-up, slow).
