@@ -8,6 +8,8 @@ const dir = process.argv[2];
   await p.evaluate(() => document.fonts.ready);
   await p.waitForTimeout(800);
   await (await p.$('.card')).screenshot({ path: `${dir}/Mayos-business-card.png` });
+  // How it looks after the printer trims the 0.125" bleed.
+  await p.screenshot({ path: `${dir}/Mayos-business-card-preview.png`, clip: { x: 12, y: 12, width: 336, height: 192 } });
   await p.pdf({ path: `${dir}/Mayos-business-card-print.pdf`, width: '3.75in', height: '2.25in', printBackground: true });
   await b.close();
 })();

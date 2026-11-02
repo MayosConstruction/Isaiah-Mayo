@@ -9,5 +9,7 @@ The back has the EDDM Retail postage indicia and "Local Postal Customer". Ask yo
 # Business card (single-sided)
 
 - `Mayos-business-card-print.pdf`: print-ready, one side, 3.5" × 2" with 0.125" bleed (file size 3.75" × 2.25").
-- `Mayos-business-card.png`: the same at 300 DPI.
+- `Mayos-business-card.png`: the same at 300 DPI (with bleed). `Mayos-business-card-preview.png` shows it trimmed.
+- `brand/`: the logo files (mascot, wordmark cut out on transparent background, original wordmark) and the navy QR code.
+- Colors: terracotta `#C3553C`, cream `#F3EBE0`, navy `#1F2B3B`. Font: Archivo Expanded.
 - `business-card.html`: the design. Edit the text, then run `node marketing/render-cards.js "$PWD/marketing"` to regenerate the files.

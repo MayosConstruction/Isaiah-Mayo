@@ -1,44 +1,47 @@
 <!doctype html>
 <html><head><meta charset="utf-8">
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700;800&family=Barlow:wght@500;600;700&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@100,600;125,700;125,800&display=swap">
 <style>
   /* Single-sided 3.5" x 2" card + 0.125" bleed on every side = 3.75" x 2.25" */
   @page { size: 3.75in 2.25in; margin: 0; }
+  :root { --terra: #C3553C; --cream: #F3EBE0; --navy: #1F2B3B; }
   * { box-sizing: border-box; margin: 0; padding: 0; }
-  body { font-family: Barlow, sans-serif; color: #151515; }
-  .card { width: 3.75in; height: 2.25in; position: relative; overflow: hidden; background: #faf3e2; }
-  .display { font-family: 'Barlow Condensed', sans-serif; font-weight: 800; text-transform: uppercase; line-height: .95; }
+  body { font-family: Archivo, sans-serif; }
+  .card { width: 3.75in; height: 2.25in; position: relative; overflow: hidden; background: var(--terra); color: var(--cream); }
+  .wide { font-stretch: 125%; text-transform: uppercase; }
 
-  .logo { position: absolute; left: .3in; top: .3in; width: 1.08in; height: 1.08in; }
-  .text { position: absolute; left: 1.5in; top: .4in; right: .28in; }
-  .name { font-size: 16.5pt; white-space: nowrap; }
-  .lines { font-family: 'Barlow Condensed'; font-weight: 700; color: #a42f28; letter-spacing: .03em; font-size: 6.6pt; text-transform: uppercase; margin-top: .05in; white-space: nowrap; }
-  .owners { font-family: 'Barlow Condensed'; font-weight: 800; font-size: 12pt; text-transform: uppercase; margin-top: .14in; letter-spacing: .02em; }
-  .owners span { color: #a42f28; font-weight: 700; font-size: 7.5pt; letter-spacing: .12em; margin-left: .05in; }
-  .where { font-size: 7pt; font-weight: 600; color: #6e665a; margin-top: .03in; }
+  .badge { position: absolute; left: .36in; top: .28in; width: 1.06in; height: 1.06in; border-radius: 50%; overflow: hidden;
+    box-shadow: 0 0 0 .03in var(--cream); }
+  .badge img { width: 100%; height: 100%; display: block; }
 
-  .band { position: absolute; left: 0; right: 0; bottom: 0; height: .74in; background: #a42f28; border-top: .04in solid #151515;
-    display: flex; align-items: center; padding: 0 .3in .1in .3in; color: #fff; }
+  .right { position: absolute; left: 1.62in; right: .3in; top: .29in; text-align: center; }
+  .wordmark { width: 1.45in; display: block; margin: 0 auto; }
+  .owners { font-weight: 700; font-size: 5.7pt; letter-spacing: .07em; margin-top: .08in; white-space: nowrap; }
+  .owners b { color: var(--navy); font-weight: 800; }
+  .where { font-weight: 600; font-size: 5.2pt; letter-spacing: .12em; margin-top: .035in; opacity: .9; }
+
+  .band { position: absolute; left: 0; right: 0; bottom: 0; height: .8in; background: var(--navy);
+    display: flex; align-items: center; padding: .02in .36in .28in .36in; }
   .band .call { flex: 1; }
-  .band .phone { font-family: 'Barlow Condensed'; font-weight: 800; font-size: 20pt; line-height: 1; letter-spacing: .01em; }
-  .band .sub { font-size: 7pt; font-weight: 600; margin-top: .02in; }
-  .band .qr { width: .5in; height: .5in; background: #fff; padding: .025in; display: block; }
+  .band .phone { font-weight: 800; font-size: 15pt; line-height: 1; letter-spacing: .02em; }
+  .band .sub { font-weight: 600; font-size: 6.2pt; letter-spacing: .06em; margin-top: .045in; text-transform: uppercase; }
+  .band .star { color: var(--terra); }
+  .band .qr { width: .42in; height: .42in; background: var(--cream); padding: .025in; display: block; }
 </style></head>
 <body>
   <div class="card">
-    <img class="logo" src="../public/logo.png" alt="">
-    <div class="text">
-      <div class="display name">Mayo's Construction</div>
-      <div class="lines">Construction · Remodeling · Roofing</div>
-      <div class="owners">Isaiah / Moss<span>Co-Owners</span></div>
-      <div class="where">Hot Springs, Arkansas</div>
+    <div class="badge"><img src="brand/mascot.png" alt=""></div>
+    <div class="right">
+      <img class="wordmark" src="brand/wordmark.png" alt="Mayo's Construction">
+      <div class="owners wide">Isaiah / Moss <b>·</b> Co-Owners</div>
+      <div class="where wide">Hot Springs, Arkansas</div>
     </div>
     <div class="band">
       <div class="call">
-        <div class="phone">870-617-3507</div>
-        <div class="sub">Call or text for a free estimate</div>
+        <div class="phone wide">870-617-3507</div>
+        <div class="sub"><span class="star">★</span> Call or text for a free estimate</div>
       </div>
-      <img class="qr" src="qr.svg" alt="">
+      <img class="qr" src="brand/qr-navy.svg" alt="">
     </div>
   </div>
 </body></html>
