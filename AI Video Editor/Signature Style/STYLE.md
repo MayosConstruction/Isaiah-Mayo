@@ -62,3 +62,20 @@ Viral Reels mostly use the app's own text, so match that:
 - No outlines, no fancy display fonts, no colored accent words unless the owner asks.
 - Render with `--sdr` when the source footage is iPhone HDR, or white turns gray.
 - Font option sheet: `construction-content/reference/font-options.png`.
+
+## Font pack (Nov 2026, from the owner's "Use these fonts" reel): `fonts/pack/`
+| Job | Font in the reel | Free file we use |
+|---|---|---|
+| Hooks/titles | Impact | Anton-Regular.ttf |
+| Hooks/titles | Bebas Neue | BebasNeue.ttf |
+| Hooks/titles | Balboa | Oswald-Bold.ttf |
+| Hooks/titles | Vanguard | Archivo-BlackItalic.ttf |
+| Educational | Helvetica | InterTight-Bold.ttf |
+| Educational | Ivy Presto | BodoniModa-SemiBoldItalic.ttf |
+| Educational | Sequel | Figtree-Bold.ttf |
+| Captions | Poppins / Montserrat | Poppins-Bold / Montserrat-ExtraBold |
+| Captions | Clash (Display) | not yet: owner to send from fontshare.com |
+| Storytelling | Playfair Display / Inter | PlayfairDisplay-Medium / Inter-Bold |
+| Storytelling | Coolvetica | not yet: owner to send |
+Signature look from that reel: white rounded label boxes with black text, gold #F2D48A accent words.
+Preview: `fonts/pack/preview.png`.
