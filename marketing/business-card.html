@@ -1,0 +1,67 @@
+<!doctype html>
+<html><head><meta charset="utf-8">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700;800&family=Barlow:wght@500;600;700&display=swap">
+<style>
+  /* 3.5" x 2" card + 0.125" bleed on every side = 3.75" x 2.25" */
+  @page { size: 3.75in 2.25in; margin: 0; }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: Barlow, sans-serif; color: #151515; }
+  .card { width: 3.75in; height: 2.25in; position: relative; overflow: hidden; background: #faf3e2; page-break-after: always; }
+  .display { font-family: 'Barlow Condensed', sans-serif; font-weight: 800; text-transform: uppercase; line-height: .95; }
+
+  /* FRONT: brand */
+  .front .logo { position: absolute; left: .3in; top: .3in; width: 1.3in; height: 1.3in; }
+  .front .text { position: absolute; left: 1.72in; top: .5in; right: .25in; }
+  .front .name { font-size: 21pt; }
+  .front .lines { font-family: 'Barlow Condensed'; font-weight: 700; color: #a42f28; letter-spacing: .04em; font-size: 7pt; text-transform: uppercase; margin-top: .06in; white-space: nowrap; }
+  .front .where { font-size: 8pt; font-weight: 600; color: #6e665a; margin-top: .05in; }
+  .front .band { position: absolute; left: 0; right: 0; bottom: 0; height: .5in; background: #a42f28; border-top: .04in solid #151515;
+    display: flex; align-items: center; justify-content: center; color: #fff; padding-bottom: .06in; }
+  .front .band span { font-family: 'Barlow Condensed'; font-weight: 800; font-size: 12pt; letter-spacing: .12em; }
+
+  /* BACK: person */
+  .back { border-left: .16in solid #a42f28; }
+  .back .who { position: absolute; left: .32in; top: .34in; }
+  .back .person { font-size: 22pt; }
+  .back .title { font-family: 'Barlow Condensed'; font-weight: 700; color: #a42f28; letter-spacing: .14em; font-size: 8pt; text-transform: uppercase; margin-top: .04in; }
+  .back .contact { position: absolute; left: .32in; bottom: .3in; font-size: 8.5pt; font-weight: 600; line-height: 1.45; }
+  .back .contact .phone { font-family: 'Barlow Condensed'; font-weight: 800; font-size: 17pt; line-height: 1; margin-bottom: .03in; }
+  .back .qr { position: absolute; right: .3in; bottom: .3in; width: .82in; text-align: center; }
+  .back .qr img { width: .82in; height: .82in; background: #fff; padding: .03in; display: block; }
+  .back .qr div { font-size: 5.5pt; font-weight: 700; margin-top: .03in; text-transform: uppercase; letter-spacing: .05em; }
+  .back .mini { position: absolute; right: .3in; top: .3in; width: .55in; height: .55in; }
+</style></head>
+<body>
+  <!-- FRONT (same for both) -->
+  <div class="card front">
+    <img class="logo" src="../public/logo.png" alt="">
+    <div class="text">
+      <div class="display name">Mayo's Construction</div>
+      <div class="lines">Construction · Remodeling · Roofing</div>
+      <div class="where">Hot Springs, Arkansas</div>
+    </div>
+    <div class="band"><span>NEED A CONTRACTOR? CALL THE MAYOS.</span></div>
+  </div>
+
+  <!-- BACK: Isaiah -->
+  <div class="card back">
+    <img class="mini" src="../public/logo.png" alt="">
+    <div class="who"><div class="display person">Isaiah Mayo</div><div class="title">Co-Owner</div></div>
+    <div class="contact">
+      <div class="phone">870-617-3507</div>
+      Call or text for a free estimate<br>mayosconstruction.netlify.app
+    </div>
+    <div class="qr"><img src="qr.svg" alt=""><div>See our work</div></div>
+  </div>
+
+  <!-- BACK: Moss -->
+  <div class="card back">
+    <img class="mini" src="../public/logo.png" alt="">
+    <div class="who"><div class="display person">Moss Mayo</div><div class="title">Co-Owner</div></div>
+    <div class="contact">
+      <div class="phone">870-617-3507</div>
+      Call or text for a free estimate<br>mayosconstruction.netlify.app
+    </div>
+    <div class="qr"><img src="qr.svg" alt=""><div>See our work</div></div>
+  </div>
+</body></html>
