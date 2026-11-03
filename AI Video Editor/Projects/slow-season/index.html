@@ -1,0 +1,100 @@
+<!doctype html>
+<html lang="en" data-resolution="portrait">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=1080, height=1920" />
+    <script src="assets/gsap.min.js"></script>
+    <style>
+      @font-face { font-family: "Courier Prime"; src: url("assets/fonts/CourierPrime-Bold.ttf"); font-weight: 700; }
+      @font-face { font-family: "Marker"; src: url("assets/fonts/PermanentMarker.ttf"); }
+      * { margin: 0; padding: 0; box-sizing: border-box; }
+      html, body { width: 1080px; height: 1920px; overflow: hidden; background: #000; }
+      #root { position: relative; width: 1080px; height: 1920px; overflow: hidden; }
+      .shot { position: absolute; inset: 0; width: 1080px; height: 1920px; object-fit: cover; }
+      /* Captions: small typewriter lowercase + one big hand-lettered keyword (from the reference style) */
+      .cap { position: absolute; top: 600px; left: 70px; right: 70px; text-align: center; z-index: 10; }
+      .sm, .sm2 { font: 700 54px/1.25 "Courier Prime", monospace; color: #fff; text-shadow: 0 2px 4px rgba(0,0,0,.9), 0 0 18px rgba(0,0,0,.55); }
+      .sm2 { font-size: 44px; margin-top: 18px; }
+      .big { font: 400 118px/1.02 "Marker", sans-serif; color: #ffd23f; text-transform: uppercase; margin-top: 8px;
+        text-shadow: 0 4px 0 rgba(0,0,0,.35), 0 6px 22px rgba(0,0,0,.6); }
+      .endc { position: absolute; top: 1240px; left: 0; right: 0; text-align: center; z-index: 11; }
+      .endc span { font: 700 46px/1.3 "Courier Prime", monospace; color: #fff; background: rgba(0,0,0,.55); padding: 8px 22px; border-radius: 10px; }
+    </style>
+  </head>
+  <body>
+    <div id="root" data-composition-id="main" data-start="0" data-duration="20.6" data-width="1080" data-height="1920">
+      <video id="v0" class="clip shot" src="assets/v0.mp4" muted playsinline data-start="0.00" data-duration="2.8" data-media-start="0" data-track-index="0"></video>
+      <video id="v1" class="clip shot" src="assets/v1.mp4" muted playsinline data-start="2.80" data-duration="2.2" data-media-start="0" data-track-index="0"></video>
+      <video id="v2" class="clip shot" src="assets/v2.mp4" muted playsinline data-start="5.00" data-duration="2.0" data-media-start="0" data-track-index="0"></video>
+      <video id="v3" class="clip shot" src="assets/v3.mp4" muted playsinline data-start="7.00" data-duration="2.6" data-media-start="0" data-track-index="0"></video>
+      <video id="v4" class="clip shot" src="assets/v4.mp4" muted playsinline data-start="9.60" data-duration="3.0" data-media-start="0" data-track-index="0"></video>
+      <video id="v5" class="clip shot" src="assets/v5.mp4" muted playsinline data-start="12.60" data-duration="2.4" data-media-start="0" data-track-index="0"></video>
+      <video id="v6" class="clip shot" src="assets/v6.mp4" muted playsinline data-start="15.00" data-duration="2.6" data-media-start="0" data-track-index="0"></video>
+      <video id="v7" class="clip shot" src="assets/v7.mp4" muted playsinline data-start="17.60" data-duration="3.0" data-media-start="0" data-track-index="0"></video>
+      <div id="c0" class="clip cap" data-start="0.00" data-duration="2.8" data-track-index="4"><div class="sm">what i do when</div><div class="big">work slows down</div><div class="sm2">for winter</div></div>
+      <div id="c1" class="clip cap" data-start="2.80" data-duration="2.2" data-track-index="5"><div class="sm">step one:</div><div class="big">business cards</div></div>
+      <div id="c2" class="clip cap" data-start="5.00" data-duration="2.0" data-track-index="4"><div class="sm">step two:</div><div class="big">donuts</div></div>
+      <div id="c3" class="clip cap" data-start="7.00" data-duration="2.6" data-track-index="5"><div class="sm">a card in</div><div class="big">every box</div></div>
+      <div id="c4" class="clip cap" data-start="9.60" data-duration="3.0" data-track-index="4"><div class="sm">first stop:</div><div class="big">realtors</div><div class="sm2">every house they sell needs work</div></div>
+      <div id="c5" class="clip cap" data-start="12.60" data-duration="2.4" data-track-index="5"><div class="sm">then:</div><div class="big">mortgage lenders</div><div class="sm2">their deals die on bad inspections</div></div>
+      <div id="c6" class="clip cap" data-start="15.00" data-duration="2.6" data-track-index="4"><div class="sm">most contractors</div><div class="big">wait for spring</div></div>
+      <div id="c7" class="clip cap" data-start="17.60" data-duration="3.0" data-track-index="5"><div class="sm">i&#x27;d rather</div><div class="big">go get it</div></div>
+      <div id="end" class="clip endc" data-start="19.20" data-duration="1.4" data-track-index="6"><span>follow for what happens next</span></div>
+      <audio id="a0" class="clip" src="assets/v0.m4a" data-start="0.000" data-duration="2.800" data-volume="0.35" data-track-index="8"></audio>
+      <audio id="a1" class="clip" src="assets/v1.m4a" data-start="2.800" data-duration="2.200" data-volume="0.35" data-track-index="9"></audio>
+      <audio id="a2" class="clip" src="assets/whoosh-short.mp3" data-start="2.740" data-duration="0.600" data-volume="0.22" data-track-index="10"></audio>
+      <audio id="a3" class="clip" src="assets/click-soft.mp3" data-start="2.960" data-duration="0.400" data-volume="0.35" data-track-index="11"></audio>
+      <audio id="a4" class="clip" src="assets/v2.m4a" data-start="5.000" data-duration="2.000" data-volume="0.35" data-track-index="12"></audio>
+      <audio id="a5" class="clip" src="assets/whoosh-short.mp3" data-start="4.940" data-duration="0.600" data-volume="0.22" data-track-index="13"></audio>
+      <audio id="a6" class="clip" src="assets/click-soft.mp3" data-start="5.160" data-duration="0.400" data-volume="0.35" data-track-index="8"></audio>
+      <audio id="a7" class="clip" src="assets/v3.m4a" data-start="7.000" data-duration="2.600" data-volume="0.35" data-track-index="9"></audio>
+      <audio id="a8" class="clip" src="assets/whoosh-short.mp3" data-start="6.940" data-duration="0.600" data-volume="0.22" data-track-index="10"></audio>
+      <audio id="a9" class="clip" src="assets/click-soft.mp3" data-start="7.160" data-duration="0.400" data-volume="0.35" data-track-index="11"></audio>
+      <audio id="a10" class="clip" src="assets/v4.m4a" data-start="9.600" data-duration="3.000" data-volume="0.35" data-track-index="12"></audio>
+      <audio id="a11" class="clip" src="assets/whoosh-short.mp3" data-start="9.540" data-duration="0.600" data-volume="0.22" data-track-index="13"></audio>
+      <audio id="a12" class="clip" src="assets/click-soft.mp3" data-start="9.760" data-duration="0.400" data-volume="0.35" data-track-index="8"></audio>
+      <audio id="a13" class="clip" src="assets/v5.m4a" data-start="12.600" data-duration="2.400" data-volume="0.35" data-track-index="9"></audio>
+      <audio id="a14" class="clip" src="assets/whoosh-short.mp3" data-start="12.540" data-duration="0.600" data-volume="0.22" data-track-index="10"></audio>
+      <audio id="a15" class="clip" src="assets/click-soft.mp3" data-start="12.760" data-duration="0.400" data-volume="0.35" data-track-index="11"></audio>
+      <audio id="a16" class="clip" src="assets/v6.m4a" data-start="15.000" data-duration="2.600" data-volume="0.35" data-track-index="12"></audio>
+      <audio id="a17" class="clip" src="assets/whoosh-short.mp3" data-start="14.940" data-duration="0.600" data-volume="0.22" data-track-index="13"></audio>
+      <audio id="a18" class="clip" src="assets/click-soft.mp3" data-start="15.160" data-duration="0.400" data-volume="0.35" data-track-index="8"></audio>
+      <audio id="a19" class="clip" src="assets/v7.m4a" data-start="17.600" data-duration="3.000" data-volume="0.35" data-track-index="9"></audio>
+      <audio id="a20" class="clip" src="assets/whoosh-short.mp3" data-start="17.540" data-duration="0.600" data-volume="0.22" data-track-index="10"></audio>
+      <audio id="a21" class="clip" src="assets/boom.mp3" data-start="17.950" data-duration="1.600" data-volume="0.6" data-track-index="11"></audio>
+      <audio id="a22" class="clip" src="assets/riser.mp3" data-start="17.700" data-duration="0.400" data-volume="0.3" data-track-index="12"></audio>
+      <audio id="a23" class="clip" src="assets/impact-bass-2.mp3" data-start="0.000" data-duration="1.600" data-volume="0.35" data-track-index="13"></audio>
+    </div>
+    <script>
+      window.__timelines = window.__timelines || {};
+      const tl = gsap.timeline({ paused: true });
+      tl.fromTo("#v0", { scale: 1.0 }, { scale: 1.04, duration: 2.8, ease: "none", immediateRender: false }, 0.00);
+      tl.fromTo("#v1", { scale: 1.0 }, { scale: 1.04, duration: 2.2, ease: "none", immediateRender: false }, 2.80);
+      tl.fromTo("#c1 .sm", { opacity: 0, y: 14 }, { opacity: 1, y: 0, duration: 0.28, ease: "power3.out", immediateRender: false }, 2.88);
+      tl.fromTo("#c1 .big", { opacity: 0, y: 18, scale: 0.98 }, { opacity: 1, y: 0, scale: 1, duration: 0.3, ease: "power3.out", immediateRender: false }, 2.96);
+      tl.fromTo("#v2", { scale: 1.0 }, { scale: 1.04, duration: 2.0, ease: "none", immediateRender: false }, 5.00);
+      tl.fromTo("#c2 .sm", { opacity: 0, y: 14 }, { opacity: 1, y: 0, duration: 0.28, ease: "power3.out", immediateRender: false }, 5.08);
+      tl.fromTo("#c2 .big", { opacity: 0, y: 18, scale: 0.98 }, { opacity: 1, y: 0, scale: 1, duration: 0.3, ease: "power3.out", immediateRender: false }, 5.16);
+      tl.fromTo("#v3", { scale: 1.0 }, { scale: 1.04, duration: 2.6, ease: "none", immediateRender: false }, 7.00);
+      tl.fromTo("#c3 .sm", { opacity: 0, y: 14 }, { opacity: 1, y: 0, duration: 0.28, ease: "power3.out", immediateRender: false }, 7.08);
+      tl.fromTo("#c3 .big", { opacity: 0, y: 18, scale: 0.98 }, { opacity: 1, y: 0, scale: 1, duration: 0.3, ease: "power3.out", immediateRender: false }, 7.16);
+      tl.fromTo("#v4", { scale: 1.0 }, { scale: 1.04, duration: 3.0, ease: "none", immediateRender: false }, 9.60);
+      tl.fromTo("#c4 .sm", { opacity: 0, y: 14 }, { opacity: 1, y: 0, duration: 0.28, ease: "power3.out", immediateRender: false }, 9.68);
+      tl.fromTo("#c4 .big", { opacity: 0, y: 18, scale: 0.98 }, { opacity: 1, y: 0, scale: 1, duration: 0.3, ease: "power3.out", immediateRender: false }, 9.76);
+      tl.fromTo("#c4 .sm2", { opacity: 0, y: 10 }, { opacity: 1, y: 0, duration: 0.28, ease: "power3.out", immediateRender: false }, 10.30);
+      tl.fromTo("#v5", { scale: 1.0 }, { scale: 1.04, duration: 2.4, ease: "none", immediateRender: false }, 12.60);
+      tl.fromTo("#c5 .sm", { opacity: 0, y: 14 }, { opacity: 1, y: 0, duration: 0.28, ease: "power3.out", immediateRender: false }, 12.68);
+      tl.fromTo("#c5 .big", { opacity: 0, y: 18, scale: 0.98 }, { opacity: 1, y: 0, scale: 1, duration: 0.3, ease: "power3.out", immediateRender: false }, 12.76);
+      tl.fromTo("#c5 .sm2", { opacity: 0, y: 10 }, { opacity: 1, y: 0, duration: 0.28, ease: "power3.out", immediateRender: false }, 13.30);
+      tl.fromTo("#v6", { scale: 1.0 }, { scale: 1.04, duration: 2.6, ease: "none", immediateRender: false }, 15.00);
+      tl.fromTo("#c6 .sm", { opacity: 0, y: 14 }, { opacity: 1, y: 0, duration: 0.28, ease: "power3.out", immediateRender: false }, 15.08);
+      tl.fromTo("#c6 .big", { opacity: 0, y: 18, scale: 0.98 }, { opacity: 1, y: 0, scale: 1, duration: 0.3, ease: "power3.out", immediateRender: false }, 15.16);
+      tl.fromTo("#v7", { scale: 1.0 }, { scale: 1.04, duration: 3.0, ease: "none", immediateRender: false }, 17.60);
+      tl.fromTo("#c7 .sm", { opacity: 0, y: 14 }, { opacity: 1, y: 0, duration: 0.28, ease: "power3.out", immediateRender: false }, 17.68);
+      tl.fromTo("#c7 .big", { opacity: 0, scale: 0.92 }, { keyframes: [{ opacity: 1, scale: 0.95, duration: 0.08 }, { scale: 1.14, duration: 0.14, ease: "power2.out" }, { scale: 1, duration: 0.3, ease: "back.out(2)" }], immediateRender: false }, 17.95);
+      tl.fromTo("#end span", { opacity: 0, y: 12 }, { opacity: 1, y: 0, duration: 0.3, ease: "power3.out", immediateRender: false }, 19.20);
+      window.__timelines["main"] = tl;
+      tl.seek(0);
+    </script>
+  </body>
+</html>
