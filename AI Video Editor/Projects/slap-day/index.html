@@ -1,0 +1,53 @@
+<!doctype html>
+<html lang="en" data-resolution="portrait">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=1080, height=1920" />
+    <script src="assets/gsap.min.js"></script>
+    <style>
+      @font-face { font-family: "TikTok Sans"; src: url("assets/fonts/TikTokSans-700.ttf"); font-weight: 700; }
+      * { margin: 0; padding: 0; box-sizing: border-box; }
+      html, body { width: 1080px; height: 1920px; overflow: hidden; background: #000; }
+      #root { position: relative; width: 1080px; height: 1920px; overflow: hidden; }
+      .shot { position: absolute; inset: 0; width: 1080px; height: 1920px; object-fit: cover; }
+      /* Native Instagram meme text: black on white rounded boxes */
+      .t { position: absolute; top: 330px; left: 70px; right: 70px; text-align: center; z-index: 10; font: 700 66px/1.45 "TikTok Sans", sans-serif; }
+      .t span { background: #fff; color: #000; padding: 6px 22px; border-radius: 18px; -webkit-box-decoration-break: clone; box-decoration-break: clone; }
+    </style>
+  </head>
+  <body>
+    <div id="root" data-composition-id="main" data-start="0" data-duration="14.8" data-width="1080" data-height="1920">
+      <!-- "National Slap Your Coworker Day is on Friday..." : the coworker is dad -->
+      <video id="v0" class="clip shot" src="assets/s0.mp4" muted playsinline data-start="0" data-duration="3.3" data-media-start="0" data-track-index="0"></video>
+      <video id="v1" class="clip shot" src="assets/s1.mp4" muted playsinline data-start="3.3" data-duration="3.25" data-media-start="0" data-track-index="0"></video>
+      <!-- "...review how they have treated the people..." : the son remembers -->
+      <video id="v2" class="clip shot" src="assets/s2.mp4" muted playsinline data-start="6.55" data-duration="2.25" data-media-start="0" data-track-index="0"></video>
+      <video id="v3" class="clip shot" src="assets/s3.mp4" muted playsinline data-start="8.8" data-duration="2.25" data-media-start="0" data-track-index="0"></video>
+      <!-- dramatic music: dad looks at the camera, freeze, slow push in on his face -->
+      <video id="v4" class="clip shot" src="assets/s4.mp4" muted playsinline data-start="11.05" data-duration="0.5" data-media-start="0" data-track-index="0"></video>
+      <img id="fz" class="clip shot" src="assets/freeze.jpg" data-start="11.55" data-duration="0.95" data-track-index="0" />
+      <!-- silence after the music: son drives off -->
+      <video id="v5" class="clip shot" src="assets/s5.mp4" muted playsinline data-start="12.5" data-duration="2.3" data-media-start="0" data-track-index="0"></video>
+
+      <div id="t0" class="clip t" data-start="0" data-duration="6.55" data-track-index="2"><span>my only coworker<br>is my dad 😐</span></div>
+      <div id="t1" class="clip t" data-start="6.55" data-duration="4.5" data-track-index="2"><span>me remembering every time<br>i said "that's not how<br>you do it"</span></div>
+      <div id="t2" class="clip t" data-start="12.5" data-duration="2.3" data-track-index="2"><span>taking friday off.</span></div>
+
+      <audio id="snd" class="clip" src="assets/sound.m4a" data-start="0" data-duration="14.8" data-volume="1" data-track-index="5"></audio>
+    </div>
+    <script>
+      window.__timelines = window.__timelines || {};
+      const tl = gsap.timeline({ paused: true });
+      // barely-there push-ins; the only big move is the dramatic zoom on dad
+      [["#v0", 0, 3.3], ["#v1", 3.3, 3.25], ["#v2", 6.55, 2.25], ["#v3", 8.8, 2.25], ["#v5", 12.5, 2.3]].forEach(([id, t, d]) => {
+        tl.fromTo(id, { scale: 1.0 }, { scale: 1.04, duration: d, ease: "none", immediateRender: false }, t);
+      });
+      tl.fromTo("#v4", { scale: 1.0 }, { scale: 1.12, duration: 0.5, ease: "power2.in", immediateRender: false }, 11.05);
+      tl.fromTo("#fz", { scale: 1.12 }, { scale: 1.75, duration: 0.95, ease: "power2.out", transformOrigin: "33% 45%", immediateRender: false }, 11.55);
+      tl.fromTo("#t1 span", { opacity: 0, y: 12 }, { opacity: 1, y: 0, duration: 0.28, ease: "power3.out", immediateRender: false }, 6.6);
+      tl.fromTo("#t2 span", { opacity: 0, y: 12 }, { opacity: 1, y: 0, duration: 0.28, ease: "power3.out", immediateRender: false }, 12.55);
+      window.__timelines["main"] = tl;
+      tl.seek(0);
+    </script>
+  </body>
+</html>
