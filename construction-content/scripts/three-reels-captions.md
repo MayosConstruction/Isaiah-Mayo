@@ -40,3 +40,10 @@ Caption: I was a cop. Then a banker. Then a cop again. Same stress, same paychec
 Pinned comment: "What's stopping you from betting on yourself? 👇"
 Hashtags: #entrepreneur #quityourjob #smallbusiness #contractor #hotspringsarkansas
 Music: emotional-but-driving trending sound; line the beat drop up with the $10,000 landing (0:22). Keep original audio ~40% so the counter roll and cha-ching hit.
+
+---
+## Why does a new deck cost $5K-$15K?, why-a-deck-costs-5k-15k.mp4, 22s
+Caption: Why does a new deck cost $5K–$15K? Composite boards, every screw set by hand, every plug tapped in one by one. Comment DECK and I'll tell you what yours would run 👇
+Hashtags: #deck #compositedecking #contractor #beforeandafter #hotspringsarkansas
+Pinned comment: "What would you guess a deck this size costs? 👇"
+Music: upbeat trending sound at ~20%, original audio ~60% so the drill and mallet come through.

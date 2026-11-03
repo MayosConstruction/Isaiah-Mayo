@@ -1,0 +1,109 @@
+<!doctype html>
+<html lang="en" data-resolution="portrait">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=1080, height=1920" />
+    <script src="assets/gsap.min.js"></script>
+    <style>
+      @font-face { font-family: "Courier Prime"; src: url("assets/fonts/CourierPrime-Bold.ttf"); font-weight: 700; }
+      @font-face { font-family: "Marker"; src: url("assets/fonts/PermanentMarker.ttf"); }
+      * { margin: 0; padding: 0; box-sizing: border-box; }
+      html, body { width: 1080px; height: 1920px; overflow: hidden; background: #000; }
+      #root { position: relative; width: 1080px; height: 1920px; overflow: hidden; }
+      .shot { position: absolute; inset: 0; width: 1080px; height: 1920px; object-fit: cover; }
+      .cap { position: absolute; top: 560px; left: 60px; right: 60px; text-align: center; z-index: 10; }
+      .cap::before { content: ""; position: absolute; left: -60px; right: -60px; top: -90px; bottom: -90px; z-index: -1; background: radial-gradient(ellipse at center, rgba(0,0,0,.42) 0%, rgba(0,0,0,0) 70%); }
+      .sm, .sm2 { font: 700 54px/1.25 "Courier Prime", monospace; color: #fff; text-shadow: 0 2px 4px rgba(0,0,0,.9), 0 0 18px rgba(0,0,0,.6); }
+      .sm2 { font-size: 44px; margin-top: 18px; display: inline-block; background: rgba(0,0,0,.55); padding: 6px 18px; border-radius: 10px; }
+      .big { font: 400 124px/1.02 "Marker", sans-serif; color: #ffd23f; text-transform: uppercase; margin-top: 8px;
+        text-shadow: 0 4px 0 rgba(0,0,0,.35), 0 6px 22px rgba(0,0,0,.65); }
+      .wipe { position: absolute; top: 0; bottom: 0; left: 0; width: 10px; margin-left: -5px; background: #fff; z-index: 5; box-shadow: 0 0 24px rgba(0,0,0,.5); }
+    </style>
+  </head>
+  <body>
+    <div id="root" data-composition-id="main" data-start="0" data-duration="21.8" data-width="1080" data-height="1920">
+      <img id="v0" class="clip shot" src="assets/v0.jpg" data-start="0.00" data-duration="2.8" data-track-index="0" />
+      <video id="v1" class="clip shot" src="assets/v1.mp4" muted playsinline data-start="2.80" data-duration="2.2" data-media-start="0" data-track-index="0"></video>
+      <video id="v2" class="clip shot" src="assets/v2.mp4" muted playsinline data-start="5.00" data-duration="2.2" data-media-start="0" data-track-index="0"></video>
+      <video id="v3" class="clip shot" src="assets/v3.mp4" muted playsinline data-start="7.20" data-duration="2.2" data-media-start="0" data-track-index="0"></video>
+      <video id="v4" class="clip shot" src="assets/v4.mp4" muted playsinline data-start="9.40" data-duration="2.0" data-media-start="0" data-track-index="0"></video>
+      <video id="v5" class="clip shot" src="assets/v5.mp4" muted playsinline data-start="11.40" data-duration="2.0" data-media-start="0" data-track-index="0"></video>
+      <img id="wb" class="clip shot" src="assets/wb.jpg" data-start="13.40" data-duration="3.4" data-track-index="0" />
+      <img id="wa" class="clip shot" src="assets/wa.jpg" data-start="13.40" data-duration="3.4" data-track-index="1" />
+      <div id="wl" class="clip wipe" data-start="13.40" data-duration="1.3" data-track-index="2"></div>
+      <img id="v7" class="clip shot" src="assets/v7.jpg" data-start="16.80" data-duration="2.4" data-track-index="0" />
+      <img id="v8" class="clip shot" src="assets/v8.jpg" data-start="19.20" data-duration="2.6" data-track-index="0" />
+      <div id="c0" class="clip cap" data-start="0.00" data-duration="2.8" data-track-index="4"><div class="sm">why does a new deck cost</div><div class="big">$5K-$15K?</div></div>
+      <div id="c1" class="clip cap" data-start="2.80" data-duration="2.2" data-track-index="5"><div class="sm">first:</div><div class="big">the boards</div><div class="sm2">composite. not the cheap stuff.</div></div>
+      <div id="c2" class="clip cap" data-start="5.00" data-duration="2.2" data-track-index="4"><div class="sm">then:</div><div class="big">every screw</div><div class="sm2">set by hand</div></div>
+      <div id="c3" class="clip cap" data-start="7.20" data-duration="2.2" data-track-index="5"><div class="sm">then:</div><div class="big">every plug</div><div class="sm2">tapped in. one by one.</div></div>
+      <div id="c4" class="clip cap" data-start="9.40" data-duration="2.0" data-track-index="4"><div class="sm">hundreds of</div><div class="big">them</div></div>
+      <div id="c5" class="clip cap" data-start="11.40" data-duration="2.0" data-track-index="5"><div class="sm">two guys.</div><div class="big">father &amp; son</div></div>
+      <div id="c6" class="clip cap" data-start="13.40" data-duration="3.4" data-track-index="4"><div class="sm">and you get</div><div class="big">this</div></div>
+      <div id="c7" class="clip cap" data-start="16.80" data-duration="2.4" data-track-index="5"><div class="sm">no stain. no sanding.</div><div class="big">no splinters</div></div>
+      <div id="c8" class="clip cap" data-start="19.20" data-duration="2.6" data-track-index="4"><div class="sm">want a price on yours?</div><div class="big">comment &quot;deck&quot;</div></div>
+      <audio id="a0" class="clip" src="assets/v1.m4a" data-start="2.800" data-duration="2.200" data-volume="0.3" data-track-index="8"></audio>
+      <audio id="a1" class="clip" src="assets/whoosh-short.mp3" data-start="2.740" data-duration="0.600" data-volume="0.2" data-track-index="9"></audio>
+      <audio id="a2" class="clip" src="assets/click-soft.mp3" data-start="2.960" data-duration="0.400" data-volume="0.3" data-track-index="10"></audio>
+      <audio id="a3" class="clip" src="assets/v2.m4a" data-start="5.000" data-duration="2.200" data-volume="0.6" data-track-index="11"></audio>
+      <audio id="a4" class="clip" src="assets/whoosh-short.mp3" data-start="4.940" data-duration="0.600" data-volume="0.2" data-track-index="12"></audio>
+      <audio id="a5" class="clip" src="assets/click-soft.mp3" data-start="5.160" data-duration="0.400" data-volume="0.3" data-track-index="13"></audio>
+      <audio id="a6" class="clip" src="assets/v3.m4a" data-start="7.200" data-duration="2.200" data-volume="0.8" data-track-index="8"></audio>
+      <audio id="a7" class="clip" src="assets/whoosh-short.mp3" data-start="7.140" data-duration="0.600" data-volume="0.2" data-track-index="9"></audio>
+      <audio id="a8" class="clip" src="assets/click-soft.mp3" data-start="7.360" data-duration="0.400" data-volume="0.3" data-track-index="10"></audio>
+      <audio id="a9" class="clip" src="assets/v4.m4a" data-start="9.400" data-duration="2.000" data-volume="0.6" data-track-index="11"></audio>
+      <audio id="a10" class="clip" src="assets/whoosh-short.mp3" data-start="9.340" data-duration="0.600" data-volume="0.2" data-track-index="12"></audio>
+      <audio id="a11" class="clip" src="assets/click-soft.mp3" data-start="9.560" data-duration="0.400" data-volume="0.3" data-track-index="13"></audio>
+      <audio id="a12" class="clip" src="assets/v5.m4a" data-start="11.400" data-duration="2.000" data-volume="0.5" data-track-index="8"></audio>
+      <audio id="a13" class="clip" src="assets/whoosh-short.mp3" data-start="11.340" data-duration="0.600" data-volume="0.2" data-track-index="9"></audio>
+      <audio id="a14" class="clip" src="assets/click-soft.mp3" data-start="11.560" data-duration="0.400" data-volume="0.3" data-track-index="10"></audio>
+      <audio id="a15" class="clip" src="assets/riser.mp3" data-start="12.500" data-duration="1.300" data-volume="0.35" data-track-index="11"></audio>
+      <audio id="a16" class="clip" src="assets/whoosh-cinematic.mp3" data-start="13.850" data-duration="1.600" data-volume="0.6" data-track-index="12"></audio>
+      <audio id="a17" class="clip" src="assets/boom.mp3" data-start="14.650" data-duration="1.600" data-volume="0.55" data-track-index="13"></audio>
+      <audio id="a18" class="clip" src="assets/sparkle.mp3" data-start="14.700" data-duration="1.600" data-volume="0.4" data-track-index="8"></audio>
+      <audio id="a19" class="clip" src="assets/whoosh-short.mp3" data-start="13.340" data-duration="0.600" data-volume="0.2" data-track-index="9"></audio>
+      <audio id="a20" class="clip" src="assets/whoosh-short.mp3" data-start="16.740" data-duration="0.600" data-volume="0.2" data-track-index="10"></audio>
+      <audio id="a21" class="clip" src="assets/click-soft.mp3" data-start="16.960" data-duration="0.400" data-volume="0.3" data-track-index="11"></audio>
+      <audio id="a22" class="clip" src="assets/whoosh-short.mp3" data-start="19.140" data-duration="0.600" data-volume="0.2" data-track-index="12"></audio>
+      <audio id="a23" class="clip" src="assets/click-soft.mp3" data-start="19.360" data-duration="0.400" data-volume="0.3" data-track-index="13"></audio>
+      <audio id="a24" class="clip" src="assets/impact-bass-2.mp3" data-start="0.000" data-duration="1.600" data-volume="0.35" data-track-index="8"></audio>
+      <audio id="a25" class="clip" src="assets/notification.mp3" data-start="19.360" data-duration="1.600" data-volume="0.4" data-track-index="9"></audio>
+    </div>
+    <script>
+      window.__timelines = window.__timelines || {};
+      const tl = gsap.timeline({ paused: true });
+      tl.fromTo("#v0", { scale: 1.0 }, { scale: 1.04, duration: 2.8, ease: "none", immediateRender: false }, 0.00);
+      tl.fromTo("#v1", { scale: 1.0 }, { scale: 1.04, duration: 2.2, ease: "none", immediateRender: false }, 2.80);
+      tl.fromTo("#c1 .sm", { opacity: 0, y: 14 }, { opacity: 1, y: 0, duration: 0.28, ease: "power3.out", immediateRender: false }, 2.88);
+      tl.fromTo("#c1 .big", { opacity: 0, y: 18, scale: 0.98 }, { opacity: 1, y: 0, scale: 1, duration: 0.3, ease: "power3.out", immediateRender: false }, 2.96);
+      tl.fromTo("#c1 .sm2", { opacity: 0, y: 10 }, { opacity: 1, y: 0, duration: 0.28, ease: "power3.out", immediateRender: false }, 3.55);
+      tl.fromTo("#v2", { scale: 1.0 }, { scale: 1.04, duration: 2.2, ease: "none", immediateRender: false }, 5.00);
+      tl.fromTo("#c2 .sm", { opacity: 0, y: 14 }, { opacity: 1, y: 0, duration: 0.28, ease: "power3.out", immediateRender: false }, 5.08);
+      tl.fromTo("#c2 .big", { opacity: 0, y: 18, scale: 0.98 }, { opacity: 1, y: 0, scale: 1, duration: 0.3, ease: "power3.out", immediateRender: false }, 5.16);
+      tl.fromTo("#c2 .sm2", { opacity: 0, y: 10 }, { opacity: 1, y: 0, duration: 0.28, ease: "power3.out", immediateRender: false }, 5.75);
+      tl.fromTo("#v3", { scale: 1.0 }, { scale: 1.04, duration: 2.2, ease: "none", immediateRender: false }, 7.20);
+      tl.fromTo("#c3 .sm", { opacity: 0, y: 14 }, { opacity: 1, y: 0, duration: 0.28, ease: "power3.out", immediateRender: false }, 7.28);
+      tl.fromTo("#c3 .big", { opacity: 0, y: 18, scale: 0.98 }, { opacity: 1, y: 0, scale: 1, duration: 0.3, ease: "power3.out", immediateRender: false }, 7.36);
+      tl.fromTo("#c3 .sm2", { opacity: 0, y: 10 }, { opacity: 1, y: 0, duration: 0.28, ease: "power3.out", immediateRender: false }, 7.95);
+      tl.fromTo("#v4", { scale: 1.0 }, { scale: 1.04, duration: 2.0, ease: "none", immediateRender: false }, 9.40);
+      tl.fromTo("#c4 .sm", { opacity: 0, y: 14 }, { opacity: 1, y: 0, duration: 0.28, ease: "power3.out", immediateRender: false }, 9.48);
+      tl.fromTo("#c4 .big", { opacity: 0, y: 18, scale: 0.98 }, { opacity: 1, y: 0, scale: 1, duration: 0.3, ease: "power3.out", immediateRender: false }, 9.56);
+      tl.fromTo("#v5", { scale: 1.0 }, { scale: 1.04, duration: 2.0, ease: "none", immediateRender: false }, 11.40);
+      tl.fromTo("#c5 .sm", { opacity: 0, y: 14 }, { opacity: 1, y: 0, duration: 0.28, ease: "power3.out", immediateRender: false }, 11.48);
+      tl.fromTo("#c5 .big", { opacity: 0, y: 18, scale: 0.98 }, { opacity: 1, y: 0, scale: 1, duration: 0.3, ease: "power3.out", immediateRender: false }, 11.56);
+      tl.fromTo("#wa", { clipPath: "inset(0 100% 0 0)" }, { clipPath: "inset(0 0% 0 0)", duration: 0.8, ease: "power2.inOut" }, 13.85);
+      tl.fromTo("#wl", { x: 0 }, { x: 1080, duration: 0.8, ease: "power2.inOut" }, 13.85);
+      tl.fromTo("#wa", { scale: 1.06 }, { scale: 1.0, duration: 3.40, ease: "power1.out", immediateRender: false }, 13.40);
+      tl.fromTo("#c6 .sm", { opacity: 0, y: 14 }, { opacity: 1, y: 0, duration: 0.28, ease: "power3.out", immediateRender: false }, 13.48);
+      tl.fromTo("#c6 .big", { opacity: 0, scale: 0.92 }, { keyframes: [{ opacity: 1, scale: 0.95, duration: 0.08 }, { scale: 1.16, duration: 0.14, ease: "power2.out" }, { scale: 1, duration: 0.3, ease: "back.out(2)" }], immediateRender: false }, 14.57);
+      tl.fromTo("#v7", { scale: 1.0 }, { scale: 1.04, duration: 2.4, ease: "none", immediateRender: false }, 16.80);
+      tl.fromTo("#c7 .sm", { opacity: 0, y: 14 }, { opacity: 1, y: 0, duration: 0.28, ease: "power3.out", immediateRender: false }, 16.88);
+      tl.fromTo("#c7 .big", { opacity: 0, y: 18, scale: 0.98 }, { opacity: 1, y: 0, scale: 1, duration: 0.3, ease: "power3.out", immediateRender: false }, 16.96);
+      tl.fromTo("#v8", { scale: 1.0 }, { scale: 1.04, duration: 2.6, ease: "none", immediateRender: false }, 19.20);
+      tl.fromTo("#c8 .sm", { opacity: 0, y: 14 }, { opacity: 1, y: 0, duration: 0.28, ease: "power3.out", immediateRender: false }, 19.28);
+      tl.fromTo("#c8 .big", { opacity: 0, y: 18, scale: 0.98 }, { opacity: 1, y: 0, scale: 1, duration: 0.3, ease: "power3.out", immediateRender: false }, 19.36);
+      window.__timelines["main"] = tl;
+      tl.seek(0);
+    </script>
+  </body>
+</html>
