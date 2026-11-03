@@ -79,3 +79,17 @@ Viral Reels mostly use the app's own text, so match that:
 | Storytelling | Coolvetica | not yet: owner to send |
 Signature look from that reel: white rounded label boxes with black text, gold #F2D48A accent words.
 Preview: `fonts/pack/preview.png`.
+
+## Motion rules (learned from design-motion-principles + Disney's 12 principles skills)
+Apply to every text pop, title, label and cut. Owner feedback that matches: "too jumpy", "too highly edited", "transitions aren't smooth".
+1. **Frequency gate.** The more often something happens, the less it should animate. Labels that appear every clip: quick and quiet. The one big moment per video (title, payoff): this is where the boom/shake/overshoot goes. Never more than one "big" moment per 10 seconds.
+2. **Golden rule: the best motion goes unnoticed.** If the viewer notices the animation instead of the job, cut it back.
+3. **Slow in / slow out.** Never linear. Text in: ease-out (power3.out, 250-350 ms). Text out: ease-in, faster than in (150-200 ms).
+4. **Anticipation.** For a slam (title, $ number), a 2-4 frame dip (scale 0.95) before it pops to 1.1 and settles at 1.0.
+5. **Exaggeration only on the payoff.** Overshoot to 110-120% on the hero moment only. Labels: 100-105% max.
+6. **Follow-through / overlap.** Multi-line text: stagger lines 60-100 ms, not all at once, not word-by-word with a sound each.
+7. **Staging: one idea on screen at a time.** Never two text blocks fighting. Clear the old label before the new one lands.
+8. **Timing scale for Reels:** micro 100-200 ms (pops), small 200-300 ms (labels), medium 300-500 ms (title in, crossfades), large 500-800 ms (payoff reveal, wipe). Hold every readable line at least 1.2 s.
+9. **Secondary action is sound, not more motion.** A whoosh on a cut beats a spin transition.
+10. **Appeal / restraint:** no filters stacked on footage, no shake on every line, no blur transitions between normal shots. Straight cuts are the default; a soft crossfade only for time jumps.
+11. **Cuts land on action** (door opens, card enters frame), not on a fixed beat count.

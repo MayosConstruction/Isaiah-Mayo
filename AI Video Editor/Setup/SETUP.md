@@ -48,3 +48,14 @@ which is much smaller than the 7 GB Linux build used here.
   On your Mac: `headroom init -g` then restart Claude Code.
 - claude-mem was not installed (telemetry on by default; hosted memory is paid after a trial).
   On your Mac: `npx claude-mem install --provider claude` then `npx claude-mem telemetry disable`.
+
+## OBS MCP (royshil/obs-mcp, GPL-2.0) — source in `Setup/obs-mcp/`
+Lets Claude control OBS Studio (scenes, sources, start/stop recording and streaming) over the OBS WebSocket.
+Only works on the owner's Mac (OBS isn't in the cloud workspace). Setup on the Mac:
+1. OBS → Tools → WebSocket Server Settings → enable, copy the password.
+2. Claude desktop MCP config: `{"mcpServers":{"obs":{"command":"npx","args":["-y","obs-mcp@latest"],"env":{"OBS_WEBSOCKET_PASSWORD":"<password>"}}}}`
+3. Restart Claude, then "switch to my truck scene and start recording".
+It only connects to OBS on the same computer (ws://localhost:4455).
+
+## Skills library
+`Setup/skills-library/animation-principles-all/` holds all 144 dylantarre animation skills (MIT). Only the 24 most useful for Reels are installed in `.claude/skills/`; copy more from here if needed.
